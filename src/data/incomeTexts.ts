@@ -1,0 +1,28 @@
+export const incomeTexts = {
+  English: {
+    title: 'Income Overview',
+    incomeBreakdown: 'Income Breakdown',
+    donutChartText: 'Total: $',
+    noIncomeData: 'No income data available',
+    noChartData: 'No chart data available',
+    loading: 'Loading...',
+    dataError: 'Error fetching data',
+    retry: 'Retry',
+    weeklyIncome: 'Weekly Income',
+    monthlyIncome: 'Monthly Income',
+    annualIncome: 'Annual Income',
+  },
+  Turkish: {
+    title: 'Gelir Görünümü',
+    incomeBreakdown: 'Gelir Dağılımı',
+    donutChartText: 'Toplam: ₺',
+    noIncomeData: 'Gelir verisi bulunamadı',
+    noChartData: 'Grafik verisi bulunamadı',
+    loading: 'Yükleniyor...',
+    dataError: 'Veri alınırken hata oluştu',
+    retry: 'Tekrar Dene',
+    weeklyIncome: 'Haftalık Gelir',
+    monthlyIncome: 'Aylık Gelir',
+    annualIncome: 'Yıllık Gelir',
+  },
+}

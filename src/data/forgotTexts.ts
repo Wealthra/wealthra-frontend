@@ -1,0 +1,26 @@
+export const forgotTexts = {
+  English: {
+    header: 'Reset Your Password',
+    subtext: "Enter your email and we'll send you instructions to reset your password",
+    forgotText: 'Forgot Password',
+    emailPlaceholder: 'Enter your email address',
+    resetButton: 'Send Reset Link',
+    backToLogin: 'Back to Login',
+    emailSentHeader: 'Check Your Email',
+    emailSentText: "We've sent reset instructions to:",
+    noEmailText: "Didn't receive an email?",
+    tryAgain: 'Try again',
+  },
+  Turkish: {
+    header: 'Şifrenizi Sıfırlayın',
+    subtext: 'E-posta adresinizi girin ve şifrenizi sıfırlamak için talimatları gönderelim',
+    forgotText: 'Şifremi Unuttum',
+    emailPlaceholder: 'E-posta adresinizi girin',
+    resetButton: 'Sıfırlama Bağlantısı Gönder',
+    backToLogin: 'Girişe Dön',
+    emailSentHeader: 'E-postanızı Kontrol Edin',
+    emailSentText: 'Sıfırlama talimatlarını şu adrese gönderdik:',
+    noEmailText: 'E-posta almadınız mı?',
+    tryAgain: 'Tekrar deneyin',
+  },
+}

@@ -1,0 +1,26 @@
+export const expensesTexts = {
+  English: {
+    title: 'Expenses Overview',
+    expenseBreakdown: 'Expense Breakdown',
+    noExpenseData: 'No expense data available',
+    noChartData: 'No chart data available',
+    loading: 'Loading...',
+    dataError: 'Error fetching data',
+    retry: 'Retry',
+    weeklyExpenses: 'Weekly Expenses',
+    monthlyExpenses: 'Monthly Expenses',
+    annualExpenses: 'Annual Expenses',
+  },
+  Turkish: {
+    title: 'Gider Görünümü',
+    expenseBreakdown: 'Gider Dağılımı',
+    noExpenseData: 'Gider verisi bulunamadı',
+    noChartData: 'Grafik verisi bulunamadı',
+    loading: 'Yükleniyor...',
+    dataError: 'Veri alınırken hata oluştu',
+    retry: 'Tekrar Dene',
+    weeklyExpenses: 'Haftalık Giderler',
+    monthlyExpenses: 'Aylık Giderler',
+    annualExpenses: 'Yıllık Giderler',
+  },
+}

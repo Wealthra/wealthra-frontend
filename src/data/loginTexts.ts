@@ -1,0 +1,26 @@
+export const loginTexts = {
+  English: {
+    header: 'Welcome to the Wealthra Platform!',
+    subtext: 'Simply log in and find the perfect financial solution in just a few clicks!',
+    loginText: 'Log In',
+    emailPlaceholder: 'Enter your email',
+    passwordPlaceholder: 'Enter your password',
+    rememberMe: 'Remember Me',
+    forgotPassword: 'Forgot Password?',
+    loginButton: 'Log In',
+    noAccount: "Don't have an account?",
+    signUp: 'Sign Up',
+  },
+  Turkish: {
+    header: 'Wealthra Platformuna Hoş Geldiniz!',
+    subtext: 'Sadece oturum açın ve birkaç tıklamayla mükemmel finansal çözümü bulun!',
+    loginText: 'Giriş Yap',
+    emailPlaceholder: 'E-postanızı girin',
+    passwordPlaceholder: 'Şifrenizi girin',
+    rememberMe: 'Beni Hatırla',
+    forgotPassword: 'Şifremi Unuttum?',
+    loginButton: 'Giriş Yap',
+    noAccount: 'Hesabınız yok mu?',
+    signUp: 'Kaydol',
+  },
+}
