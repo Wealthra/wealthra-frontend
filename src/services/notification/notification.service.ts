@@ -1,4 +1,4 @@
-import { apiRequest } from '../apiClient'
+import { apiRequest } from '../ApiClient'
 import type { Notification } from './notification.models'
 
 export const notificationService = {

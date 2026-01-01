@@ -1,4 +1,4 @@
-import { apiRequest } from '../apiClient'
+import { apiRequest } from '../ApiClient'
 import type { FinancialSummaryResponse } from './financialSummary.models'
 
 export const financialSummaryService = {

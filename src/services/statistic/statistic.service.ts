@@ -1,4 +1,4 @@
-import { apiRequest } from '../apiClient'
+import { apiRequest } from '../ApiClient'
 import type { CategorySpendingResponse, MonthlyDataResponse } from './statistic.models'
 
 export const statisticService = {
