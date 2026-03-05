@@ -100,6 +100,7 @@ export default {
       amount: number
       isRecurring: boolean
       method: string
+      transactionDate?: string
     }) {
       this.handleDeleteIncomeSource(source)
     },
@@ -109,6 +110,7 @@ export default {
       amount: number
       isRecurring: boolean
       method: string
+      transactionDate: string
     }) {
       this.handleAddIncomeSource(source)
     },
@@ -119,9 +121,10 @@ export default {
       amount: number
       isRecurring: boolean
       method: string
+      transactionDate?: string
     }) {
       try {
-        await incomeService.deleteIncome(source.id)
+        await incomeService.apiDeleteIncome(source.id)
         await this.loadAppropriateData()
       } catch (error) {
         console.error('Error deleting income source:', error)
@@ -133,14 +136,16 @@ export default {
       amount: number
       isRecurring: boolean
       method: string
+      transactionDate: string
     }) {
       console.log('Adding income source:', source)
       try {
-        await incomeService.createIncome({
+        await incomeService.apiCreateIncome({
           name: source.name,
           amount: source.amount,
           method: source.method,
           isRecurring: source.isRecurring,
+          transactionDate: new Date(source.transactionDate).toISOString(),
         })
         await this.loadAppropriateData()
       } catch (error) {
@@ -150,12 +155,22 @@ export default {
 
     async fetchIncomeSources() {
       try {
-        const data = await incomeService.getUserIncomes(this.page, 4)
+        const pageSize = 4
+        const data = await incomeService.apiGetIncomes({
+          PageNumber: this.page,
+          PageSize: pageSize,
+        })
 
-        this.financialData.incomeSources = data.data
-        this.financialData.incomeHasMoreItems = data.hasMoreItems
+        this.financialData.incomeSources = data.items.map(item => ({
+          id: item.id!,
+          name: item.name,
+          amount: item.amount,
+          isRecurring: item.isRecurring,
+          method: item.method,
+        }))
+        this.financialData.incomeHasMoreItems = data.hasNextPage
         this.financialData.pageNumberIncome = data.pageNumber
-        this.financialData.pageSizeIncome = data.pageSize
+        this.financialData.pageSizeIncome = pageSize
         this.financialData.totalCountIncome = data.totalCount
         this.financialData.totalPagesIncome = data.totalPages
       } catch (error) {

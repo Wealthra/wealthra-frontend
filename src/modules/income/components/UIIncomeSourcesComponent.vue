@@ -95,8 +95,18 @@
             v-model="newSource.method"
             :placeholder="
               selectedLanguage == 'English'
-                ? 'Enter expense payment method'
-                : 'Ödeme yöntemini girin'
+                ? 'Enter income payment method'
+                : 'Gelir ödeme yöntemini girin'
+            "
+            class="modal-input"
+          />
+          <input
+            type="date"
+            v-model="newSource.transactionDate"
+            :placeholder="
+              selectedLanguage == 'English'
+                ? 'Select transaction date'
+                : 'İşlem tarihini seçin'
             "
             class="modal-input"
           />
@@ -141,6 +151,7 @@ export default {
         amount: null,
         isRecurring: false,
         method: '',
+        transactionDate: '',
       },
       arrowIcons,
       actionIcons,
@@ -261,6 +272,7 @@ export default {
         amount: null,
         isRecurring: false,
         method: '',
+        transactionDate: '',
       }
     },
     addIncomeSource() {
@@ -297,11 +309,20 @@ export default {
         return
       }
 
+      if (!this.newSource.transactionDate) {
+        this.errorMessage =
+          this.selectedLanguage === 'English'
+            ? 'Please select transaction date'
+            : 'Lütfen işlem tarihini seçin'
+        return
+      }
+
       const newIncomeSource = {
         name: this.newSource.name,
         amount: amount,
         isRecurring: this.newSource.isRecurring,
         method: this.newSource.method,
+        transactionDate: this.newSource.transactionDate,
       }
 
       this.$emit('addIncomeSource', newIncomeSource)

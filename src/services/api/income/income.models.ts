@@ -46,7 +46,7 @@ export interface IncomeGeneralInfoResponse {
 // New API models based on /api/Incomes spec
 
 export interface IncomeApiModel {
-  id: number
+  id?: number
   name: string
   amount: number
   method: string
