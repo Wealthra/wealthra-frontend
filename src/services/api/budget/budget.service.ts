@@ -5,9 +5,12 @@ import type {
   UpdateBudgetRequest,
   Budget,
   MonthlyBudgetResponse,
+  BudgetApiModel,
+  BudgetsOverviewResponse,
 } from './budget.models'
 
 export const budgetService = {
+  // Legacy endpoints (singular "Budget") kept for backward compatibility
   async getBudgets(
     pageNumber: number = 1,
     pageSize: number = 10
@@ -60,6 +63,46 @@ export const budgetService = {
 
   async getMonthlyBudget(): Promise<MonthlyBudgetResponse> {
     return apiRequest<MonthlyBudgetResponse>(`Budget/monthly`, {
+      method: 'GET',
+    })
+  },
+
+  // New plural /api/Budgets endpoints
+
+  async apiGetBudgets(): Promise<BudgetApiModel[]> {
+    return apiRequest<BudgetApiModel[]>('Budgets', {
+      method: 'GET',
+    })
+  },
+
+  async apiCreateBudget(data: { categoryId: number; limitAmount: number }): Promise<number> {
+    return apiRequest<number>('Budgets', {
+      method: 'POST',
+      body: data,
+    })
+  },
+
+  async apiGetBudgetById(id: number): Promise<BudgetApiModel> {
+    return apiRequest<BudgetApiModel>(`Budgets/${id}`, {
+      method: 'GET',
+    })
+  },
+
+  async apiUpdateBudget(id: number, limitAmount: number): Promise<void> {
+    return apiRequest<void>(`Budgets/${id}`, {
+      method: 'PUT',
+      body: { id, limitAmount },
+    })
+  },
+
+  async apiDeleteBudget(id: number): Promise<void> {
+    return apiRequest<void>(`Budgets/${id}`, {
+      method: 'DELETE',
+    })
+  },
+
+  async apiGetBudgetsOverview(): Promise<BudgetsOverviewResponse> {
+    return apiRequest<BudgetsOverviewResponse>('Budgets/overview', {
       method: 'GET',
     })
   },

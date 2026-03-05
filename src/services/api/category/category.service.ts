@@ -3,9 +3,11 @@ import type {
   PaginatedCategoriesResponse,
   CreateCategoryRequest,
   UpdateCategoryRequest,
+  CategoriesListResponse,
 } from './category.models'
 
 export const categoryService = {
+  // Legacy endpoints (singular "Category") kept for backward compatibility
   async createCategory(name: string): Promise<void> {
     return apiRequest<void>('Category', {
       method: 'POST',
@@ -46,6 +48,34 @@ export const categoryService = {
 
   async deleteCategory(id: number): Promise<void> {
     return apiRequest<void>(`Category/${id}`, {
+      method: 'DELETE',
+    })
+  },
+
+  // New plural /api/Categories endpoints
+
+  async apiGetCategories(): Promise<CategoriesListResponse> {
+    return apiRequest<CategoriesListResponse>('Categories', {
+      method: 'GET',
+    })
+  },
+
+  async apiCreateCategory(name: string): Promise<number> {
+    return apiRequest<number>('Categories', {
+      method: 'POST',
+      body: { name } as CreateCategoryRequest,
+    })
+  },
+
+  async apiUpdateCategory(id: number, name: string): Promise<void> {
+    return apiRequest<void>(`Categories/${id}`, {
+      method: 'PUT',
+      body: { id, name } as UpdateCategoryRequest & { id: number },
+    })
+  },
+
+  async apiDeleteCategory(id: number): Promise<void> {
+    return apiRequest<void>(`Categories/${id}`, {
       method: 'DELETE',
     })
   },

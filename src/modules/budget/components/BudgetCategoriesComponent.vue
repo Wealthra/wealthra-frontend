@@ -353,7 +353,6 @@ export default {
         &:hover {
           background-color: var(--background-color-reverse);
           color: var(--reverse-header-text-color);
-          transition: all 0.3s ease-in-out;
         }
       }
     }
@@ -575,7 +574,6 @@ export default {
         &:focus {
           outline: none;
           border-color: var(--border-color-reverse);
-          transition: all 0.3s ease-in-out;
         }
       }
 
@@ -591,7 +589,6 @@ export default {
         &:focus {
           outline: none;
           border-color: var(--border-color-reverse);
-          transition: all 0.3s ease-in-out;
         }
       }
 
@@ -613,7 +610,6 @@ export default {
           &:hover {
             background-color: var(--background-color-reverse);
             color: var(--reverse-header-text-color);
-            transition: all 0.3s ease-in-out;
           }
         }
       }

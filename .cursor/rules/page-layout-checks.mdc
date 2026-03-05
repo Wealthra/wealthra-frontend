@@ -1,0 +1,53 @@
+---
+description: Sayfa düzeni değişirken dil/tema/ModuleLayout kontrolleri
+alwaysApply: true
+---
+
+## Sayfa düzeni kuralı
+
+Bu projede sayfa veya layout ile ilgili **herhangi bir düzenleme/yeniden yazma** yapmadan önce aşağıdaki kontrolleri yap.
+
+- **1. Dil desteği (i18n) kontrolü**
+  - Bu dosyada veya ilgili modülde mevcut bir dil/i18n çözümü var mı?
+    - Örnek: `useI18n`, `t()`, çeviri dosyaları, `locale` durumları vb.
+  - **Eğer dil desteği yoksa**:
+    - Kullanıcıya açıkça şunu söyle: bu sayfada dil desteği yok, istersen ekleyebilirim; devam etmek için ikinci bir komut ver.
+    - Kullanıcı ikinci, açık bir komut vermeden **otomatik olarak dil desteği ekleme**.
+
+- **2. Tema desteği (dark/light, theme config vs.) kontrolü**
+  - Projede veya ilgili modülde tema sistemi var mı?
+    - Örnek: `theme`, `darkMode`, `colorMode`, global tema store/config, Tailwind theme sınıfları vb.
+  - **Eğer tema desteği yoksa**:
+    - Kullanıcıya açıkça şunu söyle: bu sayfada/komponentte tema (dark/light) entegrasyonu görünmüyor; eklememi istiyorsan ikinci komutta söyle.
+    - Kullanıcı ikinci, açık bir komut vermeden **otomatik tema sistemi ekleme veya büyük tema refaktörü yapma**.
+
+- **3. `ModuleLayout` kullanımı kontrolü**
+  - İlgili sayfa, mümkünse ortak `ModuleLayout` veya proje standart layout bileşenlerini kullanıyor mu?
+    - Örnek: `ModuleLayout.vue`, modül özel layout bileşenleri, global layout sistemi.
+  - **Eğer `ModuleLayout` veya standart layout yoksa**:
+    - Kullanıcıya açıkça bildir: bu sayfa şu an `ModuleLayout` kullanmıyor; istersen bu layout'a taşıyabilirim veya entegre edebilirim, devam etmek için ikinci bir komut ver.
+    - Kullanıcıdan ikinci, net bir onay almadan **otomatik olarak `ModuleLayout` entegrasyonu yapma**.
+
+## Davranış şekli
+
+- **Önce analiz et, sonra sor**
+  - Dosyayı ve gerekirse ilgili modülü incele.
+  - Dil, tema ve `ModuleLayout` durumunu özetleyerek kullanıcıya raporla.
+  - Eğer herhangi biri eksikse, **kendin eklemek yerine** önce kullanıcıya sor:
+    - Ne eksik (dil/tema/layout)
+    - Ne tür bir entegrasyon yapılabileceği
+    - Kullanıcıdan “tamam, şimdi ekle/düzenle” şeklinde **ikinci bir açık komut** iste.
+
+- **İkinci komut olmadan büyük değişiklik yapma**
+  - Bu kural, özellikle:
+    - Yeni dil katmanı eklemek
+    - Tema sistemini entegre etmek veya büyük oranda değiştirmek
+    - Sayfayı `ModuleLayout` içine taşımak / ciddi layout refaktörü yapmak
+  - gibi **büyük yapısal değişiklikleri** otomatik yapmanı engeller.
+  - Kullanıcı böyle bir değişiklik için **özellikle izin verene kadar** sadece durum tespiti ve öneri ver.
+
+- **Küçük düzenlemeler serbest**
+  - Kullanıcı zaten bu yapıları (dil, tema, `ModuleLayout`) kurmuşsa:
+    - Mevcut pattern'e uygun küçük düzenleme, stil düzeltmesi, ufak refaktör vb. işlemleri normal şekilde yap.
+    - Yine de, mevcut yapıyı bozabilecek büyük refaktörlerde kullanıcıya kısaca haber ver.
+

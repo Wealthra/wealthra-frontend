@@ -35,7 +35,30 @@
           {{ selectedLanguage == 'English' ? 'Error Log' : 'Hatalar' }}
         </div>
       </div>
-      <UITopBar :selectedLanguage="selectedLanguage" @update-language="handleLanguageUpdate" />
+      <div class="admin-top-bar">
+        <div class="admin-top-bar__icons">
+          <UILanguageButton @updateLanguage="handleLanguageUpdate" />
+          <UIThemeButton />
+          <div class="profile-icon-wrapper">
+            <font-awesome-icon
+              :icon="profileIcon"
+              class="profile-icon"
+              @click="toggleLogoutTooltip"
+            />
+            <div class="logout-tooltip" v-if="showLogoutTooltip">
+              <p>{{ texts.logoutConfirmation }}</p>
+              <div class="tooltip-buttons">
+                <button class="btn btn--yes" @click="handleLogout">
+                  {{ texts.yes }}
+                </button>
+                <button class="btn btn--no" @click="toggleLogoutTooltip">
+                  {{ texts.no }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="admin-dashboard-wrapper" id="dashboard-section">
       <div class="admin-dashboard-title">
@@ -127,7 +150,8 @@
 </template>
 
 <script lang="ts">
-import UITopBar from '@/components/UITopBar.vue'
+import UILanguageButton from '@/components/UILanguageButton.vue'
+import UIThemeButton from '@/components/UIThemeButton.vue'
 import AdminDashboardCard from '@/auth/admin/components/AdminDashboardCard.vue'
 import AdminUserManagementTable from '@/auth/admin/components/AdminUserManagementTable.vue'
 import AdminSystemPerformance from '@/auth/admin/components/AdminSystemPerformance.vue'
@@ -135,11 +159,14 @@ import AdminErrorLogsTable from '@/auth/admin/components/AdminErrorLogsTable.vue
 
 import type { AdminData } from '@/interfaces/AdminData'
 import { adminService } from '@/services/api/admin/admin.service'
+import { clearAuth } from '@/utils/auth'
+import { profileIcon } from '@/icons/fontawesome-icons'
 
 export default {
   name: 'AdminView',
   components: {
-    UITopBar,
+    UILanguageButton,
+    UIThemeButton,
     AdminDashboardCard,
     AdminUserManagementTable,
     AdminSystemPerformance,
@@ -209,7 +236,21 @@ export default {
       isScrolled: false,
       activeSection: 'dashboard',
       page: 1,
+      showLogoutTooltip: false,
+      profileIcon,
     }
+  },
+  computed: {
+    texts() {
+      return {
+        logoutConfirmation:
+          this.selectedLanguage === 'English'
+            ? 'Are you sure you want to logout?'
+            : 'Çıkış yapmak istediğinize emin misiniz?',
+        yes: this.selectedLanguage === 'English' ? 'Yes' : 'Evet',
+        no: this.selectedLanguage === 'English' ? 'No' : 'Hayır',
+      }
+    },
   },
   methods: {
     // Handle Scroll
@@ -247,6 +288,15 @@ export default {
     handleLanguageUpdate(language: string) {
       this.selectedLanguage = language
       localStorage.setItem('selectedLanguage', language)
+    },
+
+    toggleLogoutTooltip() {
+      this.showLogoutTooltip = !this.showLogoutTooltip
+    },
+
+    handleLogout() {
+      clearAuth()
+      this.$router.push('/')
     },
 
     // Handle Error Logs Change Page
@@ -396,14 +446,14 @@ export default {
     justify-content: space-between;
     width: 100%;
     padding: 1rem;
-    transition: all 0.3s ease-in-out;
+    transition: padding 0.3s ease-in-out;
 
     &.scrolled {
       background-color: var(--background-color);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       z-index: 1000;
       padding: 1.5rem;
-      transition: all 0.3s ease-in-out;
+      transition: padding 0.3s ease-in-out;
     }
 
     .wealthra-logo-wrapper {
@@ -434,7 +484,7 @@ export default {
         width: 100%;
         font-size: 0.9rem;
         text-align: center;
-        transition: all 0.3s ease;
+        transition: padding 0.3s ease;
         padding: 0.5rem;
         border-radius: var(--border-radius);
 
@@ -582,6 +632,18 @@ export default {
       .scroll-to-section-navbar {
         display: none;
       }
+      .admin-top-bar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: 100%;
+        gap: 0.5rem;
+
+        &__icons {
+          display: flex;
+          gap: 0.5rem;
+        }
+      }
     }
 
     .admin-dashboard-wrapper {
@@ -616,6 +678,69 @@ export default {
         width: 100%;
         overflow-x: auto;
       }
+    }
+  }
+}
+
+.profile-icon-wrapper {
+  width: 24px;
+  height: 24px;
+
+  .profile-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+  }
+
+  .logout-tooltip {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 180px;
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+
+    p {
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--normal-text-color);
+      text-align: center;
+    }
+
+    .tooltip-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.4rem;
+    }
+  }
+}
+
+.btn {
+  padding: 0.3rem 0.6rem;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+
+  &--yes {
+    background-color: var(--primary-red-color);
+    color: white;
+
+    &:hover {
+      background-color: var(--reverse-primary-red-color);
+    }
+  }
+
+  &--no {
+    background-color: var(--primary-blue-color);
+    color: white;
+
+    &:hover {
+      background-color: var(--reverse-primary-blue-color);
     }
   }
 }

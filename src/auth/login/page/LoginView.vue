@@ -163,21 +163,16 @@ export default {
       }
 
       try {
-        const data = await accountService.authenticate(email, password)
+        const data = await accountService.apiLogin({ email, password })
 
-        if (data.jwToken) {
-          import('../../../utils/auth').then(({ setAuth }) => {
-            // Pass user ID to setAuth function
-            setAuth(data.jwToken, rememberMe, data.id, data.roles)
-            if (data.roles.includes('Admin')) {
-              this.$router.push('/admin')
-            } else {
-              this.$router.push('/dashboard')
-            }
-          })
-        } else {
+        if (!data.token) {
           throw new Error('No token received from server')
         }
+
+        import('../../../utils/auth').then(({ setAuth }) => {
+          setAuth(data.token, rememberMe, data.id)
+          this.$router.push('/dashboard')
+        })
       } catch {
         this.showError(
           this.selectedLanguage === 'English'

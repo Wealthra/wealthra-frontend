@@ -47,7 +47,7 @@ import {
 } from 'chart.js'
 
 import type { TooltipItem, ChartEvent } from 'chart.js'
-import type { SpendingCategories } from '../../interfaces/SpendingCategories'
+import type { SpendingCategories } from '@/interfaces/SpendingCategories'
 
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale)
 
@@ -88,7 +88,10 @@ export default {
       return this.categoriesData && this.categoriesData.length > 0
     },
     total() {
-      return this.categoriesData.reduce((sum, category) => sum + category.value, 0)
+      return this.categoriesData.reduce(
+        (sum: number, category: SpendingCategories) => sum + category.value,
+        0
+      )
     },
     computedText() {
       return this.donutChartText + this.total
@@ -99,7 +102,7 @@ export default {
       const rootStyles = getComputedStyle(root)
 
       // Convert CSS variables to actual colors
-      const backgroundColors = this.categoriesData.map(item => {
+      const backgroundColors = this.categoriesData.map((item: SpendingCategories) => {
         const varName = (item.color || '--category-other-color')
           .replace('var(', '')
           .replace(')', '')
@@ -110,7 +113,9 @@ export default {
       const hoverColors = [...backgroundColors]
 
       if (this.clickedSegment) {
-        const index = this.categoriesData.findIndex(item => item.name === this.clickedSegment?.name)
+        const index = this.categoriesData.findIndex(
+          (item: SpendingCategories) => item.name === this.clickedSegment?.name
+        )
         if (index !== -1) {
           // Create highlight effect for selected segment
           const normalizedName = this.getNormalizedCategoryName(this.clickedSegment.name)
@@ -124,10 +129,10 @@ export default {
       }
 
       return {
-        labels: this.categoriesData.map(item => item.name),
+        labels: this.categoriesData.map((item: SpendingCategories) => item.name),
         datasets: [
           {
-            data: this.categoriesData.map(item => item.value),
+            data: this.categoriesData.map((item: SpendingCategories) => item.value),
             backgroundColor: backgroundColors,
             hoverBackgroundColor: hoverColors,
             borderColor: rootStyles.getPropertyValue('--background-color').trim(),
@@ -173,7 +178,7 @@ export default {
             },
           },
         },
-        onHover: (event: any, elements: any[]) => {
+        onHover: (event: ChartEvent, elements: Array<{ index: number }>) => {
           const canvas = event.native?.target as HTMLCanvasElement | null
           if (canvas) {
             canvas.style.cursor = elements && elements.length > 0 ? 'pointer' : 'default'
@@ -193,16 +198,18 @@ export default {
         return
       }
       // Create a deep copy of the categories array
-      this.categoriesData = Object.entries(this.categories).map(([key, value]) => ({
-        name: this.getNormalizedCategoryName(key),
-        value: value,
-        label: this.getNormalizedCategoryName(key),
-        color: '',
-      }))
-      this.categoriesData.sort((a, b) => b.value - a.value)
+      this.categoriesData = Object.entries(this.categories).map(
+        ([key, value]: [string, number]): SpendingCategories => ({
+          name: this.getNormalizedCategoryName(key),
+          value,
+          label: this.getNormalizedCategoryName(key),
+          color: '',
+        })
+      )
+      this.categoriesData.sort((a: SpendingCategories, b: SpendingCategories) => b.value - a.value)
 
       // Assign colors based on category names
-      this.categoriesData.forEach(category => {
+      this.categoriesData.forEach((category: SpendingCategories) => {
         if (category.name === 'Other' || category.name === 'Diğer') {
           category.color = 'var(--category-other-color)'
         } else if (category.name === 'Food' || category.name === 'Yiyecek') {
@@ -245,7 +252,16 @@ export default {
     },
 
     handleChartClick(event: ChartEvent) {
-      const chartEvent = event as any
+      const chartEvent = event as ChartEvent & {
+        chart: {
+          getElementsAtEventForMode: (
+            native: unknown,
+            mode: string,
+            options: unknown,
+            intersect: boolean
+          ) => Array<{ index: number }>
+        }
+      }
       if (!chartEvent.chart || !chartEvent.chart.getElementsAtEventForMode || !chartEvent.native)
         return
 

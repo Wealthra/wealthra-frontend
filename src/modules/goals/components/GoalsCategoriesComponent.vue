@@ -295,7 +295,7 @@ export default {
 
             &:hover {
               scale: 1.1;
-              transition: all 0.2s ease-in-out;
+              transition: transform 0.2s ease-in-out;
             }
           }
         }
@@ -418,7 +418,9 @@ export default {
         border-radius: var(--border-radius);
         cursor: pointer;
         font-size: 1rem;
-        transition: all 0.2s ease;
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s ease;
 
         &:first-child {
           background-color: var(--background-color-soft);
@@ -435,7 +437,6 @@ export default {
         &:hover {
           background-color: var(--primary-green-color);
           color: white;
-          transition: background-color 0.3s ease;
         }
       }
     }

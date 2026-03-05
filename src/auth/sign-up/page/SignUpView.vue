@@ -283,12 +283,11 @@ export default {
       confirmPassword: string
     ) {
       try {
-        await accountService.register({
+        await accountService.apiRegister({
           firstName,
           lastName,
           email,
           password,
-          confirmPassword,
         })
 
         this.showSuccess(

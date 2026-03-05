@@ -1,20 +1,9 @@
-export interface AuthenticateRequest {
-  email: string
-  password: string
-}
-
-export interface AuthenticateResponse {
-  jwToken: string
-  id: string
-  roles: string[]
-}
-
 export interface RegisterRequest {
   firstName: string
   lastName: string
   email: string
   password: string
-  confirmPassword: string
+  confirmPassword?: string
 }
 
 export interface UpdateUserRequest {
@@ -24,27 +13,61 @@ export interface UpdateUserRequest {
   email: string
 }
 
-export interface UpdatePasswordRequest {
-  userId: string
-  currentPassword: string
-  newPassword: string
-  confirmPassword: string
-}
-
-export interface ForgotPasswordRequest {
-  email: string
-}
-
-export interface ResetPasswordRequest {
-  email: string
-  token: string
-  password: string
-  confirmPassword: string
-}
-
 export interface UserInfoResponse {
   id: string
   firstName: string
   lastName: string
   email: string
+}
+
+// New API models based on /api/Account spec
+
+export interface AccountRegisterRequest {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+}
+
+export interface AccountLoginRequest {
+  email: string
+  password: string
+}
+
+export interface AccountAuthResponse {
+  id: string
+  email: string
+  token: string
+  refreshToken: string
+  refreshTokenExpiration: string
+}
+
+export interface AccountProfileResponse {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  avatarUrl: string
+  createdAt: string
+}
+
+export interface AccountUpdateProfileRequest {
+  firstName: string
+  lastName: string
+  avatarUrl: string
+}
+
+export interface AccountUpdatePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
+export interface AccountForgotPasswordRequest {
+  email: string
+}
+
+export interface AccountResetPasswordRequest {
+  email: string
+  token: string
+  password: string
 }

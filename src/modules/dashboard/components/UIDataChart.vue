@@ -18,7 +18,7 @@
 </template>
 
 <script lang="ts">
-import type { ChartDataItem } from '../../interfaces/ChartData'
+import type { ChartDataItem } from '@/interfaces/ChartData'
 
 export default {
   name: 'DataChart',

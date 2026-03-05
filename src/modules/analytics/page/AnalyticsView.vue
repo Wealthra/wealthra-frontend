@@ -1,71 +1,61 @@
 <template>
-  <div class="analytics-c">
-    <UIHorizontalNavbar v-if="isMobile" />
-    <UILeftSideBar
-      :initialLanguage="selectedLanguage"
-      :selectedPage="selectedLanguage == 'English' ? 'Analytics' : 'Analizler'"
-      v-else
+  <ModuleLayout
+    :selectedLanguage="selectedLanguage"
+    :selectedPage="selectedPage"
+    @update-language="handleLanguageUpdate"
+  >
+    <UILoading
+      v-if="isLoading || hasError"
+      :isLoading="isLoading"
+      :hasError="hasError"
+      :loadingText="analyticsTexts[selectedLanguage]?.loading || 'Loading...'"
+      :errorMessage="activeErrorMessage"
+      :retryText="analyticsTexts[selectedLanguage]?.retry || 'Retry'"
+      @retry="loadAppropriateData"
     />
-    <div class="right-side-wrapper">
-      <UITopBar :selectedLanguage="selectedLanguage" @update-language="handleLanguageUpdate" />
-      <UILoading
-        v-if="isLoading || hasError"
-        :isLoading="isLoading"
-        :hasError="hasError"
-        :loadingText="analyticsTexts[selectedLanguage]?.loading || 'Loading...'"
-        :errorMessage="activeErrorMessage"
-        :retryText="analyticsTexts[selectedLanguage]?.retry || 'Retry'"
-        @retry="loadAppropriateData"
-      />
-      <template v-else>
-        <div class="right-side-top-wrapper">
-          <div class="financial-reports-header">
-            {{ analyticsTexts[selectedLanguage].financialReports }}
-          </div>
-          <div class="date-range-picker-wrapper">
-            <Datepicker
-              v-model:value="selectedDateRange"
-              range
-              :placeholder="analyticsTexts[selectedLanguage].customDateRange"
-              :disabled-date="disableFutureDates"
-              @change="loadAppropriateData"
-            />
-          </div>
+    <template v-else>
+      <div class="right-side-top-wrapper">
+        <div class="date-range-picker-wrapper">
+          <Datepicker
+            v-model:value="selectedDateRange"
+            range
+            :placeholder="analyticsTexts[selectedLanguage].customDateRange"
+            :disabled-date="disableFutureDates"
+            @change="loadAppropriateData"
+          />
         </div>
-        <div
-          class="analytics-data-available"
-          v-if="selectedDateRange && selectedDateRange[0] && selectedDateRange[1]"
-        >
-          <div class="analytics-data-wrapper">
-            <UIGraph
-              :selectedLanguage="selectedLanguage"
-              :incomeExpenseData="financialData.incomeExpenseData"
-            />
+      </div>
+      <div
+        class="analytics-data-available"
+        v-if="selectedDateRange && selectedDateRange[0] && selectedDateRange[1]"
+      >
+        <div class="analytics-data-wrapper">
+          <UIGraph
+            :selectedLanguage="selectedLanguage"
+            :incomeExpenseData="financialData.incomeExpenseData"
+          />
 
-            <UIExpenseDistribution
-              :selectedLanguage="selectedLanguage"
-              :expenseDistribution="financialData.expenseDistribution"
-            />
-          </div>
+          <UIExpenseDistribution
+            :selectedLanguage="selectedLanguage"
+            :expenseDistribution="financialData.expenseDistribution"
+          />
         </div>
-        <div class="analytics-data-not-available" v-else>
-          <p>{{ analyticsTexts[selectedLanguage].selectDateRange }}</p>
-        </div>
-      </template>
-    </div>
-  </div>
+      </div>
+      <div class="analytics-data-not-available" v-else>
+        <p>{{ analyticsTexts[selectedLanguage].selectDateRange }}</p>
+      </div>
+    </template>
+  </ModuleLayout>
 </template>
 
 <script lang="ts">
-import UILeftSideBar from '@/components/UILeftSideBar.vue'
-import UITopBar from '@/components/UITopBar.vue'
 import UILoading from '@/components/UILoading.vue'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 
 import UIGraph from '@/modules/analytics/components/UIGraph.vue'
 import UIExpenseDistribution from '@/modules/analytics/components/UIExpenseDistribution.vue'
-import UIHorizontalNavbar from '@/components/UIHorizontalNavbar.vue'
+import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 import { analyticsTexts } from '@/data/analyticsTexts'
 
@@ -77,13 +67,11 @@ import type { FinancialData } from '@/interfaces/FinancialData'
 export default {
   name: 'AnalyticsView',
   components: {
-    UILeftSideBar,
-    UITopBar,
+    ModuleLayout,
     Datepicker,
     UIGraph,
     UIExpenseDistribution,
     UILoading,
-    UIHorizontalNavbar,
   },
   data() {
     return {
@@ -94,9 +82,12 @@ export default {
       analyticsTexts: analyticsTexts,
       financialData: {} as FinancialData,
       activeErrorMessage: '',
-      isMobile: window.innerWidth <= 768,
-      windowWidth: window.innerWidth,
     }
+  },
+  computed: {
+    selectedPage() {
+      return this.selectedLanguage === 'English' ? 'Analytics' : 'Analizler'
+    },
   },
 
   methods: {
@@ -104,10 +95,6 @@ export default {
       this.selectedLanguage = language
       localStorage.setItem('selectedLanguage', language)
       this.loadAppropriateData()
-    },
-    handleResize() {
-      this.windowWidth = window.innerWidth
-      this.isMobile = this.windowWidth <= 768
     },
 
     disableFutureDates(date: Date): boolean {
@@ -294,13 +281,10 @@ export default {
       this.selectedLanguage = savedLanguage as 'English' | 'Turkish'
     }
 
-    window.addEventListener('resize', this.handleResize)
-
     this.loadAppropriateData()
   },
 
   beforeUnmount() {
-    window.removeEventListener('resize', this.handleResize)
   },
 
   watch: {},
@@ -308,122 +292,88 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.analytics-c {
+.right-side-top-wrapper {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
-  height: 100vh;
+  padding: 0 2rem;
+  gap: 1rem;
 
-  .right-side-wrapper {
+  .financial-reports-header {
     display: flex;
-    flex-direction: column;
-    width: 100%;
     align-items: center;
-    padding: 0.5rem;
-    background-color: var(--background-color);
-    overflow-y: auto;
+    justify-content: flex-start;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--header-text-color);
+  }
+  .date-range-picker-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
     gap: 1rem;
+  }
+}
+.analytics-data-available {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  gap: 1rem;
 
-    .right-side-top-wrapper {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      padding: 0 2rem;
-      gap: 1rem;
+  .analytics-data-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    height: 90%;
+    gap: 1rem;
+  }
+}
+.analytics-data-not-available {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 1rem;
+  font-size: 2rem;
+  color: var(--normal-text-color);
+}
 
-      .financial-reports-header {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--header-text-color);
-      }
-      .date-range-picker-wrapper {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 1rem;
-      }
+@media (max-width: 768px) {
+  .right-side-top-wrapper {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    gap: 0.5rem;
+
+    .financial-reports-header {
+      font-size: 1.2rem;
     }
-    .analytics-data-available {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      height: 100%;
-      padding: 0 2rem;
-      gap: 1rem;
+  }
 
-      .analytics-data-wrapper {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
-        height: 90%;
-        padding: 0 2rem;
-        gap: 1rem;
-      }
-    }
-    .analytics-data-not-available {
-      display: flex;
+  .analytics-data-available {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+    padding: 0 1rem;
+    gap: 0.5rem;
+
+    .analytics-data-wrapper {
       flex-direction: column;
-      align-items: center;
       justify-content: center;
       width: 100%;
       height: 100%;
-      padding: 0 2rem;
-      gap: 1rem;
-      font-size: 2rem;
-      color: var(--normal-text-color);
-    }
-  }
-}
-@media (max-width: 768px) {
-  .analytics-c {
-    flex-direction: column;
-    align-items: center;
-
-    .right-side-wrapper {
-      width: 100%;
-      height: 100%;
-      padding: 0.5rem;
-      gap: 2rem;
-      flex-direction: column;
-      overflow: auto;
-
-      .right-side-top-wrapper {
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 0 1rem;
-        gap: 0.5rem;
-
-        .financial-reports-header {
-          font-size: 1.2rem;
-        }
-      }
-
-      .analytics-data-available {
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100vh;
-        padding: 0 1rem;
-        gap: 0.5rem;
-
-        .analytics-data-wrapper {
-          flex-direction: column;
-          justify-content: center;
-          width: 100%;
-          height: 100%;
-          padding: 0 1rem;
-          gap: 0.5rem;
-        }
-      }
+      padding: 0 1rem;
+      gap: 0.5rem;
     }
   }
 }

@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import type { Spendings } from '../../interfaces/Spendings'
+import type { Spendings } from '@/interfaces/Spendings'
 
 export default {
   name: 'TopSpendingsBox',

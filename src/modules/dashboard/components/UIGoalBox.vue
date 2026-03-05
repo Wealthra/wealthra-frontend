@@ -60,19 +60,21 @@ export default {
   },
   props: {
     financialGoal: {
-      type: Object as () => {
-        created: string
-        createdBy: string
-        deadline: string
-        id: number
-        initialAmount: number
-        lastModified: string
-        lastModifiedBy: string
-        name: string
-        targetAmount: number
-      },
-
-      required: true,
+      type: Object as () =>
+        | null
+        | {
+            created: string
+            createdBy: string
+            deadline: string
+            id: number
+            initialAmount: number
+            lastModified: string
+            lastModifiedBy: string
+            name: string
+            targetAmount: number
+          },
+      required: false,
+      default: null,
     },
     selectedLanguage: {
       type: String,

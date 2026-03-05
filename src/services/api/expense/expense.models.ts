@@ -43,3 +43,27 @@ export interface ExpenseGeneralInfoResponse {
   previousYearTotalExpense: number
   recentTransactions: Expense[]
 }
+
+// New API models based on /api/Expenses spec
+
+export interface ExpenseApiModel extends Expense {
+  transactionDate: string
+}
+
+export interface ExpensesApiListResponse {
+  items: ExpenseApiModel[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
+export interface ExpenseSummaryItem {
+  period: string
+  totalAmount: number
+  expenseCount: number
+  categoryBreakdown: Record<string, number>
+}
+
+export type ExpenseSummaryResponse = ExpenseSummaryItem[]

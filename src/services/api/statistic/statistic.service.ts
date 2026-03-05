@@ -1,7 +1,13 @@
 import { apiRequest } from '../../apiClient'
-import type { CategorySpendingResponse, MonthlyDataResponse } from './statistic.models'
+import type {
+  CategorySpendingResponse,
+  MonthlyDataResponse,
+  StatisticsBreakdownResponse,
+  StatisticsTrendsResponse,
+} from './statistic.models'
 
 export const statisticService = {
+  // Legacy endpoints kept for backward compatibility
   async getCategorySpendingByDateRange(
     userId: string,
     startDate: string,
@@ -39,5 +45,20 @@ export const statisticService = {
         method: 'GET',
       }
     )
+  },
+
+  // New /api/Statistics endpoints
+
+  async apiGetBreakdown(startDate: string, endDate: string): Promise<StatisticsBreakdownResponse> {
+    const params = new URLSearchParams({ StartDate: startDate, EndDate: endDate })
+    return apiRequest<StatisticsBreakdownResponse>(`Statistics/breakdown?${params.toString()}`, {
+      method: 'GET',
+    })
+  },
+
+  async apiGetTrends(year: number): Promise<StatisticsTrendsResponse> {
+    return apiRequest<StatisticsTrendsResponse>(`Statistics/trends?Year=${year}`, {
+      method: 'GET',
+    })
   },
 }

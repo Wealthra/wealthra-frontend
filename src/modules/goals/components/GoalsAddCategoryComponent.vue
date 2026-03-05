@@ -200,7 +200,6 @@ export default {
 
         &:hover {
           background-color: var(--reverse-primary-green-color);
-          transition: background-color 0.3s ease;
         }
       }
     }

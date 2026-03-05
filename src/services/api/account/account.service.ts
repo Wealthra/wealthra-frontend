@@ -1,24 +1,20 @@
 import { apiRequest } from '../../apiClient'
 import type {
-  AuthenticateRequest,
-  AuthenticateResponse,
   RegisterRequest,
   UpdateUserRequest,
   UpdatePasswordRequest,
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
   UserInfoResponse,
+  AccountRegisterRequest,
+  AccountLoginRequest,
+  AccountAuthResponse,
+  AccountProfileResponse,
+  AccountUpdateProfileRequest,
+  AccountUpdatePasswordRequest,
+  AccountForgotPasswordRequest,
+  AccountResetPasswordRequest,
 } from './account.models'
 
 export const accountService = {
-  async authenticate(email: string, password: string): Promise<AuthenticateResponse> {
-    return apiRequest<AuthenticateResponse>('Account/authenticate', {
-      method: 'POST',
-      body: { email, password } as AuthenticateRequest,
-      requiresAuth: false,
-    })
-  },
-
   async register(userData: RegisterRequest): Promise<void> {
     return apiRequest<void>('Account/register', {
       method: 'POST',
@@ -37,12 +33,12 @@ export const accountService = {
   async forgotPassword(email: string): Promise<void> {
     return apiRequest<void>('Account/forgot-password', {
       method: 'POST',
-      body: { email } as ForgotPasswordRequest,
+      body: { email } as AccountForgotPasswordRequest,
       requiresAuth: false,
     })
   },
 
-  async resetPassword(data: ResetPasswordRequest): Promise<void> {
+  async resetPassword(data: AccountResetPasswordRequest): Promise<void> {
     return apiRequest<void>('Account/reset-password', {
       method: 'POST',
       body: data,
@@ -50,49 +46,53 @@ export const accountService = {
     })
   },
 
-  async updateUser(userId: string, userData: Omit<UpdateUserRequest, 'userId'>): Promise<void> {
-    return apiRequest<void>('Account/update-user', {
-      method: 'PUT',
-      body: { ...userData, userId } as UpdateUserRequest,
+  // New API endpoints based on /api/Account spec
+
+  async apiRegister(data: AccountRegisterRequest): Promise<string> {
+    return apiRequest<string>('Account/register', {
+      method: 'POST',
+      body: data,
+      requiresAuth: false,
     })
   },
 
-  async updatePassword(
-    userId: string,
-    passwordData: Omit<UpdatePasswordRequest, 'userId'>
-  ): Promise<void> {
+  async apiLogin(credentials: AccountLoginRequest): Promise<AccountAuthResponse> {
+    return apiRequest<AccountAuthResponse>('Account/login', {
+      method: 'POST',
+      body: credentials,
+      requiresAuth: false,
+    })
+  },
+
+  async refreshToken(): Promise<AccountAuthResponse> {
+    return apiRequest<AccountAuthResponse>('Account/refresh-token', {
+      method: 'POST',
+    })
+  },
+
+  async revokeToken(): Promise<void> {
+    return apiRequest<void>('Account/revoke-token', {
+      method: 'POST',
+    })
+  },
+
+  async getMe(): Promise<AccountProfileResponse> {
+    return apiRequest<AccountProfileResponse>('Account/me', {
+      method: 'GET',
+    })
+  },
+
+  async updateProfile(data: AccountUpdateProfileRequest): Promise<void> {
+    return apiRequest<void>('Account/update-profile', {
+      method: 'PUT',
+      body: data,
+    })
+  },
+
+  async changePassword(data: AccountUpdatePasswordRequest): Promise<void> {
     return apiRequest<void>('Account/update-password', {
       method: 'PUT',
-      body: { ...passwordData, userId } as UpdatePasswordRequest,
-    })
-  },
-
-  async uploadProfileImage(userId: string, imageFile: File): Promise<void> {
-    const formData = new FormData()
-    formData.append('imageFile', imageFile)
-
-    return apiRequest<void>(`Account/upload-profile-image?userId=${userId}`, {
-      method: 'POST',
-      body: formData,
-      isFormData: true,
-    })
-  },
-
-  async getProfileImage(userId: string): Promise<Blob> {
-    return apiRequest<Blob>(`Account/profile-image/${userId}`, {
-      method: 'GET',
-    })
-  },
-
-  async deleteProfileImage(userId: string): Promise<void> {
-    return apiRequest<void>(`Account/profile-image?userId=${userId}`, {
-      method: 'DELETE',
-    })
-  },
-
-  async getUserInfo(userId: string): Promise<UserInfoResponse> {
-    return apiRequest<UserInfoResponse>(`Account/user-info?UserId=${userId}`, {
-      method: 'GET',
+      body: data,
     })
   },
 }

@@ -430,7 +430,6 @@ export default {
       &:hover {
         background-color: var(--background-color-reverse);
         color: var(--reverse-header-text-color);
-        transition: background-color 0.2s;
       }
     }
   }
@@ -714,7 +713,6 @@ export default {
         &:hover {
           background-color: var(--background-color-reverse);
           color: var(--reverse-header-text-color);
-          transition: background-color 0.2s;
         }
       }
 

@@ -1,47 +1,38 @@
 <template>
-  <div class="budget-c">
-    <UIHorizontalNavbar v-if="isMobile" :initialLanguage="selectedLanguage" />
-    <UILeftSideBar
-      :initialLanguage="selectedLanguage"
-      :selectedPage="selectedLanguage === 'English' ? 'Budget' : 'Bütçe'"
-      v-else
-    />
+  <ModuleLayout
+    :selectedLanguage="selectedLanguage"
+    :selectedPage="selectedPage"
+    @update-language="handleLanguageUpdate"
+  >
+    <div class="budget-content">
+      <BudgetOverviewComponent
+        :selectedLanguage="selectedLanguage"
+        :currentAmount="financialData.currentAmount"
+        :limitAmount="financialData.limitAmount"
+      />
 
-    <div class="right-wrapper">
-      <UITopBar :selectedLanguage="selectedLanguage" @updateLanguage="handleLanguageUpdate" />
-      <div class="budget-title">
-        {{ budgetTexts[selectedLanguage].budget }}
-      </div>
-      <div class="budget-content">
-        <BudgetOverviewComponent
+      <div class="budget-categories-notifications">
+        <BudgetCategoriesComponent
           :selectedLanguage="selectedLanguage"
-          :currentAmount="financialData.currentAmount"
-          :limitAmount="financialData.limitAmount"
+          :budgetCategoriesData="financialData.budgetCategoriesData"
+          :budgetHasMoreItems="financialData.budgetHasMoreItems"
+          :pageNumberBudget="financialData.pageNumberBudget"
+          :pageSizeBudget="financialData.pageSizeBudget"
+          :totalCountBudget="financialData.totalCountBudget"
+          :totalPagesBudget="financialData.totalPagesBudget"
+          :page="page"
+          @changePage="handleChangePage"
+          @handleAddNewBudgetCategory="handleAddNewBudgetCategory"
+          @handleDeleteBudgetCategoryItem="handleDeleteBudgetCategoryItem"
         />
-
-        <div class="budget-categories-notifications">
-          <BudgetCategoriesComponent
-            :selectedLanguage="selectedLanguage"
-            :budgetCategoriesData="financialData.budgetCategoriesData"
-            :budgetHasMoreItems="financialData.budgetHasMoreItems"
-            :pageNumberBudget="financialData.pageNumberBudget"
-            :pageSizeBudget="financialData.pageSizeBudget"
-            :totalCountBudget="financialData.totalCountBudget"
-            :totalPagesBudget="financialData.totalPagesBudget"
-            :page="page"
-            @changePage="handleChangePage"
-            @handleAddNewBudgetCategory="handleAddNewBudgetCategory"
-            @handleDeleteBudgetCategoryItem="handleDeleteBudgetCategoryItem"
-          />
-          <NotificationsComponent
-            :selectedLanguage="selectedLanguage"
-            :notifications="financialData.budgetNotifications"
-            @deleteNotifications="handleDeleteNotifications"
-          />
-        </div>
+        <NotificationsComponent
+          :selectedLanguage="selectedLanguage"
+          :notifications="financialData.budgetNotifications"
+          @deleteNotifications="handleDeleteNotifications"
+        />
       </div>
     </div>
-  </div>
+  </ModuleLayout>
 </template>
 
 <script lang="ts">
@@ -53,10 +44,8 @@ import { budgetTexts } from '@/data/budgetTexts'
 import { budgetService } from '@/services/api/budget/budget.service'
 import { notificationService } from '@/services/api/notification/notification.service'
 
-// Shared Components
-import UITopBar from '@/components/UITopBar.vue'
-import UILeftSideBar from '@/components/UILeftSideBar.vue'
-import UIHorizontalNavbar from '@/components/UIHorizontalNavbar.vue'
+// Shared Layout
+import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 // Budget Components
 import BudgetOverviewComponent from '@/modules/budget/components/BudgetOverviewComponent.vue'
@@ -66,12 +55,10 @@ import BudgetCategoriesComponent from '@/modules/budget/components/BudgetCategor
 export default {
   name: 'BudgetView',
   components: {
-    UITopBar,
-    UILeftSideBar,
+    ModuleLayout,
     BudgetOverviewComponent,
     NotificationsComponent,
     BudgetCategoriesComponent,
-    UIHorizontalNavbar,
   },
   data() {
     return {
@@ -81,8 +68,12 @@ export default {
       isLoading: false,
       hasError: false,
       page: 1,
-      isMobile: window.innerWidth <= 768,
     }
+  },
+  computed: {
+    selectedPage() {
+      return this.selectedLanguage === 'English' ? 'Budget' : 'Bütçe'
+    },
   },
   methods: {
     // Budget categories fetching
@@ -255,7 +246,6 @@ export default {
       height: 100%;
       align-items: center;
       gap: 2rem;
-      padding: 0rem 2rem;
       margin-top: 1rem;
 
       @media (max-width: 768px) {

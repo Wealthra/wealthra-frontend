@@ -1,40 +1,31 @@
 <template>
-  <div class="goals-c">
-    <UIHorizontalNavbar v-if="isMobile" :initialLanguage="selectedLanguage" />
-    <UILeftSideBar
-      :initialLanguage="selectedLanguage"
-      v-else
-      :selectedPage="selectedLanguage === 'English' ? 'Goals' : 'Hedefler'"
-    />
+  <ModuleLayout
+    :selectedLanguage="selectedLanguage"
+    :selectedPage="selectedPage"
+    @update-language="handleLanguageUpdate"
+  >
+    <div class="goals-content">
+      <GoalsOverviewComponent
+        :selectedLanguage="selectedLanguage"
+        :totalInitialAmount="financialData.totalInitialAmount"
+        :totalTargetAmount="financialData.totalTargetAmount"
+      />
 
-    <div class="right-wrapper">
-      <UITopBar :selectedLanguage="selectedLanguage" @updateLanguage="handleLanguageUpdate" />
-      <div class="goals-title">
-        {{ goalsTexts[selectedLanguage].goals }}
-      </div>
-      <div class="goals-content">
-        <GoalsOverviewComponent
+      <div class="goals-categories-wrapper">
+        <GoalsCategoriesComponent
           :selectedLanguage="selectedLanguage"
-          :totalInitialAmount="financialData.totalInitialAmount"
-          :totalTargetAmount="financialData.totalTargetAmount"
+          :goalCategoriesData="financialData.goalCategoriesData"
+          @handleDeleteGoalCategoryItem="handleDeleteGoalCategoryItem"
+          @handleUpdateGoalCategoryItem="handleUpdateGoalCategoryItem"
         />
 
-        <div class="goals-categories-wrapper">
-          <GoalsCategoriesComponent
-            :selectedLanguage="selectedLanguage"
-            :goalCategoriesData="financialData.goalCategoriesData"
-            @handleDeleteGoalCategoryItem="handleDeleteGoalCategoryItem"
-            @handleUpdateGoalCategoryItem="handleUpdateGoalCategoryItem"
-          />
-
-          <GoalsAddCategoryComponent
-            :selectedLanguage="selectedLanguage"
-            @handleAddNewGoalCategory="handleAddNewGoalCategory"
-          />
-        </div>
+        <GoalsAddCategoryComponent
+          :selectedLanguage="selectedLanguage"
+          @handleAddNewGoalCategory="handleAddNewGoalCategory"
+        />
       </div>
     </div>
-  </div>
+  </ModuleLayout>
 </template>
 
 <script lang="ts">
@@ -46,9 +37,7 @@ import { goalService } from '@/services/api/goal/goal.service'
 import { goalsTexts } from '@/data/goalsTexts'
 
 // Shared Components
-import UITopBar from '@/components/UITopBar.vue'
-import UILeftSideBar from '@/components/UILeftSideBar.vue'
-import UIHorizontalNavbar from '@/components/UIHorizontalNavbar.vue'
+import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 // Goals Components
 import GoalsOverviewComponent from '@/modules/goals/components/GoalsOverviewComponent.vue'
@@ -58,12 +47,10 @@ import GoalsAddCategoryComponent from '@/modules/goals/components/GoalsAddCatego
 export default {
   name: 'GoalsView',
   components: {
-    UITopBar,
-    UILeftSideBar,
+    ModuleLayout,
     GoalsOverviewComponent,
     GoalsCategoriesComponent,
     GoalsAddCategoryComponent,
-    UIHorizontalNavbar,
   },
   data() {
     return {
@@ -73,9 +60,12 @@ export default {
       isLoading: false,
       hasError: false,
       page: 1,
-      isMobile: window.innerWidth <= 768,
-      windowWidth: window.innerWidth,
     }
+  },
+  computed: {
+    selectedPage() {
+      return this.selectedLanguage === 'English' ? 'Goals' : 'Hedefler'
+    },
   },
   methods: {
     // Goals categories fetching
@@ -197,11 +187,6 @@ export default {
       localStorage.setItem('selectedLanguage', language)
     },
 
-    handleResize() {
-      this.windowWidth = window.innerWidth
-      this.isMobile = this.windowWidth <= 768
-    },
-
     loadAppropriateData() {
       this.fetchGoalCategories()
       this.fetchGoalsProgress()
@@ -213,13 +198,10 @@ export default {
       this.selectedLanguage = savedLanguage as 'English' | 'Turkish'
     }
 
-    window.addEventListener('resize', this.handleResize)
-
     this.loadAppropriateData()
   },
 
   beforeUnmount() {
-    window.removeEventListener('resize', this.handleResize)
   },
 
   watch: {},
@@ -227,97 +209,43 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.goals-c {
+.goals-title {
+  display: flex;
+  width: 100%;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 0 2rem;
+  color: var(--header-text-color);
+
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
+}
+
+.goals-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 0rem 1rem;
+    gap: 0.5rem;
+  }
+}
+
+.goals-categories-wrapper {
   display: flex;
   flex-direction: row;
   width: 100%;
-  height: 100vh;
+  height: 100%;
+  gap: 1rem;
 
-  .right-wrapper {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    flex-direction: column;
-
-    width: 100%;
-    height: 100%;
-    padding: 0.5rem;
-    background-color: var(--background-color);
-    overflow-y: auto;
-    gap: 1rem;
-
-    @media (max-width: 768px) {
-      padding: 0.3rem;
-    }
-
-    .goals-title {
-      display: flex;
-      width: 100%;
-      font-size: 1.5rem;
-      font-weight: bold;
-      padding: 0 2rem;
-      color: var(--header-text-color);
-
-      @media (max-width: 768px) {
-        padding: 0 1rem;
-      }
-    }
-
-    .goals-content {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      height: 100%;
-      align-items: center;
-      gap: 2rem;
-      padding: 0rem 2rem;
-      margin-top: 1rem;
-
-      @media (max-width: 768px) {
-        padding: 0rem 1rem;
-        gap: 0.5rem;
-      }
-    }
-
-    .goals-categories-wrapper {
-      display: flex;
-      flex-direction: row;
-      width: 100%;
-      height: 100%;
-      gap: 1rem;
-
-      @media (max-width: 768px) {
-        gap: 0.5rem;
-      }
-    }
-  }
-}
-@media (max-width: 768px) {
-  .goals-c {
-    flex-direction: column;
-    height: auto;
-
-    .right-wrapper {
-      width: 100%;
-      height: auto;
-      padding: 0.5rem;
-      gap: 1rem;
-
-      .goals-title {
-        font-size: 1.2rem;
-        padding: 0 1rem;
-      }
-
-      .goals-content {
-        padding: 0rem 1rem;
-        gap: 0.5rem;
-
-        .goals-categories-wrapper {
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-      }
-    }
+  @media (max-width: 768px) {
+    gap: 0.5rem;
   }
 }
 </style>

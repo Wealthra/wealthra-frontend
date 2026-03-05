@@ -1,594 +1,864 @@
 <template>
-  <div class="settings-c">
-    <UIHorizontalNavbar v-if="isMobile" :initialLanguage="selectedLanguage" />
-    <UILeftSideBar
-      :initialLanguage="selectedLanguage"
-      v-else
-      :selectedPage="selectedLanguage === 'English' ? 'Settings' : 'Ayarlar'"
+  <ModuleLayout
+    :selectedLanguage="selectedLanguage"
+    :selectedPage="selectedPage"
+    @update-language="handleLanguageUpdate"
+  >
+    <UILoading
+      v-if="isInitialLoading"
+      :isLoading="isInitialLoading"
+      :hasError="!!initialError"
+      :loadingText="loadingText"
+      :errorMessage="initialError || errorMessage"
+      :retryText="selectedLanguage === 'English' ? 'Retry' : 'Tekrar Dene'"
+      @retry="loadMe"
     />
 
-    <div class="main-content">
-      <UITopBar :selectedLanguage="selectedLanguage" @updateLanguage="handleLanguageUpdate" />
+    <template v-else>
+      <div class="settings-root">
+        <div class="settings-columns">
+          <section class="settings-card">
+            <h2>{{ profileTitle }}</h2>
 
-      <UILoading
-        v-if="isLoading || error"
-        :isLoading="isLoading"
-        :hasError="error"
-        :loadingText="loadingText"
-        :errorMessage="errorMessage"
-        :retryText="selectedLanguage == 'English' ? 'Retry' : 'Tekrar Dene'"
-      />
-
-      <template v-else>
-        <div class="settings-title">
-          {{ selectedLanguage == 'English' ? 'Settings' : 'Ayarlar' }}
-        </div>
-        <div class="settings-content">
-          <div class="settings-card">
-            <h2>{{ selectedLanguage == 'English' ? 'Profile Settings' : 'Profil Ayarları' }}</h2>
-            <div class="profile-content">
-              <div class="profile-photo">
-                <img v-if="userPhoto" :src="userPhoto" alt="Profile Photo" />
-                <div v-else class="profile-photo-icon">
-                  <font-awesome-icon icon="user" />
+            <div class="profile-layout">
+              <div class="avatar-column">
+                <div class="avatar-wrapper">
+                  <img
+                    v-if="profileForm.avatarUrl"
+                    :src="profileForm.avatarUrl"
+                    alt="Avatar"
+                  />
+                  <div v-else class="avatar-placeholder">
+                    <span v-if="initials">{{ initials }}</span>
+                    <font-awesome-icon v-else icon="user" />
+                  </div>
                 </div>
-                <button @click="triggerPhotoUpload" class="change-photo-btn">
-                  {{ selectedLanguage == 'English' ? 'Change Photo' : 'Fotoğraf Değiştir' }}
-                </button>
+
+                <div class="avatar-actions">
+                  <button type="button" class="secondary-btn" @click="onPickAvatar">
+                    {{ avatarButtonLabel }}
+                  </button>
+
                 <input
+                  ref="avatarInput"
                   type="file"
-                  ref="photoInput"
-                  style="display: none"
                   accept="image/*"
-                  @change="handlePhotoChange"
+                  class="hidden-input"
+                  @change="onAvatarSelected"
                 />
+
+                  <button
+                    type="button"
+                    class="primary-outline-btn"
+                    :disabled="!avatarFile || isUploadingAvatar"
+                    @click="onUploadAvatar"
+                  >
+                    <span v-if="isUploadingAvatar">
+                      {{ selectedLanguage === 'English' ? 'Uploading...' : 'Yükleniyor...' }}
+                    </span>
+                    <span v-else>
+                      {{ selectedLanguage === 'English' ? 'Upload avatar' : 'Avatarı yükle' }}
+                    </span>
+                  </button>
+                </div>
+
+                <p class="helper-text">
+                  {{
+                    selectedLanguage === 'English'
+                      ? 'We upload your photo to a free image host and only store the URL.'
+                      : 'Fotoğrafınızı ücretsiz bir görsel servisine yüklüyoruz, sadece linkini saklıyoruz.'
+                  }}
+                </p>
+
+                <p v-if="avatarError" class="error-text">
+                  {{ avatarError }}
+                </p>
               </div>
-              <div class="profile-fields">
-                <div class="form-sections">
-                  <div class="profile-section">
-                    <div class="form-group">
-                      <label>{{ selectedLanguage == 'English' ? 'First Name' : 'Ad' }}</label>
-                      <UIFormSection
-                        v-model="userFirstName"
-                        :description="selectedLanguage == 'English' ? 'First Name' : 'Ad'"
-                        icon="person"
-                        fieldType="firstName"
-                        @update-user-data="updateUserData"
-                      />
-                    </div>
-                    <div class="form-group">
-                      <label>{{ selectedLanguage == 'English' ? 'Last Name' : 'Soyad' }}</label>
-                      <UIFormSection
-                        v-model="userLastName"
-                        :description="selectedLanguage == 'English' ? 'Last Name' : 'Soyad'"
-                        icon="person"
-                        fieldType="lastName"
-                        @update-user-data="updateUserData"
-                      />
-                    </div>
-                    <div class="form-group">
-                      <label>Email</label>
-                      <UIFormSection
-                        v-model="userEmail"
-                        description="Email"
-                        icon="email"
-                        fieldType="email"
-                        @update-user-data="updateUserData"
-                      />
-                    </div>
+
+              <div class="profile-column">
+                <div class="two-column">
+                  <div class="form-group">
+                    <label for="firstName">
+                      {{ selectedLanguage === 'English' ? 'First name' : 'Ad' }}
+                    </label>
+                    <input
+                      id="firstName"
+                      v-model="profileForm.firstName"
+                      type="text"
+                      autocomplete="given-name"
+                    />
+                    <p v-if="profileErrors.firstName" class="error-text">
+                      {{ profileErrors.firstName }}
+                    </p>
                   </div>
 
-                  <div class="password-section">
-                    <div class="form-group">
-                      <label>{{
-                        selectedLanguage == 'English' ? 'Current Password' : 'Mevcut Şifre'
-                      }}</label>
-                      <UIFormSection
-                        v-model="currentPassword"
-                        :description="
-                          selectedLanguage == 'English' ? 'Current Password' : 'Mevcut Şifre'
-                        "
-                        icon="password"
-                        fieldType="currentPassword"
-                        @update-user-data="updateUserData"
-                      />
-                    </div>
-
-                    <div class="form-group">
-                      <label>{{
-                        selectedLanguage == 'English' ? 'New Password' : 'Yeni Şifre'
-                      }}</label>
-                      <UIFormSection
-                        v-model="newPassword"
-                        :description="selectedLanguage == 'English' ? 'New Password' : 'Yeni Şifre'"
-                        icon="password"
-                        fieldType="newPassword"
-                        @update-user-data="updateUserData"
-                      />
-                    </div>
-
-                    <div class="form-group">
-                      <label>{{
-                        selectedLanguage == 'English' ? 'Confirm New Password' : 'Yeni Şifre Tekrar'
-                      }}</label>
-                      <UIFormSection
-                        v-model="confirmPassword"
-                        :description="
-                          selectedLanguage == 'English'
-                            ? 'Confirm New Password'
-                            : 'Yeni Şifre Tekrar'
-                        "
-                        icon="password"
-                        fieldType="confirmPassword"
-                        @update-user-data="updateUserData"
-                      />
-                    </div>
+                  <div class="form-group">
+                    <label for="lastName">
+                      {{ selectedLanguage === 'English' ? 'Last name' : 'Soyad' }}
+                    </label>
+                    <input
+                      id="lastName"
+                      v-model="profileForm.lastName"
+                      type="text"
+                      autocomplete="family-name"
+                    />
+                    <p v-if="profileErrors.lastName" class="error-text">
+                      {{ profileErrors.lastName }}
+                    </p>
                   </div>
                 </div>
 
-                <div class="buttons-row">
-                  <button class="save-btn" @click="saveProfile">
-                    {{ selectedLanguage == 'English' ? 'Save Profile' : 'Profili Kaydet' }}
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input id="email" :value="me?.email" type="email" disabled />
+                </div>
+
+                <div class="meta-row">
+                  <span class="meta-label">
+                    {{ selectedLanguage === 'English' ? 'Member since' : 'Kayıt tarihi' }}
+                  </span>
+                  <span class="meta-value">
+                    {{ createdAtLabel }}
+                  </span>
+                </div>
+
+                <div class="actions-row">
+                  <button
+                    type="button"
+                    class="primary-btn"
+                    :disabled="isSavingProfile"
+                    @click="onSaveProfile"
+                  >
+                    <span v-if="isSavingProfile">
+                      {{ selectedLanguage === 'English' ? 'Saving...' : 'Kaydediliyor...' }}
+                    </span>
+                    <span v-else>
+                      {{
+                        selectedLanguage === 'English' ? 'Save profile' : 'Profili kaydet'
+                      }}
+                    </span>
                   </button>
-                  <button class="save-btn" @click="savePassword">
-                    {{ selectedLanguage == 'English' ? 'Update Password' : 'Şifreyi Güncelle' }}
-                  </button>
+
+                  <p v-if="profileSuccess" class="success-text">
+                    {{
+                      selectedLanguage === 'English'
+                        ? 'Profile updated successfully.'
+                        : 'Profil başarıyla güncellendi.'
+                    }}
+                  </p>
+
+                  <p v-if="profileError" class="error-text">
+                    {{ profileError }}
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <button class="cancel-btn">
-            {{ selectedLanguage == 'English' ? 'Cancel Changes' : 'Değişiklikleri İptal Et' }}
-          </button>
+          <section class="settings-card">
+            <h2>{{ securityTitle }}</h2>
+
+            <div class="password-layout">
+              <div class="form-group">
+                <label for="currentPassword">
+                  {{
+                    selectedLanguage === 'English' ? 'Current password' : 'Mevcut şifre'
+                  }}
+                </label>
+                <input
+                  id="currentPassword"
+                  v-model="passwordForm.currentPassword"
+                  :type="showCurrentPassword ? 'text' : 'password'"
+                  autocomplete="current-password"
+                />
+              </div>
+
+              <div class="two-column">
+                <div class="form-group">
+                  <label for="newPassword">
+                    {{ selectedLanguage === 'English' ? 'New password' : 'Yeni şifre' }}
+                  </label>
+                  <input
+                    id="newPassword"
+                    v-model="passwordForm.newPassword"
+                    :type="showNewPassword ? 'text' : 'password'"
+                    autocomplete="new-password"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="confirmPassword">
+                    {{
+                      selectedLanguage === 'English'
+                        ? 'Confirm new password'
+                        : 'Yeni şifre tekrar'
+                    }}
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    v-model="passwordForm.confirmPassword"
+                    :type="showConfirmPassword ? 'text' : 'password'"
+                    autocomplete="new-password"
+                  />
+                </div>
+              </div>
+
+              <ul class="helper-list">
+                <li>
+                  {{
+                    selectedLanguage === 'English'
+                      ? 'At least 8 characters.'
+                      : 'En az 8 karakter.'
+                  }}
+                </li>
+                <li>
+                  {{
+                    selectedLanguage === 'English'
+                      ? 'Use letters, numbers and symbols if possible.'
+                      : 'Mümkünse harf, rakam ve sembol kullan.'
+                  }}
+                </li>
+              </ul>
+
+              <div class="actions-row">
+                <button
+                  type="button"
+                  class="primary-btn"
+                  :disabled="isSavingPassword"
+                  @click="onChangePassword"
+                >
+                  <span v-if="isSavingPassword">
+                    {{
+                      selectedLanguage === 'English'
+                        ? 'Updating password...'
+                        : 'Şifre güncelleniyor...'
+                    }}
+                  </span>
+                  <span v-else>
+                    {{
+                      selectedLanguage === 'English'
+                        ? 'Update password'
+                        : 'Şifreyi güncelle'
+                    }}
+                  </span>
+                </button>
+
+                <p v-if="passwordSuccess" class="success-text">
+                  {{
+                    selectedLanguage === 'English'
+                      ? 'Password updated successfully.'
+                      : 'Şifre başarıyla güncellendi.'
+                  }}
+                </p>
+
+                <p v-if="passwordError" class="error-text">
+                  {{ passwordError }}
+                </p>
+              </div>
+            </div>
+          </section>
         </div>
-      </template>
-    </div>
-  </div>
+      </div>
+    </template>
+  </ModuleLayout>
 </template>
 
 <script lang="ts">
-import UILeftSideBar from '../../../components/UILeftSideBar.vue'
-import UITopBar from '../../../components/UITopBar.vue'
-import UILoading from '../../../components/UILoading.vue'
-import UIFormSection from '../../../shared/UIFormSection.vue'
-import UIHorizontalNavbar from '@/components/UIHorizontalNavbar.vue'
-
-import { getUserId } from '../../../utils/auth'
+import { defineComponent, ref, computed } from 'vue'
+import ModuleLayout from '@/layouts/ModuleLayout.vue'
+import UILoading from '@/components/UILoading.vue'
 import { accountService } from '@/services/api/account/account.service'
+import type { AccountProfileResponse } from '@/services/api/account/account.models'
+import { uploadAvatar } from '@/services/external/imageHost.service'
 
-export default {
+export default defineComponent({
   name: 'SettingsView',
   components: {
-    UILeftSideBar,
-    UITopBar,
+    ModuleLayout,
     UILoading,
-    UIFormSection,
-    UIHorizontalNavbar,
   },
-  data() {
-    return {
-      selectedLanguage: localStorage.getItem('selectedLanguage') || 'English',
-      isLoading: false,
-      error: false,
-      hasError: false,
-      isMobile: window.innerWidth <= 768,
-      windowWidth: window.innerWidth,
+  setup() {
+    const selectedLanguage = ref(localStorage.getItem('selectedLanguage') || 'English')
 
-      // User profile data
-      userPhoto: null as string | null,
-      userPhotoFile: null as File | null,
-      userFirstName: '',
-      userLastName: '',
-      userEmail: '',
+    const me = ref<AccountProfileResponse | null>(null)
 
-      // Security data
+    const profileForm = ref({
+      firstName: '',
+      lastName: '',
+      avatarUrl: '',
+    })
+
+    const passwordForm = ref({
       currentPassword: '',
       newPassword: '',
       confirmPassword: '',
+    })
 
-      // Password visibility toggle
-      visibleCurrentPassword: false,
-      visibleNewPassword: false,
-      visibleConfirmPassword: false,
+    const isInitialLoading = ref(false)
+    const initialError = ref<string | null>(null)
+
+    const isSavingProfile = ref(false)
+    const profileError = ref<string | null>(null)
+    const profileSuccess = ref(false)
+
+    const isUploadingAvatar = ref(false)
+    const avatarFile = ref<File | null>(null)
+    const avatarError = ref<string | null>(null)
+
+    const isSavingPassword = ref(false)
+    const passwordError = ref<string | null>(null)
+    const passwordSuccess = ref(false)
+
+    const profileErrors = ref<{ firstName?: string; lastName?: string }>({})
+
+    const showCurrentPassword = ref(false)
+    const showNewPassword = ref(false)
+    const showConfirmPassword = ref(false)
+
+    const avatarInput = ref<HTMLInputElement | null>(null)
+
+    const selectedPage = computed(() =>
+      selectedLanguage.value === 'English' ? 'Settings' : 'Ayarlar'
+    )
+
+    const loadingText = computed(() =>
+      selectedLanguage.value === 'English'
+        ? 'Loading your profile...'
+        : 'Profiliniz yükleniyor...'
+    )
+
+    const errorMessage = computed(() =>
+      selectedLanguage.value === 'English'
+        ? 'Failed to load profile. Please try again.'
+        : 'Profil yüklenemedi. Lütfen tekrar deneyin.'
+    )
+
+    const profileTitle = computed(() =>
+      selectedLanguage.value === 'English' ? 'Profile' : 'Profil'
+    )
+
+    const securityTitle = computed(() =>
+      selectedLanguage.value === 'English' ? 'Security' : 'Güvenlik'
+    )
+
+    const avatarButtonLabel = computed(() =>
+      selectedLanguage.value === 'English' ? 'Choose image' : 'Görsel seç'
+    )
+
+    const initials = computed(() => {
+      if (!me.value) return ''
+      const first = me.value.firstName?.charAt(0) ?? ''
+      const last = me.value.lastName?.charAt(0) ?? ''
+      return (first + last).toUpperCase()
+    })
+
+    const createdAtLabel = computed(() => {
+      if (!me.value?.createdAt) return '-'
+      const date = new Date(me.value.createdAt)
+      return date.toLocaleDateString(
+        selectedLanguage.value === 'English' ? 'en-GB' : 'tr-TR',
+        {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+        }
+      )
+    })
+
+    const handleLanguageUpdate = (language: string) => {
+      selectedLanguage.value = language
+      localStorage.setItem('selectedLanguage', language)
+    }
+
+    const loadMe = async () => {
+      isInitialLoading.value = true
+      initialError.value = null
+
+      try {
+        const data = await accountService.getMe()
+        me.value = data
+        profileForm.value.firstName = data.firstName
+        profileForm.value.lastName = data.lastName
+        profileForm.value.avatarUrl = data.avatarUrl || ''
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load /Account/me', err)
+        initialError.value =
+          selectedLanguage.value === 'English'
+            ? 'Could not load your profile.'
+            : 'Profiliniz yüklenemedi.'
+      } finally {
+        isInitialLoading.value = false
+      }
+    }
+
+    const validateProfile = () => {
+      profileErrors.value = {}
+      if (!profileForm.value.firstName.trim()) {
+        profileErrors.value.firstName =
+          selectedLanguage.value === 'English'
+            ? 'First name is required.'
+            : 'Ad zorunludur.'
+      }
+      if (!profileForm.value.lastName.trim()) {
+        profileErrors.value.lastName =
+          selectedLanguage.value === 'English'
+            ? 'Last name is required.'
+            : 'Soyad zorunludur.'
+      }
+      return Object.keys(profileErrors.value).length === 0
+    }
+
+    const onSaveProfile = async () => {
+      if (!validateProfile()) return
+
+      isSavingProfile.value = true
+      profileError.value = null
+      profileSuccess.value = false
+
+      try {
+        await accountService.updateProfile({
+          firstName: profileForm.value.firstName.trim(),
+          lastName: profileForm.value.lastName.trim(),
+          avatarUrl: profileForm.value.avatarUrl,
+        })
+
+        profileSuccess.value = true
+        await loadMe()
+      } catch (err: any) {
+        // eslint-disable-next-line no-console
+        console.error('updateProfile failed', err)
+        profileError.value =
+          selectedLanguage.value === 'English'
+            ? 'Could not update profile.'
+            : 'Profil güncellenemedi.'
+      } finally {
+        isSavingProfile.value = false
+      }
+    }
+
+    const onPickAvatar = () => {
+      avatarInput.value?.click()
+    }
+
+    const onAvatarSelected = (event: Event) => {
+      const target = event.target as HTMLInputElement
+      const file = target.files?.[0]
+      if (!file) return
+
+      if (!file.type.startsWith('image/')) {
+        avatarError.value =
+          selectedLanguage.value === 'English'
+            ? 'Please choose an image file.'
+            : 'Lütfen bir görsel dosyası seçin.'
+        return
+      }
+
+      const maxSizeMb = 5
+      if (file.size > maxSizeMb * 1024 * 1024) {
+        avatarError.value =
+          selectedLanguage.value === 'English'
+            ? `Image must be smaller than ${maxSizeMb} MB.`
+            : `Görsel ${maxSizeMb} MB\'dan küçük olmalı.`
+        return
+      }
+
+      avatarError.value = null
+      avatarFile.value = file
+
+      const previewUrl = URL.createObjectURL(file)
+      profileForm.value.avatarUrl = previewUrl
+    }
+
+    const onUploadAvatar = async () => {
+      if (!avatarFile.value) return
+
+      isUploadingAvatar.value = true
+      avatarError.value = null
+
+      try {
+        const url = await uploadAvatar(avatarFile.value)
+        profileForm.value.avatarUrl = url
+        avatarFile.value = null
+      } catch (err: any) {
+        // eslint-disable-next-line no-console
+        console.error('Avatar upload failed', err)
+        avatarError.value =
+          selectedLanguage.value === 'English'
+            ? 'Avatar upload failed. Please try again.'
+            : 'Avatar yüklenemedi. Lütfen tekrar deneyin.'
+      } finally {
+        isUploadingAvatar.value = false
+      }
+    }
+
+    const validatePassword = () => {
+      passwordError.value = null
+
+      if (!passwordForm.value.currentPassword || !passwordForm.value.newPassword) {
+        passwordError.value =
+          selectedLanguage.value === 'English'
+            ? 'Current and new password are required.'
+            : 'Mevcut ve yeni şifre zorunludur.'
+        return false
+      }
+
+      if (passwordForm.value.newPassword.length < 8) {
+        passwordError.value =
+          selectedLanguage.value === 'English'
+            ? 'New password must be at least 8 characters.'
+            : 'Yeni şifre en az 8 karakter olmalı.'
+        return false
+      }
+
+      if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+        passwordError.value =
+          selectedLanguage.value === 'English'
+            ? 'New passwords do not match.'
+            : 'Yeni şifreler eşleşmiyor.'
+        return false
+      }
+
+      return true
+    }
+
+    const onChangePassword = async () => {
+      if (!validatePassword()) return
+
+      isSavingPassword.value = true
+      passwordSuccess.value = false
+
+      try {
+        await accountService.changePassword({
+          currentPassword: passwordForm.value.currentPassword,
+          newPassword: passwordForm.value.newPassword,
+        })
+
+        passwordSuccess.value = true
+        passwordForm.value.currentPassword = ''
+        passwordForm.value.newPassword = ''
+        passwordForm.value.confirmPassword = ''
+      } catch (err: any) {
+        // eslint-disable-next-line no-console
+        console.error('changePassword failed', err)
+        passwordError.value =
+          selectedLanguage.value === 'English'
+            ? 'Could not update password.'
+            : 'Şifre güncellenemedi.'
+      } finally {
+        isSavingPassword.value = false
+      }
+    }
+
+    loadMe()
+
+    return {
+      selectedLanguage,
+      selectedPage,
+      loadingText,
+      errorMessage,
+      profileTitle,
+      securityTitle,
+      avatarButtonLabel,
+      initials,
+      createdAtLabel,
+
+      me,
+      profileForm,
+      passwordForm,
+
+      isInitialLoading,
+      initialError,
+
+      isSavingProfile,
+      profileError,
+      profileSuccess,
+      profileErrors,
+
+      isUploadingAvatar,
+      avatarFile,
+      avatarError,
+
+      isSavingPassword,
+      passwordError,
+      passwordSuccess,
+
+      showCurrentPassword,
+      showNewPassword,
+      showConfirmPassword,
+
+      avatarInput,
+
+      handleLanguageUpdate,
+      loadMe,
+      onSaveProfile,
+      onPickAvatar,
+      onAvatarSelected,
+      onUploadAvatar,
+      onChangePassword,
     }
   },
-  computed: {
-    selectedPage() {
-      return this.selectedLanguage == 'English' ? 'Settings' : 'Ayarlar'
-    },
-    loadingText() {
-      return this.selectedLanguage == 'English'
-        ? 'Loading your profile data...'
-        : 'Profil verileriniz yükleniyor...'
-    },
-    errorMessage() {
-      return this.selectedLanguage == 'English'
-        ? 'Failed to load profile data. Please try again.'
-        : 'Profil verileri yüklenemedi. Lütfen tekrar deneyin.'
-    },
-  },
-  methods: {
-    handleLanguageUpdate(language: string) {
-      this.selectedLanguage = language
-      localStorage.setItem('selectedLanguage', language)
-    },
-
-    handleResize() {
-      this.windowWidth = window.innerWidth
-      this.isMobile = this.windowWidth <= 768
-    },
-
-    triggerPhotoUpload() {
-      ;(this.$refs.photoInput as HTMLInputElement).click()
-    },
-    handlePhotoChange(event: Event) {
-      const file = (event.target as HTMLInputElement).files?.[0]
-      if (file) {
-        this.userPhotoFile = file
-
-        const reader = new FileReader()
-        reader.onload = e => {
-          this.userPhoto = e.target?.result as string
-        }
-        reader.readAsDataURL(file)
-      }
-    },
-    updateUserData(value: string, fieldType: string) {
-      if (fieldType === 'firstName') {
-        this.userFirstName = value
-      } else if (fieldType === 'lastName') {
-        this.userLastName = value
-      } else if (fieldType === 'email') {
-        this.userEmail = value
-      } else if (fieldType === 'currentPassword') {
-        this.currentPassword = value
-      } else if (fieldType === 'newPassword') {
-        this.newPassword = value
-      } else if (fieldType === 'confirmPassword') {
-        this.confirmPassword = value
-      }
-    },
-    async saveProfile() {
-      this.isLoading = true
-
-      const userId = getUserId()
-
-      if (!userId) {
-        this.error = true
-        this.isLoading = false
-        return
-      }
-
-      // Update user data except photo
-      try {
-        await accountService.updateUser(userId, {
-          firstName: this.userFirstName,
-          lastName: this.userLastName,
-          email: this.userEmail,
-        })
-      } catch (error) {
-        console.error('Error updating user data:', error)
-        this.error = true
-      } finally {
-        this.isLoading = false
-      }
-
-      // Update user photo if a new one is selected
-      if (this.userPhotoFile != null) {
-        try {
-          await accountService.uploadProfileImage(userId, this.userPhotoFile)
-        } catch (error) {
-          console.error('Error uploading profile image:', error)
-          this.error = true
-        } finally {
-          this.isLoading = false
-        }
-      }
-    },
-    async savePassword() {
-      this.isLoading = true
-
-      const userId = getUserId()
-
-      if (!userId) {
-        this.error = true
-        this.isLoading = false
-        return
-      }
-
-      try {
-        await accountService.updatePassword(userId, {
-          currentPassword: this.currentPassword,
-          newPassword: this.newPassword,
-          confirmPassword: this.confirmPassword,
-        })
-      } catch {
-        this.error = true
-      } finally {
-        this.isLoading = false
-      }
-    },
-    handleStorageChange(event: StorageEvent) {
-      if (event.key === 'selectedLanguage' && event.newValue) {
-        this.selectedLanguage = event.newValue
-      }
-    },
-    async loadUserData() {
-      const userId = getUserId()
-
-      // Check if userId is available
-      if (!userId) {
-        this.error = true
-        return
-      }
-
-      this.isLoading = true
-
-      // Load user data
-      try {
-        const data = await accountService.getUserInfo(userId)
-        this.userFirstName = data.firstName
-        this.userLastName = data.lastName
-        this.userEmail = data.email
-      } catch (error) {
-        console.error('Error loading user data:', error)
-        this.error = true
-      } finally {
-        this.isLoading = false
-      }
-
-      // Load user photo if available
-      try {
-        const photoBlob = await accountService.getProfileImage(userId)
-        this.userPhoto = URL.createObjectURL(photoBlob)
-      } catch (error) {
-        console.error('Error loading user photo:', error)
-      }
-    },
-  },
-  mounted() {
-    // Listen for storage events to detect language changes from other components
-    window.addEventListener('storage', this.handleStorageChange)
-
-    // Listen for window resize events
-    window.addEventListener('resize', this.handleResize)
-
-    // Load user data when component mounts
-    this.loadUserData()
-  },
-  beforeUnmount() {
-    window.removeEventListener('storage', this.handleStorageChange)
-    window.removeEventListener('resize', this.handleResize)
-  },
-
-  watch: {},
-}
+})
 </script>
 
 <style scoped lang="scss">
-.settings-c {
-  display: flex;
-  flex-direction: row;
+.settings-root {
   width: 100%;
-  height: 100vh;
+  padding: var(--spacing-md) 0;
+}
 
-  .main-content {
-    display: flex;
-    flex-direction: column;
+.settings-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-md);
+}
+
+.settings-card {
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--header-text-color);
+  }
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-md);
+}
+
+.avatar-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.avatar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs, 0.5rem);
+}
+
+.avatar-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-color-soft);
+
+  img {
     width: 100%;
-    padding: 0.5rem;
-    background-color: var(--background-color) s;
+    height: 100%;
+    object-fit: cover;
+  }
+}
 
-    .settings-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin-left: 1.5rem;
-      margin-bottom: 1rem;
-      color: var(--header-text-color);
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.4rem;
+  color: var(--primary-green-color);
+}
+
+.profile-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.two-column {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+
+  label {
+    font-size: 0.8rem;
+    color: var(--header-text-color);
+  }
+
+  input {
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--background-color-soft);
+    color: var(--header-text-color);
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+    outline: none;
+
+    &:focus {
+      border-color: var(--primary-green-color);
     }
 
-    .settings-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      padding: 0 1.5rem;
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
 
-      .settings-card {
-        width: 100%;
-        margin-bottom: 1rem;
-        padding: 1rem 2rem;
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-        background-color: var(--background-color);
-
-        h2 {
-          font-size: 1.2rem;
-          font-weight: 600;
-          margin-bottom: 0.75rem;
-          color: var(--header-text-color);
-        }
-
-        .profile-content {
-          display: flex;
-          .profile-photo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-right: 1.5rem;
-            color: var(--header-text-color);
-            gap: 0.5rem;
-
-            img,
-            .profile-photo-icon {
-              width: 70px;
-              height: 70px;
-              border-radius: 50%;
-              border: 1px solid var(--border-color);
-            }
-
-            img {
-              object-fit: cover;
-            }
-
-            .profile-photo-icon {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background-color: var(--background-color-soft);
-              font-size: 2rem;
-            }
-
-            .change-photo-btn {
-              margin-top: 0.3rem;
-              padding: 0.5rem;
-              font-size: 0.7rem;
-              background: none;
-              border: none;
-              background-color: var(--background-color-soft);
-              cursor: pointer;
-              border-radius: 5px;
-              color: var(--text-color);
-
-              &:hover {
-                background-color: var(--background-color-reverse);
-                color: var(--reverse-header-text-color);
-                transition: background-color 0.3s ease;
-              }
-            }
-          }
-
-          .profile-fields {
-            flex: 1;
-
-            .form-sections {
-              display: flex;
-              width: 100%;
-              align-items: center;
-              justify-content: space-between;
-
-              .profile-section,
-              .password-section {
-                flex: 1;
-              }
-
-              .profile-section {
-                border-right: 1px solid var(--border-color);
-                padding-right: 1.5rem;
-              }
-
-              .password-section {
-                padding-left: 1.5rem;
-              }
-            }
-
-            .buttons-row {
-              display: flex;
-              justify-content: space-between;
-              margin-top: 1rem;
-            }
-          }
-        }
-      }
-
-      .form-group {
-        margin-bottom: 0.75rem;
-
-        label {
-          display: block;
-          margin-bottom: 0.2rem;
-          font-size: 0.8rem;
-          color: var(--header-text-color);
-        }
-
-        .password-field {
-          position: relative;
-
-          input {
-            width: 100%;
-            padding-right: 2rem;
-          }
-
-          .password-toggle {
-            position: absolute;
-            right: 0.4rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-
-            img {
-              width: 16px;
-              height: 16px;
-              opacity: var(--opacity);
-            }
-          }
-        }
-      }
-
-      .save-btn {
-        padding: 0.4rem 1.2rem;
-        background-color: var(--primary-green-color);
-        color: var(--background-color);
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-        color: var(--text-color-reverse);
-
-        &:hover {
-          background-color: var(--reverse-primary-green-color);
-          transition: background-color 0.3s ease;
-        }
-      }
-
-      .cancel-btn {
-        padding: 0.4rem 1.2rem;
-        background-color: var(--primary-red-color);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-        margin-top: 0.75rem;
-        align-self: flex-end;
-        &:hover {
-          background-color: var(--reverse-primary-red-color);
-          transition: background-color 0.3s ease;
-        }
-      }
+    &::placeholder {
+      color: var(--header-text-color);
+      opacity: 1;
     }
   }
 }
 
+.hidden-input {
+  display: none;
+}
+
+.helper-text {
+  font-size: 0.75rem;
+  color: var(--header-text-color);
+}
+
+.helper-list {
+  margin: 0;
+  margin-top: 0.5rem;
+  padding-left: 1.2rem;
+  font-size: 0.75rem;
+  color: var(--header-text-color);
+}
+
+.meta-row {
+  display: flex;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--header-text-color);
+}
+
+.meta-label {
+  font-weight: 500;
+}
+
+.meta-value {
+  opacity: 0.9;
+}
+
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.primary-btn {
+  padding: 0.4rem 1.2rem;
+  background-color: var(--primary-green-color);
+  color: var(--text-color-reverse);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+}
+
+.primary-outline-btn {
+  padding: 0.3rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--primary-green-color);
+  background: transparent;
+  color: var(--primary-green-color);
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+}
+
+.secondary-btn {
+  padding: 0.3rem 1rem;
+  border-radius: 999px;
+  border: 1px dashed var(--border-color);
+  background: transparent;
+  color: var(--header-text-color);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.error-text {
+  font-size: 0.75rem;
+  color: var(--primary-red-color);
+}
+
+.success-text {
+  font-size: 0.75rem;
+  color: var(--primary-green-color);
+}
+
+.password-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+@media (max-width: 1024px) {
+  .settings-root {
+    padding: var(--spacing-sm) 0;
+  }
+
+  .settings-card {
+    padding: var(--spacing-sm);
+  }
+
+  .profile-layout {
+    gap: var(--spacing-sm);
+  }
+}
+
+@media (min-width: 960px) {
+  .settings-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .settings-c {
+  .settings-columns {
+    gap: var(--spacing-sm);
+  }
+
+  .avatar-column {
     flex-direction: column;
-    .main-content {
-      padding: 0.5rem;
-      .settings-title {
-        margin-left: 0;
-      }
-      .settings-content {
-        padding: 0;
-        .settings-card {
-          padding: 1rem;
-          h2 {
-            font-size: 1.2rem;
-          }
-          .profile-content {
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            .profile-photo {
-              margin-right: 0;
-            }
-          }
-        }
-      }
-    }
+    align-items: flex-start;
+    gap: var(--spacing-xs, 0.5rem);
+  }
+
+  .avatar-wrapper {
+    width: 64px;
+    height: 64px;
+  }
+
+  .two-column {
+    flex-direction: column;
   }
 }
 </style>
