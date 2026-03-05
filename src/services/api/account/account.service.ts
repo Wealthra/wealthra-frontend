@@ -1,9 +1,6 @@
 import { apiRequest } from '../../apiClient'
 import type {
   RegisterRequest,
-  UpdateUserRequest,
-  UpdatePasswordRequest,
-  UserInfoResponse,
   AccountRegisterRequest,
   AccountLoginRequest,
   AccountAuthResponse,

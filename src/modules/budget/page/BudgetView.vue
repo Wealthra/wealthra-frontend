@@ -134,7 +134,6 @@ export default {
       try {
         await budgetService.createBudget({
           limitAmount: newCategory.limitAmount,
-          currentAmount: newCategory.currentAmount,
           categoryId: newCategory.categoryId,
         })
         this.loadAppropriateData()

@@ -23,11 +23,7 @@
             <div class="profile-layout">
               <div class="avatar-column">
                 <div class="avatar-wrapper">
-                  <img
-                    v-if="profileForm.avatarUrl"
-                    :src="profileForm.avatarUrl"
-                    alt="Avatar"
-                  />
+                  <img v-if="profileForm.avatarUrl" :src="profileForm.avatarUrl" alt="Avatar" />
                   <div v-else class="avatar-placeholder">
                     <span v-if="initials">{{ initials }}</span>
                     <font-awesome-icon v-else icon="user" />
@@ -39,13 +35,13 @@
                     {{ avatarButtonLabel }}
                   </button>
 
-                <input
-                  ref="avatarInput"
-                  type="file"
-                  accept="image/*"
-                  class="hidden-input"
-                  @change="onAvatarSelected"
-                />
+                  <input
+                    ref="avatarInput"
+                    type="file"
+                    accept="image/*"
+                    class="hidden-input"
+                    @change="onAvatarSelected"
+                  />
 
                   <button
                     type="button"
@@ -133,9 +129,7 @@
                       {{ selectedLanguage === 'English' ? 'Saving...' : 'Kaydediliyor...' }}
                     </span>
                     <span v-else>
-                      {{
-                        selectedLanguage === 'English' ? 'Save profile' : 'Profili kaydet'
-                      }}
+                      {{ selectedLanguage === 'English' ? 'Save profile' : 'Profili kaydet' }}
                     </span>
                   </button>
 
@@ -161,9 +155,7 @@
             <div class="password-layout">
               <div class="form-group">
                 <label for="currentPassword">
-                  {{
-                    selectedLanguage === 'English' ? 'Current password' : 'Mevcut şifre'
-                  }}
+                  {{ selectedLanguage === 'English' ? 'Current password' : 'Mevcut şifre' }}
                 </label>
                 <input
                   id="currentPassword"
@@ -189,9 +181,7 @@
                 <div class="form-group">
                   <label for="confirmPassword">
                     {{
-                      selectedLanguage === 'English'
-                        ? 'Confirm new password'
-                        : 'Yeni şifre tekrar'
+                      selectedLanguage === 'English' ? 'Confirm new password' : 'Yeni şifre tekrar'
                     }}
                   </label>
                   <input
@@ -206,9 +196,7 @@
               <ul class="helper-list">
                 <li>
                   {{
-                    selectedLanguage === 'English'
-                      ? 'At least 8 characters.'
-                      : 'En az 8 karakter.'
+                    selectedLanguage === 'English' ? 'At least 8 characters.' : 'En az 8 karakter.'
                   }}
                 </li>
                 <li>
@@ -235,11 +223,7 @@
                     }}
                   </span>
                   <span v-else>
-                    {{
-                      selectedLanguage === 'English'
-                        ? 'Update password'
-                        : 'Şifreyi güncelle'
-                    }}
+                    {{ selectedLanguage === 'English' ? 'Update password' : 'Şifreyi güncelle' }}
                   </span>
                 </button>
 
@@ -322,9 +306,7 @@ export default defineComponent({
     )
 
     const loadingText = computed(() =>
-      selectedLanguage.value === 'English'
-        ? 'Loading your profile...'
-        : 'Profiliniz yükleniyor...'
+      selectedLanguage.value === 'English' ? 'Loading your profile...' : 'Profiliniz yükleniyor...'
     )
 
     const errorMessage = computed(() =>
@@ -355,14 +337,11 @@ export default defineComponent({
     const createdAtLabel = computed(() => {
       if (!me.value?.createdAt) return '-'
       const date = new Date(me.value.createdAt)
-      return date.toLocaleDateString(
-        selectedLanguage.value === 'English' ? 'en-GB' : 'tr-TR',
-        {
-          year: 'numeric',
-          month: 'short',
-          day: '2-digit',
-        }
-      )
+      return date.toLocaleDateString(selectedLanguage.value === 'English' ? 'en-GB' : 'tr-TR', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+      })
     })
 
     const handleLanguageUpdate = (language: string) => {
@@ -396,15 +375,11 @@ export default defineComponent({
       profileErrors.value = {}
       if (!profileForm.value.firstName.trim()) {
         profileErrors.value.firstName =
-          selectedLanguage.value === 'English'
-            ? 'First name is required.'
-            : 'Ad zorunludur.'
+          selectedLanguage.value === 'English' ? 'First name is required.' : 'Ad zorunludur.'
       }
       if (!profileForm.value.lastName.trim()) {
         profileErrors.value.lastName =
-          selectedLanguage.value === 'English'
-            ? 'Last name is required.'
-            : 'Soyad zorunludur.'
+          selectedLanguage.value === 'English' ? 'Last name is required.' : 'Soyad zorunludur.'
       }
       return Object.keys(profileErrors.value).length === 0
     }
@@ -425,7 +400,7 @@ export default defineComponent({
 
         profileSuccess.value = true
         await loadMe()
-      } catch (err: any) {
+      } catch (err: unknown) {
         // eslint-disable-next-line no-console
         console.error('updateProfile failed', err)
         profileError.value =
@@ -480,7 +455,7 @@ export default defineComponent({
         const url = await uploadAvatar(avatarFile.value)
         profileForm.value.avatarUrl = url
         avatarFile.value = null
-      } catch (err: any) {
+      } catch (err: unknown) {
         // eslint-disable-next-line no-console
         console.error('Avatar upload failed', err)
         avatarError.value =
@@ -538,7 +513,7 @@ export default defineComponent({
         passwordForm.value.currentPassword = ''
         passwordForm.value.newPassword = ''
         passwordForm.value.confirmPassword = ''
-      } catch (err: any) {
+      } catch (err: unknown) {
         // eslint-disable-next-line no-console
         console.error('changePassword failed', err)
         passwordError.value =
