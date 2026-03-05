@@ -6,7 +6,11 @@
         <img src="../icons/logo.svg" alt="logo" v-else />
       </div>
       <div class="close-icon-wrapper" @click="toggleSidebar" v-if="sidebarOpen">
-        <img src="../icons/arrow.svg" alt="close-icon" :class="{ 'arrow--rotated': sidebarOpen }" />
+        <font-awesome-icon
+          :icon="arrowIcons.right"
+          class="arrow-icon"
+          :class="{ 'arrow--rotated': sidebarOpen }"
+        />
       </div>
     </div>
 
@@ -19,16 +23,16 @@
         @click="routeToPage(item)"
       >
         <div class="nav-icon">
-          <img :src="`src/icons/${computedItem(index)}.svg`" alt="icon" />
+          <font-awesome-icon :icon="leftSidebarIconMap[computedItem(index)]" />
         </div>
         <span>{{ item }}</span>
       </div>
     </div>
 
     <div class="open-icon-wrapper" v-if="!sidebarOpen">
-      <img
-        src="../icons/arrow.svg"
-        alt="open-icon"
+      <font-awesome-icon
+        :icon="arrowIcons.right"
+        class="arrow-icon"
         :class="{ 'arrow--rotated': sidebarOpen }"
         @click="toggleSidebar"
       />
@@ -41,7 +45,7 @@
         :class="{ 'nav-item--active': 'Settings' === selectedPage || 'Ayarlar' === selectedPage }"
       >
         <div class="settings-icon">
-          <img src="../icons/settings.svg" alt="settings" />
+          <font-awesome-icon :icon="leftSidebarIconMap.Settings" />
         </div>
         <span>{{ leftBarContent[selectedLanguage][6] }}</span>
       </div>
@@ -50,7 +54,10 @@
 </template>
 
 <script lang="ts">
-export default {
+import { defineComponent } from 'vue'
+import { arrowIcons, leftSidebarIconMap } from '../icons/fontawesome-icons'
+
+export default defineComponent({
   name: 'UILeftSideBar',
   props: {
     initialLanguage: {
@@ -79,6 +86,8 @@ export default {
           'Ayarlar',
         ],
       },
+      leftSidebarIconMap,
+      arrowIcons,
     }
   },
   watch: {
@@ -106,18 +115,21 @@ export default {
     },
     routeToPage(item: string) {
       if (this.selectedLanguage === 'Turkish') {
-        item = this.leftBarContent['English'][this.leftBarContent['Turkish'].indexOf(item)]
+        item = this.leftBarContent['English'][this.leftContentTurkishIndex(item)]
       }
       this.$router.push(item.toLowerCase())
     },
     routeToSettings() {
       this.$router.push('settings')
     },
+    leftContentTurkishIndex(item: string) {
+      return this.leftBarContent['Turkish'].indexOf(item)
+    },
   },
   mounted() {
     this.sidebarOpen = localStorage.getItem('sidebarOpen') === 'true'
   },
-}
+})
 </script>
 
 <style scoped lang="scss">

@@ -1,28 +1,30 @@
 <template>
-  <div class="theme-toggle" @click="updateTheme">
-    <span class="toggle-icon">
-      <img
-        src="../icons/light-mode-icon.svg"
-        alt="Light Theme"
-        class="theme-icon"
-        v-if="isLightTheme"
-      />
-      <img src="../icons/dark-mode-icon.svg" alt="Dark Theme" class="theme-icon" v-else />
-    </span>
-  </div>
+  <button class="theme-toggle" type="button" @click="updateTheme" :aria-label="ariaLabel">
+    <i class="theme-icon" :class="themeIconClass"></i>
+  </button>
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue'
+
 const THEME_KEY = 'theme-preference'
 
-export default {
+export default defineComponent({
   name: 'UIThemeButton',
+  emits: ['updateTheme'],
   data() {
     return {
       isLightTheme: localStorage.getItem(THEME_KEY) !== 'dark',
     }
   },
-  emits: ['updateTheme'],
+  computed: {
+    themeIconClass(): string {
+      return this.isLightTheme ? 'fa-solid fa-sun' : 'fa-solid fa-moon'
+    },
+    ariaLabel(): string {
+      return this.isLightTheme ? 'Switch to dark theme' : 'Switch to light theme'
+    },
+  },
   methods: {
     updateTheme() {
       this.isLightTheme = !this.isLightTheme
@@ -32,31 +34,34 @@ export default {
       this.$emit('updateTheme', theme)
     },
   },
-}
+})
 </script>
 
 <style scoped lang="scss">
 .theme-toggle {
-  cursor: pointer;
   display: flex;
-  align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background-color: var(--color-background);
-  transition: background-color 0.3s ease;
+  align-items: center;
+  color: var(--normal-text-color);
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
   &:hover {
     background-color: var(--color-background-hover);
+    border-color: var(--border-color);
   }
 
-  .toggle-icon {
-    width: 24px;
-    height: 24px;
+  &:active {
+    transform: scale(0.97);
+  }
 
-    .theme-icon {
-      width: 100%;
-      height: auto;
-    }
+  .theme-icon {
+    font-size: 16px;
   }
 }
 </style>

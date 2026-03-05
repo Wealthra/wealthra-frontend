@@ -4,7 +4,7 @@
       <UILanguageButton @updateLanguage="handleLanguageUpdate" />
       <UIThemeButton />
       <div class="profile-icon-wrapper">
-        <img src="../icons/user.svg" alt="user" @click="toggleLogoutTooltip" />
+        <font-awesome-icon :icon="profileIcon" class="profile-icon" @click="toggleLogoutTooltip" />
         <div class="logout-tooltip" v-if="showLogoutTooltip">
           <p>{{ texts.logoutConfirmation }}</p>
           <div class="tooltip-buttons">
@@ -25,6 +25,7 @@
 import UILanguageButton from './UILanguageButton.vue'
 import UIThemeButton from './UIThemeButton.vue'
 import { clearAuth } from '../utils/auth'
+import { profileIcon } from '../icons/fontawesome-icons'
 
 export default {
   name: 'UITopBar',
@@ -54,6 +55,7 @@ export default {
   data() {
     return {
       showLogoutTooltip: false,
+      profileIcon,
     }
   },
   methods: {
@@ -150,6 +152,9 @@ export default {
 }
 
 .demo-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.3rem 0.6rem;
   border-radius: 3px;
   border: 1px solid var(--border-color);
@@ -158,9 +163,6 @@ export default {
   font-size: 0.75rem;
   cursor: pointer;
   transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
   &:hover {
     background-color: var(--hover-color);

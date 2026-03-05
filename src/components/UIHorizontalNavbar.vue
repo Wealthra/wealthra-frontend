@@ -8,7 +8,7 @@
           class="navbar-item"
           @click="routeToPage(page)"
         >
-          <img :src="`src/icons/${computedItem(page)}.svg`" alt="icon" />
+          <font-awesome-icon :icon="leftSidebarIconMap[page]" />
         </div>
       </div>
     </div>
@@ -16,12 +16,14 @@
 </template>
 
 <script lang="ts">
-export default {
+import { defineComponent } from 'vue'
+import { leftSidebarIconMap } from '../icons/fontawesome-icons'
+
+export default defineComponent({
   name: 'UIHorizontalNavbar',
 
   data() {
     return {
-      sidebarOpen: this.initialSidebarState,
       leftBarContent: [
         'Dashboard',
         'Income',
@@ -30,28 +32,17 @@ export default {
         'Goals',
         'Analytics',
         'Settings',
-      ],
+      ] as Array<keyof typeof leftSidebarIconMap>,
+      leftSidebarIconMap,
     }
   },
 
   methods: {
-    computedItem(page: string): string {
-      const pageMap: { [key: string]: string } = {
-        Dashboard: 'dashboard',
-        Income: 'income',
-        Expenses: 'expenses',
-        Budget: 'budget',
-        Goals: 'goals',
-        Analytics: 'analytics',
-        Settings: 'settings',
-      }
-      return pageMap[page] || ''
-    },
     routeToPage(page: string) {
       this.$router.push(page.toLowerCase())
     },
   },
-}
+})
 </script>
 <style scoped lang="scss">
 .horizontal-navbar-c {

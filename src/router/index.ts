@@ -1,18 +1,18 @@
-// Lazy Loading Views
-const LandingView = () => import('../views/LandingView.vue')
-const LoginView = () => import('../views/LoginView.vue')
-const ForgetPasswordView = () => import('../views/ForgetPasswordView.vue')
-const SignUpView = () => import('../views/SignUpView.vue')
+// Lazy Loading Public Views
+const LandingView = () => import('../landing/LandingView.vue')
+const LoginView = () => import('../auth/login/page/LoginView.vue')
+const ForgetPasswordView = () => import('../auth/forget-password/page/ForgetPasswordView.vue')
+const SignUpView = () => import('../auth/sign-up/page/SignUpView.vue')
 
 // Lazy Loading Authenticated Views
-const DashboardView = () => import('../views/DashboardView.vue')
-const AdminView = () => import('../views/AdminView.vue')
-const AnalyticsView = () => import('../views/AnalyticsView.vue')
-const BudgetView = () => import('../views/BudgetView.vue')
-const ExpensesView = () => import('../views/ExpensesView.vue')
-const IncomeView = () => import('../views/IncomeView.vue')
-const GoalsView = () => import('../views/GoalsView.vue')
-const SettingsView = () => import('../views/SettingsView.vue')
+const DashboardView = () => import('../modules/dashboard/page/DashboardView.vue')
+const AdminView = () => import('../auth/admin/page/AdminView.vue')
+const AnalyticsView = () => import('../modules/analytics/page/AnalyticsView.vue')
+const BudgetView = () => import('../modules/budget/page/BudgetView.vue')
+const ExpensesView = () => import('../modules/expenses/page/ExpensesView.vue')
+const IncomeView = () => import('../modules/income/page/IncomeView.vue')
+const GoalsView = () => import('../modules/goals/page/GoalsView.vue')
+const SettingsView = () => import('../modules/settings/page/SettingsView.vue')
 
 import { isAuthenticated } from '../utils/auth'
 import { createRouter, createWebHistory } from 'vue-router'

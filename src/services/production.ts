@@ -1,3 +1,3 @@
 export const production = {
-  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  apiUrl: 'https://89.167.80.182.nip.io/api',
 }

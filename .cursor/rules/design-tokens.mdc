@@ -1,0 +1,44 @@
+---
+description: Prefer design tokens (CSS variables) over hard-coded values in Vue components and styles
+globs: src/**/*.{vue,css,scss}
+alwaysApply: false
+---
+
+# Design tokens and theming
+
+This project defines a rich set of design tokens as CSS variables in `src/assets/base.css`
+for colors, typography, and theming (light/dark). When editing or creating components:
+
+- Prefer existing tokens such as `--primary-green-color`, `--background-color`,
+  `--header-text-color`, `--normal-text-color`, and category/notification colors
+  instead of hard-coded hex values or `rgb(...)`.
+- When you need a new reusable color or theme value, first add it as a CSS variable
+  in `base.css` for both the default and `[data-theme='dark']` blocks, and then
+  reference it via `var(--your-token-name)` from components/styles.
+- In `<style>` blocks of `.vue` files and in global styles, use `var(--token-name)`
+  for colors, background colors, and other theme-able properties, so that light/dark
+  modes stay consistent.
+
+## Examples
+
+Bad (hard-coded color in a component style):
+
+```scss
+.cta-button {
+  background-color: #5cb85c;
+  color: #ffffff;
+}
+```
+
+Good (using existing design tokens):
+
+```scss
+.cta-button {
+  background-color: var(--primary-green-color);
+  color: var(--reverse-header-text-color);
+}
+```
+
+When in doubt, inspect or extend the variables in `src/assets/base.css` rather than
+introducing new raw color values directly in components.
+
