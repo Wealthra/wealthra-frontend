@@ -26,6 +26,8 @@
           :title="dashboardTexts[selectedLanguage].totalNetWorth"
           color="yellow"
           type="income"
+          icon="fas fa-wallet"
+          icon-color="var(--primary-yellow-color)"
         />
         <UIInformationBox
           :currentAmount="dashboardSummary?.totalExpenses || 0"
@@ -33,6 +35,8 @@
           :title="dashboardTexts[selectedLanguage].totalSpendingThisMonth"
           color="blue"
           type="spending"
+          icon="fas fa-credit-card"
+          icon-color="var(--primary-blue-color)"
         />
         <UIExpenseBox
           :title="dashboardTexts[selectedLanguage].upcomingExpenses"

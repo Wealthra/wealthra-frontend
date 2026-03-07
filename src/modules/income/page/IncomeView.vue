@@ -8,47 +8,60 @@
       <div class="information-wrapper">
         <UIInformationBox
           :currentAmount="financialData.weeklyTotalIncome"
-          :lastAmount="financialData.previousWeekTotalIncome"
+          :lastAmount="0"
           color="green"
           type="income"
           :title="incomeTexts[selectedLanguage].weeklyIncome"
+          icon="fas fa-calendar-week"
+          icon-color="var(--primary-green-color)"
         />
         <UIInformationBox
           :currentAmount="financialData.monthlyTotalIncome"
-          :lastAmount="financialData.previousMonthTotalIncome"
-          color="yellow"
+          :lastAmount="0"
+          color="green"
           type="income"
           :title="incomeTexts[selectedLanguage].monthlyIncome"
+          icon="fas fa-calendar-day"
+          icon-color="var(--primary-green-color)"
+        />
+        <UIInformationBox
+          :currentAmount="financialData.averageMonthlyIncome"
+          :lastAmount="0"
+          color="green"
+          type="income"
+          :title="incomeTexts[selectedLanguage].averageMonthlyIncome"
+          icon="fas fa-chart-line"
+          icon-color="var(--primary-green-color)"
         />
         <UIInformationBox
           :currentAmount="financialData.yearlyTotalIncome"
-          :lastAmount="financialData.previousYearTotalIncome"
-          color="blue"
+          :lastAmount="0"
+          color="green"
           type="income"
           :title="incomeTexts[selectedLanguage].annualIncome"
+          icon="fas fa-calendar"
+          icon-color="var(--primary-green-color)"
         />
       </div>
       <div class="statistics-wrapper">
-        <div class="income-sources-wrapper">
-          <UIIncomeSourcesComponent
-            :incomeSources="financialData.incomeSources"
-            :hasMoreItems="financialData.incomeHasMoreItems"
-            :selectedLanguage="selectedLanguage"
-            :pageNumber="financialData.pageNumberIncome"
-            :pageSize="financialData.pageSizeIncome"
-            :totalCount="financialData.totalCountIncome"
-            :totalPages="financialData.totalPagesIncome"
-            @changePage="handleChangePage"
-            @addIncomeSource="handleAddIncome"
-            @deleteSource="handleDeleteIncome"
-          />
-        </div>
-        <div class="income-transactions-wrapper">
-          <UIIncomeTransactionsComponent
-            :incomeRecentTransactions="financialData.incomeRecentTransactions"
-            :selectedLanguage="selectedLanguage"
-          />
-        </div>
+        <UIIncomeSourcesComponent
+          :incomeSources="financialData.incomeSources"
+          :hasMoreItems="financialData.incomeHasMoreItems"
+          :selectedLanguage="selectedLanguage"
+          :pageNumber="financialData.pageNumberIncome"
+          :pageSize="financialData.pageSizeIncome"
+          :totalCount="financialData.totalCountIncome"
+          :totalPages="financialData.totalPagesIncome"
+          :startDate="startDateIncome ?? undefined"
+          :endDate="endDateIncome ?? undefined"
+          :getIncomeById="getIncomeById"
+          @changePage="handleChangePage"
+          @updateDateRange="handleDateRangeUpdate"
+          @updatePageSize="handlePageSizeUpdate"
+          @addIncomeSource="handleAddIncome"
+          @updateIncomeSource="handleUpdateIncomeSource"
+          @deleteSource="handleDeleteIncome"
+        />
       </div>
     </div>
   </ModuleLayout>
@@ -57,12 +70,22 @@
 <script lang="ts">
 import UIInformationBox from '@/modules/dashboard/components/UIInformationBox.vue'
 import UIIncomeSourcesComponent from '@/modules/income/components/UIIncomeSourcesComponent.vue'
-import UIIncomeTransactionsComponent from '@/modules/income/components/UIIncomeTransactionsComponent.vue'
 import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 import { incomeTexts } from '@/data/incomeTexts'
 import type { FinancialData } from '@/interfaces/FinancialData'
 import { incomeService } from '@/services/api/income/income.service'
+
+function toYmd(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function getDefaultIncomeDateRange(): { start: string; end: string } {
+  const today = new Date()
+  const start = new Date(today)
+  start.setDate(start.getDate() - 30)
+  return { start: toYmd(start), end: toYmd(today) }
+}
 
 export default {
   name: 'IncomeView',
@@ -70,9 +93,9 @@ export default {
     ModuleLayout,
     UIInformationBox,
     UIIncomeSourcesComponent,
-    UIIncomeTransactionsComponent,
   },
   data() {
+    const { start, end } = getDefaultIncomeDateRange()
     return {
       selectedLanguage: 'English' as 'English' | 'Turkish',
       incomeTexts: incomeTexts,
@@ -80,6 +103,9 @@ export default {
       hasError: false,
       financialData: {} as FinancialData,
       page: 1,
+      pageSizeIncome: 10,
+      startDateIncome: start as string | null,
+      endDateIncome: end as string | null,
     }
   },
   computed: {
@@ -92,6 +118,10 @@ export default {
     handleLanguageUpdate(language: 'English' | 'Turkish') {
       this.selectedLanguage = language
       localStorage.setItem('selectedLanguage', language)
+    },
+
+    getIncomeById(id: number) {
+      return incomeService.getIncomeById(id)
     },
 
     handleDeleteIncome(source: {
@@ -124,7 +154,7 @@ export default {
       transactionDate?: string
     }) {
       try {
-        await incomeService.apiDeleteIncome(source.id)
+        await incomeService.deleteIncome(source.id)
         await this.loadAppropriateData()
       } catch (error) {
         console.error('Error deleting income source:', error)
@@ -138,9 +168,8 @@ export default {
       method: string
       transactionDate: string
     }) {
-      console.log('Adding income source:', source)
       try {
-        await incomeService.apiCreateIncome({
+        await incomeService.createIncome({
           name: source.name,
           amount: source.amount,
           method: source.method,
@@ -153,13 +182,45 @@ export default {
       }
     },
 
+    async handleUpdateIncomeSource(
+      id: number,
+      data: {
+        name: string
+        amount: number
+        isRecurring: boolean
+        method: string
+        transactionDate: string
+      }
+    ) {
+      try {
+        await incomeService.updateIncome(id, {
+          name: data.name,
+          amount: data.amount,
+          method: data.method,
+          isRecurring: data.isRecurring,
+          transactionDate: new Date(data.transactionDate).toISOString(),
+        })
+        await this.loadAppropriateData()
+      } catch (error) {
+        console.error('Error updating income source:', error)
+      }
+    },
+
     async fetchIncomeSources() {
       try {
-        const pageSize = 4
-        const data = await incomeService.apiGetIncomes({
+        const params: {
+          PageNumber: number
+          PageSize: number
+          StartDate?: string
+          EndDate?: string
+        } = {
           PageNumber: this.page,
-          PageSize: pageSize,
-        })
+          PageSize: this.pageSizeIncome,
+        }
+        if (this.startDateIncome) params.StartDate = this.startDateIncome
+        if (this.endDateIncome) params.EndDate = this.endDateIncome
+
+        const data = await incomeService.getIncomes(params)
 
         this.financialData.incomeSources = data.items.map(item => ({
           id: item.id!,
@@ -170,7 +231,7 @@ export default {
         }))
         this.financialData.incomeHasMoreItems = data.hasNextPage
         this.financialData.pageNumberIncome = data.pageNumber
-        this.financialData.pageSizeIncome = pageSize
+        this.financialData.pageSizeIncome = this.pageSizeIncome
         this.financialData.totalCountIncome = data.totalCount
         this.financialData.totalPagesIncome = data.totalPages
       } catch (error) {
@@ -185,19 +246,10 @@ export default {
       try {
         const data = await incomeService.getIncomeGeneralInfo()
 
-        this.financialData.weeklyTotalIncome = data.weeklyTotalIncome
-        this.financialData.previousWeekTotalIncome = data.previousWeekTotalIncome
-        this.financialData.monthlyTotalIncome = data.monthlyTotalIncome
-        this.financialData.previousMonthTotalIncome = data.previousMonthTotalIncome
-        this.financialData.yearlyTotalIncome = data.yearlyTotalIncome
-        this.financialData.previousYearTotalIncome = data.previousYearTotalIncome
-        this.financialData.incomeRecentTransactions = data.recentTransactions.map(inc => ({
-          ...inc,
-          created: inc.created || '',
-          createdBy: inc.createdBy || '',
-          lastModified: inc.lastModified || '',
-          lastModifiedBy: inc.lastModifiedBy || '',
-        }))
+        this.financialData.weeklyTotalIncome = data.weeklyTotal
+        this.financialData.monthlyTotalIncome = data.monthlyTotal
+        this.financialData.yearlyTotalIncome = data.yearlyTotal
+        this.financialData.averageMonthlyIncome = data.averageMonthlyIncome
       } catch (error) {
         console.error('Error fetching financial data:', error)
       }
@@ -205,6 +257,19 @@ export default {
 
     handleChangePage(page: number) {
       this.page = page
+      this.loadAppropriateData()
+    },
+
+    handleDateRangeUpdate(startDate: string | null, endDate: string | null) {
+      this.startDateIncome = startDate
+      this.endDateIncome = endDate
+      this.page = 1
+      this.loadAppropriateData()
+    },
+
+    handlePageSizeUpdate(size: number) {
+      this.pageSizeIncome = size
+      this.page = 1
       this.loadAppropriateData()
     },
 
@@ -239,10 +304,12 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  min-height: 0;
   gap: 2rem;
+  flex: 1 1 auto;
 
   .information-wrapper {
+    flex-shrink: 0;
     display: flex;
     flex-direction: row;
     width: 100%;
@@ -251,20 +318,26 @@ export default {
   }
   .statistics-wrapper {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     width: 100%;
-    height: 100%;
-    justify-content: space-between;
-    gap: 0.5rem;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+  }
+}
 
-    .income-sources-wrapper {
-      width: 100%;
+@media (max-width: 1024px) {
+  .income-content {
+    flex: 0 0 auto;
+    min-height: min-content;
+
+    .information-wrapper {
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
-    .income-transactions-wrapper {
-      width: 100%;
-      gap: 0.5rem;
-      display: flex;
-      flex-direction: column;
+    .statistics-wrapper {
+      flex: none;
+      min-height: 0;
     }
   }
 }
@@ -276,8 +349,8 @@ export default {
   }
 
   .income-content {
-    padding: 0rem 1rem;
-    gap: 0.5rem;
+    padding: 0 0.5rem;
+    gap: 1rem;
 
     .information-wrapper {
       flex-direction: column;
@@ -285,7 +358,7 @@ export default {
     }
     .statistics-wrapper {
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 1rem;
     }
   }
 }

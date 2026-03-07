@@ -12,6 +12,8 @@
           color="green"
           type="spending"
           :title="expensesTexts[selectedLanguage].weeklyExpenses"
+          icon="fas fa-calendar-week"
+          icon-color="var(--primary-green-color)"
         />
         <UIInformationBox
           :currentAmount="financialData?.monthlyTotalExpense"
@@ -19,6 +21,8 @@
           color="yellow"
           type="spending"
           :title="expensesTexts[selectedLanguage].monthlyExpenses"
+          icon="fas fa-calendar-day"
+          icon-color="var(--primary-yellow-color)"
         />
         <UIInformationBox
           :currentAmount="financialData?.yearlyTotalExpense"
@@ -26,6 +30,8 @@
           color="blue"
           type="spending"
           :title="expensesTexts[selectedLanguage].annualExpenses"
+          icon="fas fa-calendar"
+          icon-color="var(--primary-blue-color)"
         />
       </div>
       <div class="statistics-wrapper">

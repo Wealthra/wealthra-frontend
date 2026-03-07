@@ -11,13 +11,12 @@ import type {
 } from './expense.models'
 
 export const expenseService = {
-  // Legacy endpoints (singular "Expense") kept for backward compatibility
   async getExpenses(
     pageNumber: number = 1,
     pageSize: number = 10
   ): Promise<PaginatedExpensesResponse> {
     return apiRequest<PaginatedExpensesResponse>(
-      `Expense?PageNumber=${pageNumber}&PageSize=${pageSize}`,
+      `Expenses?PageNumber=${pageNumber}&PageSize=${pageSize}`,
       {
         method: 'GET',
       }
@@ -25,27 +24,27 @@ export const expenseService = {
   },
 
   async createExpense(expenseData: CreateExpenseRequest): Promise<void> {
-    return apiRequest<void>('Expense', {
+    return apiRequest<void>('Expenses', {
       method: 'POST',
       body: expenseData,
     })
   },
 
   async getExpenseById(id: number): Promise<Expense> {
-    return apiRequest<Expense>(`Expense/${id}`, {
+    return apiRequest<Expense>(`Expenses/${id}`, {
       method: 'GET',
     })
   },
 
   async updateExpense(id: number, expenseData: UpdateExpenseRequest): Promise<void> {
-    return apiRequest<void>(`Expense/${id}`, {
+    return apiRequest<void>(`Expenses/${id}`, {
       method: 'PUT',
       body: expenseData,
     })
   },
 
   async deleteExpense(id: number): Promise<void> {
-    return apiRequest<void>(`Expense/${id}`, {
+    return apiRequest<void>(`Expenses/${id}`, {
       method: 'DELETE',
     })
   },
@@ -55,7 +54,7 @@ export const expenseService = {
     pageSize: number = 10
   ): Promise<PaginatedExpensesResponse> {
     return apiRequest<PaginatedExpensesResponse>(
-      `Expense/user?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+      `Expenses/user?pageNumber=${pageNumber}&pageSize=${pageSize}`,
       {
         method: 'GET',
       }
@@ -63,7 +62,7 @@ export const expenseService = {
   },
 
   async getExpenseGeneralInfo(): Promise<ExpenseGeneralInfoResponse> {
-    return apiRequest<ExpenseGeneralInfoResponse>(`Expense/generalinfo`, {
+    return apiRequest<ExpenseGeneralInfoResponse>(`Expenses/generalinfo`, {
       method: 'GET',
     })
   },
@@ -74,14 +73,14 @@ export const expenseService = {
     pageSize: number = 10
   ): Promise<PaginatedExpensesResponse> {
     return apiRequest<PaginatedExpensesResponse>(
-      `Expense/category/${categoryId}/user?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+      `Expenses/category/${categoryId}/user?pageNumber=${pageNumber}&pageSize=${pageSize}`,
       {
         method: 'GET',
       }
     )
   },
 
-  // New plural /api/Expenses endpoints
+  // /api/Expenses endpoints (paginated list, CRUD, summary)
 
   async apiGetExpenses(params: {
     StartDate?: string

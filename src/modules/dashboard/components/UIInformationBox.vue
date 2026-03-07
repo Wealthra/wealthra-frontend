@@ -1,22 +1,27 @@
 <template>
-  <div class="information-box-c" :style="{ backgroundColor: backgroundColor }">
-    <div class="title">{{ title }}</div>
-    <div class="amount">${{ currentAmount.toLocaleString() }}</div>
-    <div class="percentage-container">
-      <font-awesome-icon
-        :icon="isNegative ? trendIcons.negative : trendIcons.positive"
-        class="trend-icon"
-      />
-      <div class="percentage" :style="{ color: isNegative ? redColor : greenColor }">
-        {{ animatedPercentage }}%
+  <div class="kpi-card">
+    <div class="kpi-card__main">
+      <div class="kpi-card__label">{{ title }}</div>
+      <div class="kpi-card__value">${{ currentAmount.toLocaleString() }}</div>
+      <div class="kpi-card__trend-badge" :class="{ 'kpi-card__trend-badge--negative': isNegative }">
+        <font-awesome-icon
+          :icon="isNegative ? trendIcons.negative : trendIcons.positive"
+          class="kpi-card__trend-icon"
+          aria-hidden="true"
+        />
+        <span class="kpi-card__trend-value">{{ animatedPercentage }}%</span>
       </div>
+    </div>
+    <div v-if="resolvedKpiIcon" class="kpi-card__icon-wrap" :style="{ color: resolvedIconColor }">
+      <font-awesome-icon :icon="resolvedKpiIcon" class="kpi-card__icon" aria-hidden="true" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { defineComponent } from 'vue'
-import { trendIcons } from '@/icons/fontawesome-icons'
+import { kpiIconMap, trendIcons } from '@/icons/fontawesome-icons'
 
 export default defineComponent({
   name: 'InformationBoxCard',
@@ -44,28 +49,53 @@ export default defineComponent({
       type: String,
       default: 'spending',
     },
+    icon: {
+      type: String,
+      default: '',
+    },
+    iconColor: {
+      type: String,
+      default: '',
+    },
   },
   data() {
     return {
       isNegative: false,
-      redColor: '#e74c3c',
-      greenColor: '#7dcea0',
-      backgroundColor: `var(--primary-${this.color}-color)`,
       trendIcons,
     }
   },
+  computed: {
+    accentColor(): string {
+      return `var(--primary-${this.color}-color)`
+    },
+    resolvedIconColor(): string {
+      if (this.iconColor) return this.iconColor
+      return this.accentColor
+    },
+    /** Resolve prop string (e.g. 'fas fa-wallet') to IconDefinition from fontawesome-icons */
+    resolvedKpiIcon(): IconDefinition | null {
+      if (!this.icon || typeof this.icon !== 'string') return null
+      const key = this.icon.trim().split(/\s+/).pop() ?? ''
+      return kpiIconMap[key] ?? kpiIconMap[key.replace(/^fa-/, '')] ?? null
+    },
+    percentage(): string {
+      const value = this.calculatePercentage()
+      this.adjustPercentage()
+      return (value < 0 ? -value : value).toFixed(1)
+    },
+    animatedPercentage(): string {
+      const value = this.calculatePercentage()
+      this.adjustPercentage()
+      return (value < 0 ? -value : value).toFixed(1)
+    },
+  },
   methods: {
-    calculatePercentage() {
-      if (this.lastAmount === 0 && this.currentAmount === 0) {
-        return 0
-      }
-      if (this.lastAmount === 0) {
-        return 100
-      }
-
+    calculatePercentage(): number {
+      if (this.lastAmount === 0 && this.currentAmount === 0) return 0
+      if (this.lastAmount === 0) return 100
       return (this.currentAmount / this.lastAmount) * 100 - 100
     },
-    adjustPercentage() {
+    adjustPercentage(): void {
       if (this.type === 'spending') {
         this.isNegative = this.currentAmount - this.lastAmount >= 0
       } else {
@@ -73,79 +103,126 @@ export default defineComponent({
       }
     },
   },
-  computed: {
-    percentage() {
-      const percentage: number = this.calculatePercentage()
-      this.adjustPercentage()
-      return (percentage < 0 ? -percentage : percentage).toFixed(1)
-    },
-    animatedPercentage() {
-      const percentage: number = this.calculatePercentage()
-      this.adjustPercentage()
-      return (percentage < 0 ? -percentage : percentage).toFixed(1)
-    },
-  },
 })
 </script>
 
 <style scoped lang="scss">
-.information-box-c {
+.kpi-card {
+  --kpi-trend-up: var(--primary-green-color);
+  --kpi-trend-down: var(--primary-red-color);
+  --kpi-badge-up-bg: rgba(92, 184, 92, 0.15);
+  --kpi-badge-down-bg: rgba(239, 100, 100, 0.15);
+
   display: flex;
-  flex-direction: column;
-  width: 25%;
-  padding: 0.8rem;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+  padding: 1rem 1.25rem;
   border-radius: var(--border-radius);
-  text-align: left;
   font-family: var(--main-font);
-  .title {
-    font-size: 20px;
-    font-weight: medium;
-    color: #000000;
+  background: var(--background-color);
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   }
-  .amount {
-    font-size: 24px;
-    font-weight: 600;
-    color: #000000;
-    margin-bottom: 0.2rem;
-  }
-  .percentage-container {
+
+  .kpi-card__main {
+    flex: 1;
+    min-width: 0;
     display: flex;
-    width: fit-content;
-    justify-content: flex-start;
+    flex-direction: column;
+  }
+
+  .kpi-card__icon-wrap {
+    flex-shrink: 0;
+    display: flex;
     align-items: center;
-    padding: 0.3rem;
-    gap: 0.1rem;
-    background: #fff;
-    border-radius: var(--border-radius);
-    .percentage {
-      font-size: 12px;
-      font-weight: 500;
-      line-height: 1.2;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 10px;
+    background: var(--background-color-soft);
+  }
+
+  .kpi-card__icon {
+    font-size: 1.25rem;
+    color: inherit;
+  }
+
+  .kpi-card__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--normal-text-color);
+    letter-spacing: 0.01em;
+    margin-bottom: 0.25rem;
+  }
+
+  .kpi-card__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--header-text-color);
+    line-height: 1.25;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .kpi-card__trend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    width: fit-content;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    background: var(--kpi-badge-up-bg);
+    color: var(--kpi-trend-up);
+
+    &--negative {
+      background: var(--kpi-badge-down-bg);
+      color: var(--kpi-trend-down);
     }
-    img {
-      width: 16px;
-      height: 16px;
-    }
+  }
+
+  .kpi-card__trend-icon {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    color: inherit;
+  }
+
+  .kpi-card__trend-value {
+    line-height: 1.2;
   }
 
   @media (max-width: 768px) {
-    width: 100%;
-    padding: 0.6rem;
+    padding: 0.875rem 1rem;
+    gap: 0.75rem;
 
-    .title {
-      font-size: 12px;
+    .kpi-card__icon-wrap {
+      width: 2.25rem;
+      height: 2.25rem;
     }
 
-    .amount {
-      font-size: 24px;
+    .kpi-card__icon {
+      font-size: 1rem;
     }
 
-    .percentage-container {
-      gap: 0.1rem;
+    .kpi-card__label {
+      font-size: 0.75rem;
+    }
 
-      .percentage {
-        font-size: 11px;
-      }
+    .kpi-card__value {
+      font-size: 1.25rem;
+    }
+
+    .kpi-card__trend-badge {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.4rem;
     }
   }
 }

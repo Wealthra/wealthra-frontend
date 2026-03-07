@@ -40,23 +40,6 @@
         />
 
         <div class="bottom-icons">
-          <div class="remember-me-wrapper">
-            <div
-              class="remember-me-icon"
-              @click="toggleRememberMe"
-              v-if="!userData.rememberMe"
-            ></div>
-            <div
-              class="remember-me-icon-check"
-              @click="toggleRememberMe"
-              v-if="userData.rememberMe"
-            >
-              <font-awesome-icon icon="circle-check" />
-            </div>
-            <div class="remember-me-text">
-              {{ loginTexts[selectedLanguage].rememberMe }}
-            </div>
-          </div>
           <div class="forgot-password-text">
             <router-link to="/forgetpassword">
               {{ loginTexts[selectedLanguage].forgotPassword }}
@@ -120,11 +103,9 @@ export default {
       userData: {
         email: '' as string,
         password: '' as string,
-        rememberMe: false as boolean,
       } as {
         email: string
         password: string
-        rememberMe: boolean
       },
       loginTexts,
     }
@@ -133,20 +114,17 @@ export default {
     togglePasswordVisibility() {
       this.showPassword = !this.showPassword
     },
-    toggleRememberMe() {
-      this.userData.rememberMe = !this.userData.rememberMe
-    },
     handleLanguageUpdate(language: string) {
       this.selectedLanguage = language as 'English' | 'Turkish'
       localStorage.setItem('selectedLanguage', this.selectedLanguage)
     },
     async handleLogin() {
-      const { email, password, rememberMe } = this.userData
+      const { email, password } = this.userData
 
       // Dummy admin login for local testing
       if (email === 'admin@gmail.com' && password === '1234') {
         import('../../../utils/auth').then(({ setAuth }) => {
-          setAuth('dummy-admin-token', rememberMe, 'admin-id', ['Admin'])
+          setAuth('dummy-admin-token', 'admin-id', ['Admin'])
           this.$router.push('/admin')
         })
         return
@@ -170,7 +148,7 @@ export default {
         }
 
         import('../../../utils/auth').then(({ setAuth }) => {
-          setAuth(data.token, rememberMe, data.id)
+          setAuth(data.token, data.id)
           this.$router.push('/dashboard')
         })
       } catch {

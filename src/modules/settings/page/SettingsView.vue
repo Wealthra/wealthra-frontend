@@ -579,7 +579,12 @@ export default defineComponent({
 <style scoped lang="scss">
 .settings-root {
   width: 100%;
-  padding: var(--spacing-md) 0;
+  flex: 1;
+  min-height: 0;
+  padding: var(--spacing-md);
+  background-color: var(--background-color);
+  border-radius: 12px;
+  box-sizing: border-box;
 }
 
 .settings-columns {
@@ -798,7 +803,7 @@ export default defineComponent({
 
 @media (max-width: 1024px) {
   .settings-root {
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-sm);
   }
 
   .settings-card {

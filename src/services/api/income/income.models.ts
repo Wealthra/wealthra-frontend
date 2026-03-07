@@ -1,50 +1,3 @@
-export interface Income {
-  id: number
-  name: string
-  amount: number
-  method: string
-  isRecurring: boolean
-  created?: string
-  createdBy?: string
-  lastModified?: string
-  lastModifiedBy?: string
-}
-
-export interface PaginatedIncomesResponse {
-  pageNumber: number
-  pageSize: number
-  data: Income[]
-  hasMoreItems: boolean
-  totalCount: number
-  totalPages: number
-}
-
-export interface CreateIncomeRequest {
-  name: string
-  amount: number
-  method: string
-  isRecurring: boolean
-}
-
-export interface UpdateIncomeRequest {
-  name: string
-  amount: number
-  method: string
-  isRecurring: boolean
-}
-
-export interface IncomeGeneralInfoResponse {
-  weeklyTotalIncome: number
-  monthlyTotalIncome: number
-  yearlyTotalIncome: number
-  previousWeekTotalIncome: number
-  previousMonthTotalIncome: number
-  previousYearTotalIncome: number
-  recentTransactions: Income[]
-}
-
-// New API models based on /api/Incomes spec
-
 export interface IncomeApiModel {
   id?: number
   name: string
@@ -70,3 +23,10 @@ export interface IncomeSummaryItem {
 }
 
 export type IncomeSummaryResponse = IncomeSummaryItem[]
+
+export interface IncomesGeneralInfoResponse {
+  weeklyTotal: number
+  monthlyTotal: number
+  yearlyTotal: number
+  averageMonthlyIncome: number
+}

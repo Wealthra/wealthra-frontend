@@ -409,9 +409,6 @@ export default defineComponent({
   flex: 1;
   min-height: 0;
   margin: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
-  padding: var(--spacing-md);
-  border-radius: 12px;
-  background-color: var(--background-color);
   overflow-y: auto;
   box-sizing: border-box;
 }

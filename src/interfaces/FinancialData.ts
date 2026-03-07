@@ -53,11 +53,9 @@ export interface FinancialData {
     name: string
   }[]
   weeklyTotalIncome: number
-  previousWeekTotalIncome: number
   monthlyTotalIncome: number
-  previousMonthTotalIncome: number
   yearlyTotalIncome: number
-  previousYearTotalIncome: number
+  averageMonthlyIncome: number
 
   weeklyTotalExpense: number
   previousWeekTotalExpense: number

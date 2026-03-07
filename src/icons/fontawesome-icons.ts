@@ -1,22 +1,32 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
   faArrowDown,
+  faArrowTrendDown,
+  faArrowTrendUp,
   faArrowUp,
   faBullseye,
+  faCalendar,
+  faCalendarDay,
+  faCalendarWeek,
   faChartLine,
   faChevronLeft,
   faChevronRight,
   faCircleCheck,
   faCircleExclamation,
   faCircleInfo,
+  faCreditCard,
   faEnvelope,
   faGauge,
   faGear,
   faGlobe,
+  faHandHoldingDollar,
   faLanguage,
+  faList,
   faLock,
   faMoon,
   faPen,
+  faPiggyBank,
+  faReceipt,
   faSun,
   faTrash,
   faTriangleExclamation,
@@ -28,12 +38,18 @@ import {
 
 export const leftSidebarIconMap: Record<string, IconDefinition> = {
   Dashboard: faGauge,
-  Income: faArrowUp,
-  Expenses: faArrowDown,
-  Budget: faWallet,
+  Income: faHandHoldingDollar,
+  Expenses: faReceipt,
+  Budget: faPiggyBank,
   Goals: faBullseye,
   Analytics: faChartLine,
   Settings: faGear,
+}
+
+/** Icons for empty-state placeholders (no data) */
+export const emptyStateIcons = {
+  incomeSources: faHandHoldingDollar,
+  transactions: faReceipt,
 }
 
 export const alertTypeIconMap: Record<'error' | 'success' | 'warning' | 'info', IconDefinition> = {
@@ -74,12 +90,32 @@ export const arrowIcons = {
 }
 
 export const trendIcons = {
-  positive: faArrowUp,
-  negative: faArrowDown,
+  positive: faArrowTrendUp,
+  negative: faArrowTrendDown,
 }
 
 export const actionIcons = {
   delete: faTrash,
   edit: faPen,
+}
+
+export const paginationIcons = {
+  results: faList,
+}
+
+/** Map icon string (e.g. 'fas fa-wallet' or 'fa-wallet') to IconDefinition for KPI cards */
+export const kpiIconMap: Record<string, IconDefinition> = {
+  wallet: faWallet,
+  'fa-wallet': faWallet,
+  'credit-card': faCreditCard,
+  'fa-credit-card': faCreditCard,
+  'calendar-week': faCalendarWeek,
+  'fa-calendar-week': faCalendarWeek,
+  'calendar-day': faCalendarDay,
+  'fa-calendar-day': faCalendarDay,
+  calendar: faCalendar,
+  'fa-calendar': faCalendar,
+  'chart-line': faChartLine,
+  'fa-chart-line': faChartLine,
 }
 

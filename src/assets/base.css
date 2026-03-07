@@ -162,6 +162,134 @@
   --notification-info-color-text: #cff4fc;
 }
 
+/* Income datepicker: wider sidebar, no scroll – show all shortcut options */
+.income-datepicker-popup.mx-datepicker-popup {
+  max-height: none;
+}
+.income-datepicker-popup .mx-datepicker-sidebar {
+  width: 11rem;
+  min-width: 11rem;
+  overflow: visible;
+  max-height: none;
+}
+.income-datepicker-popup .mx-datepicker-sidebar + .mx-datepicker-content {
+  margin-left: 11rem;
+}
+.income-datepicker-popup .mx-datepicker-main {
+  max-height: none;
+  overflow: visible;
+}
+
+/* Dark theme: datepicker popup (vue-datepicker-next, teleported to body) */
+:root[data-theme='dark'] .mx-datepicker-main {
+  background-color: var(--background-color);
+  border-color: var(--border-color);
+  color: var(--header-text-color);
+}
+:root[data-theme='dark'] .mx-datepicker-popup {
+  --mx-calendar-bg: var(--background-color);
+  --mx-calendar-border: var(--border-color);
+  --mx-calendar-text: var(--header-text-color);
+  --mx-calendar-text-muted: var(--normal-text-color);
+  --mx-calendar-hover: var(--background-color-soft);
+  --mx-calendar-active: var(--primary-green-color);
+}
+:root[data-theme='dark'] .mx-datepicker-header,
+:root[data-theme='dark'] .mx-datepicker-footer {
+  border-color: var(--border-color);
+}
+:root[data-theme='dark'] .mx-datepicker-sidebar + .mx-datepicker-content {
+  border-left-color: var(--border-color);
+}
+:root[data-theme='dark'] .mx-calendar {
+  border-color: var(--border-color);
+}
+:root[data-theme='dark'] .mx-calendar + .mx-calendar {
+  border-left-color: var(--border-color);
+}
+:root[data-theme='dark'] .mx-btn {
+  border-color: var(--border-color);
+  color: var(--normal-text-color);
+}
+:root[data-theme='dark'] .mx-btn:hover {
+  border-color: var(--primary-green-color);
+  color: var(--primary-green-color);
+}
+:root[data-theme='dark'] .mx-calendar-header-label {
+  color: var(--header-text-color);
+}
+:root[data-theme='dark'] .mx-calendar-content .cell {
+  color: var(--header-text-color);
+}
+:root[data-theme='dark'] .mx-calendar-content .cell:hover {
+  color: var(--header-text-color);
+  background-color: var(--background-color-soft);
+}
+:root[data-theme='dark'] .mx-calendar-content .cell.active {
+  color: var(--text-color-reverse);
+  background-color: var(--primary-green-color);
+}
+:root[data-theme='dark'] .mx-calendar-content .cell.in-range,
+:root[data-theme='dark'] .mx-calendar-content .cell.hover-in-range {
+  color: var(--header-text-color);
+  background-color: var(--background-color-soft);
+}
+:root[data-theme='dark'] .mx-calendar-content .cell.disabled {
+  color: var(--normal-text-color);
+  background-color: var(--background-color-soft);
+  opacity: 0.6;
+}
+:root[data-theme='dark'] .mx-table-date .today {
+  color: var(--primary-green-color);
+}
+:root[data-theme='dark'] .mx-table-date .cell.not-current-month {
+  color: var(--normal-text-color);
+  background: none;
+}
+:root[data-theme='dark'] .mx-time {
+  background: var(--background-color);
+}
+:root[data-theme='dark'] .mx-time + .mx-time {
+  border-left-color: var(--border-color);
+}
+:root[data-theme='dark'] .mx-time-header {
+  border-bottom-color: var(--border-color);
+}
+:root[data-theme='dark'] .mx-time-column {
+  border-left-color: var(--border-color);
+}
+:root[data-theme='dark'] .mx-time-column .mx-time-item:hover,
+:root[data-theme='dark'] .mx-time-option:hover {
+  color: var(--header-text-color);
+  background-color: var(--background-color-soft);
+}
+:root[data-theme='dark'] .mx-time-column .mx-time-item.active,
+:root[data-theme='dark'] .mx-time-option.active {
+  color: var(--primary-green-color);
+  background-color: transparent;
+}
+:root[data-theme='dark'] .mx-time-column .mx-time-item.disabled,
+:root[data-theme='dark'] .mx-time-option.disabled {
+  color: var(--normal-text-color);
+  background-color: var(--background-color-soft);
+}
+:root[data-theme='dark'] .mx-calendar-week-mode .mx-date-row:hover {
+  background-color: var(--background-color-soft);
+}
+:root[data-theme='dark'] .mx-calendar-week-mode .mx-date-row.mx-active-week {
+  background-color: var(--background-color-soft);
+}
+:root[data-theme='dark'] .mx-scrollbar-track .mx-scrollbar-thumb {
+  background-color: var(--normal-text-color);
+}
+:root[data-theme='dark'] .mx-icon-calendar,
+:root[data-theme='dark'] .mx-icon-clear {
+  color: var(--normal-text-color);
+}
+:root[data-theme='dark'] .mx-icon-clear:hover {
+  color: var(--header-text-color);
+}
+
 *,
 *::before,
 *::after {

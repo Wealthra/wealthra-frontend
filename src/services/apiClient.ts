@@ -45,20 +45,27 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
     }
   }
 
-  const requestOptions: RequestInit = {
+  const baseRequestInit: RequestInit = {
     method,
     headers: requestHeaders,
+    credentials: 'include',
   }
 
-  if (body) {
-    if (isFormData) {
-      requestOptions.body = body
-    } else {
-      requestOptions.body = JSON.stringify(body)
+  const createRequestInit = (): RequestInit => {
+    const init: RequestInit = { ...baseRequestInit }
+
+    if (body) {
+      if (isFormData) {
+        init.body = body
+      } else {
+        init.body = JSON.stringify(body)
+      }
     }
+
+    return init
   }
 
-  const response = await fetch(url, requestOptions)
+  let response = await fetch(url, createRequestInit())
 
   if (!response.ok) {
     let errorData: ApiError
@@ -73,12 +80,69 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
       errorData = { message: response.statusText || 'An error occurred', status: response.status }
     }
 
-    // Handle 401 Unauthorized - redirect to login
-    if (response.status === 401) {
-      // Clear auth data
+    // Handle 401 Unauthorized - try refresh once, then redirect to login
+    if (response.status === 401 && requiresAuth) {
+      try {
+        const [{ accountService }, authUtils] = await Promise.all([
+          import('./api/account/account.service'),
+          import('../utils/auth'),
+        ])
+
+        const refreshData = await accountService.refreshToken()
+
+        if (refreshData && refreshData.token) {
+          authUtils.setAuth(refreshData.token, refreshData.id)
+
+          const refreshedHeaders: Record<string, string> = { ...headers }
+          if (!isFormData && !refreshedHeaders['Content-Type']) {
+            refreshedHeaders['Content-Type'] = 'application/json'
+          }
+
+          const refreshedToken = authUtils.getAuthToken()
+          if (refreshedToken) {
+            refreshedHeaders['Authorization'] = `Bearer ${refreshedToken}`
+          }
+
+          const retryInit: RequestInit = {
+            method,
+            headers: refreshedHeaders,
+            credentials: 'include',
+          }
+
+          if (body) {
+            if (isFormData) {
+              retryInit.body = body
+            } else {
+              retryInit.body = JSON.stringify(body)
+            }
+          }
+
+          response = await fetch(url, retryInit)
+
+          if (response.ok) {
+            const contentType = response.headers.get('content-type')
+            if (contentType && contentType.includes('image')) {
+              return (await response.blob()) as T
+            }
+
+            const text = await response.text()
+            if (!text) {
+              return {} as T
+            }
+
+            try {
+              return JSON.parse(text) as T
+            } catch {
+              return text as T
+            }
+          }
+        }
+      } catch {
+        // Intentionally swallow refresh errors and fall through to clearAuth + redirect
+      }
+
       const authUtils = await import('../utils/auth')
       authUtils.clearAuth()
-      // Redirect to login
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }

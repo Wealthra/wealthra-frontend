@@ -11,6 +11,7 @@ export const incomeTexts = {
     weeklyIncome: 'Weekly Income',
     monthlyIncome: 'Monthly Income',
     annualIncome: 'Annual Income',
+    averageMonthlyIncome: 'Avg. Monthly Income',
   },
   Turkish: {
     title: 'Gelir Görünümü',
@@ -24,5 +25,6 @@ export const incomeTexts = {
     weeklyIncome: 'Haftalık Gelir',
     monthlyIncome: 'Aylık Gelir',
     annualIncome: 'Yıllık Gelir',
+    averageMonthlyIncome: 'Ort. Aylık Gelir',
   },
 }

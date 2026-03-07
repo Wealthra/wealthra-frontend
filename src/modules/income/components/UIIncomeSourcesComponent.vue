@@ -1,135 +1,280 @@
 <template>
   <div class="income-sources-container">
     <div class="header">
-      <div class="title">
+      <h1 class="title">
         {{ selectedLanguage == 'English' ? 'Income Sources' : 'Gelir Kaynakları' }}
+      </h1>
+      <div class="header-actions">
+        <button class="add-source-btn" @click="showAddModal">
+          {{ selectedLanguage == 'English' ? 'Add Source' : 'Kaynak Ekle' }}
+        </button>
+        <div class="date-range-picker-wrap">
+          <Datepicker
+            :value="dateRangeModel"
+            range
+            :placeholder="selectedLanguage == 'English' ? 'Date range' : 'Tarih aralığı'"
+            :disabled-date="disableFutureDates"
+            :shortcuts="dateRangeShortcuts"
+            popup-class="income-datepicker-popup"
+            @update:value="onDateRangeChange"
+          />
+        </div>
       </div>
-      <button class="add-source-btn" @click="showAddModal">
-        {{ selectedLanguage == 'English' ? 'Add Source' : 'Kaynak Ekle' }}
-      </button>
     </div>
-    <div class="sources-list" v-if="incomeSources && incomeSources.length > 0">
-      <div v-for="(source, index) in incomeSources" :key="index" class="source-item">
-        <div class="source-info">
-          <div class="source-details">
-            <div class="source-name">{{ source.name }}</div>
-            <div class="source-type">{{ isRecurrent(source) }} - {{ source.method }}</div>
+
+    <div class="table-wrap" :class="{ 'table-wrap--empty': isTableEmpty }">
+      <div v-if="incomeSources && incomeSources.length > 0" class="table" role="table">
+        <div class="table-header" role="row">
+          <div class="col col-name" role="columnheader">
+            {{ selectedLanguage == 'English' ? 'Name' : 'Ad' }}
+          </div>
+          <div class="col col-type" role="columnheader">
+            {{ selectedLanguage == 'English' ? 'Type' : 'Tür' }}
+          </div>
+          <div class="col col-amount" role="columnheader">
+            {{ selectedLanguage == 'English' ? 'Amount' : 'Miktar' }}
+          </div>
+          <div class="col col-actions" role="columnheader">
+            {{ selectedLanguage == 'English' ? 'Actions' : 'İşlemler' }}
           </div>
         </div>
-        <div class="source-amount">${{ source.amount }}</div>
-        <div class="source-actions" @click="deleteSource(source)">
-          <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
+        <div v-for="(source, index) in incomeSources" :key="index" class="table-row" role="row">
+          <div class="col col-name">
+            <div class="source-name">{{ source.name }}</div>
+          </div>
+          <div class="col col-type">{{ isRecurrent(source) }} – {{ source.method }}</div>
+          <div class="col col-amount">${{ source.amount }}</div>
+          <div class="col col-actions">
+            <button
+              type="button"
+              class="row-action-btn"
+              @click="openEditModal(source)"
+              :aria-label="selectedLanguage == 'English' ? 'Edit source' : 'Kaynağı düzenle'"
+            >
+              <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
+            </button>
+            <button
+              type="button"
+              class="row-action-btn"
+              @click="deleteSource(source)"
+              :aria-label="selectedLanguage == 'English' ? 'Delete source' : 'Kaynağı sil'"
+            >
+              <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div v-if="isTableEmpty" class="empty-state">
+        <div class="empty-state__icon-wrap">
+          <font-awesome-icon
+            :icon="emptyStateIcons.incomeSources"
+            class="empty-state__icon"
+            aria-hidden="true"
+          />
+        </div>
+        <h2 class="empty-state__heading">
+          {{ selectedLanguage == 'English' ? 'No income sources yet' : 'Henüz gelir kaynağı yok' }}
+        </h2>
+        <p class="empty-state__text">
+          {{
+            selectedLanguage == 'English'
+              ? 'Add your first income source to start tracking your earnings.'
+              : 'Kazançlarınızı takip etmek için ilk gelir kaynağınızı ekleyin.'
+          }}
+        </p>
       </div>
     </div>
 
-    <div v-if="!incomeSources || incomeSources?.length === 0" class="no-income">
-      {{
-        selectedLanguage == 'English'
-          ? '💰 No income sources available 💰'
-          : '💰 Hiç gelir kaynağı yok 💰'
-      }}
-    </div>
-
-    <!-- Pagination -->
-    <div class="pagination" v-if="incomeSources && incomeSources.length > 0">
-      <button
-        :disabled="pageNumber === 1"
-        @click="changePage(pageNumber - 1)"
-        class="pagination-btn"
-      >
-        <font-awesome-icon :icon="arrowIcons.left" class="arrow-left" />
-      </button>
-
-      <span
-        v-for="page in displayedPages"
-        :key="page"
-        :class="['page-number', { active: page === pageNumber }]"
-        @click="changePage(page)"
-      >
-        {{ page }}
-      </span>
-
-      <span v-if="showEllipsis" class="ellipsis">...</span>
-
-      <span
-        v-if="showLastPage"
-        :class="['page-number', { active: totalPages === pageNumber }]"
-        @click="changePage(totalPages)"
-      >
-        {{ totalPages }}
-      </span>
-
-      <button
-        :disabled="pageNumber === totalPages || totalPages === 0"
-        @click="changePage(pageNumber + 1)"
-        class="pagination-btn"
-      >
-        <font-awesome-icon :icon="arrowIcons.right" class="arrow-right" />
-      </button>
+    <!-- Pagination bar (layout like reference: page size dropdown left, page nav right) -->
+    <div v-if="incomeSources && incomeSources.length > 0 && totalPages > 0" class="pagination-bar">
+      <div class="pagination-results">
+        <font-awesome-icon
+          :icon="paginationIcons.results"
+          class="pagination-results-icon"
+          aria-hidden="true"
+        />
+        <select
+          :value="pageSize"
+          class="page-size-select"
+          :aria-label="selectedLanguage == 'English' ? 'Results per page' : 'Sayfa başına sonuç'"
+          @change="onPageSizeChange"
+        >
+          <option v-for="opt in pageSizeOptions" :key="opt" :value="opt">
+            {{ opt }}
+          </option>
+        </select>
+        <span class="pagination-results-label">
+          {{ selectedLanguage == 'English' ? 'of' : '/' }}
+          <span class="pagination-total">{{ totalCount }}</span>
+          {{ selectedLanguage == 'English' ? 'results' : 'sonuç' }}
+        </span>
+      </div>
+      <div class="pagination-nav">
+        <button
+          type="button"
+          :disabled="pageNumber === 1"
+          class="pagination-btn"
+          aria-label="Previous page"
+          @click="changePage(pageNumber - 1)"
+        >
+          <font-awesome-icon :icon="arrowIcons.left" class="arrow-icon" />
+        </button>
+        <template v-for="page in displayedPages" :key="page">
+          <button
+            type="button"
+            :class="['pagination-num', { active: page === pageNumber }]"
+            @click="changePage(page)"
+          >
+            {{ page }}
+          </button>
+        </template>
+        <span v-if="showEllipsis" class="pagination-ellipsis">—</span>
+        <button
+          v-if="showLastPage"
+          type="button"
+          :class="['pagination-num', { active: totalPages === pageNumber }]"
+          @click="changePage(totalPages)"
+        >
+          {{ totalPages }}
+        </button>
+        <button
+          type="button"
+          :disabled="pageNumber === totalPages || totalPages === 0"
+          class="pagination-btn"
+          aria-label="Next page"
+          @click="changePage(pageNumber + 1)"
+        >
+          <font-awesome-icon :icon="arrowIcons.right" class="arrow-icon" />
+        </button>
+      </div>
     </div>
 
     <div v-if="isAddModalVisible" class="modal-overlay">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>{{ selectedLanguage == 'English' ? 'Income Add Module' : 'Gelir Ekleme Modülü' }}</h3>
-          <button class="close-btn" @click="hideAddModal">&times;</button>
+          <h3>
+            {{
+              editingSourceId != null
+                ? selectedLanguage == 'English'
+                  ? 'Edit Income'
+                  : 'Geliri Düzenle'
+                : selectedLanguage == 'English'
+                  ? 'Income Add Module'
+                  : 'Gelir Ekleme Modülü'
+            }}
+          </h3>
+          <button type="button" class="close-btn" @click="hideAddModal" aria-label="Close">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
-          <input
-            type="text"
-            v-model="newSource.name"
-            :placeholder="selectedLanguage == 'English' ? 'Enter income name' : 'Gelir adını girin'"
-            class="modal-input"
-          />
-          <input
-            type="number"
-            v-model="newSource.amount"
-            :placeholder="
-              selectedLanguage == 'English' ? 'Enter income amount' : 'Gelir miktarını girin'
-            "
-            class="modal-input"
-          />
-          <input
-            type="text"
-            v-model="newSource.method"
-            :placeholder="
-              selectedLanguage == 'English'
-                ? 'Enter income payment method'
-                : 'Gelir ödeme yöntemini girin'
-            "
-            class="modal-input"
-          />
-          <input
-            type="date"
-            v-model="newSource.transactionDate"
-            :placeholder="
-              selectedLanguage == 'English'
-                ? 'Select transaction date'
-                : 'İşlem tarihini seçin'
-            "
-            class="modal-input"
-          />
-          <div class="frequency-buttons">
-            <button
-              :class="['frequency-btn', newSource.isRecurring === true ? 'active' : '']"
-              @click="newSource.isRecurring = true"
-            >
-              {{ selectedLanguage == 'English' ? 'Periodic' : 'Periyodik' }}
-            </button>
-            <button
-              :class="['frequency-btn', newSource.isRecurring === false ? 'active' : '']"
-              @click="newSource.isRecurring = false"
-            >
-              {{ selectedLanguage == 'English' ? 'One-time' : 'Tek seferlik' }}
-            </button>
+          <div class="form-group">
+            <label for="income-source-name">{{
+              selectedLanguage == 'English' ? 'Name' : 'Ad'
+            }}</label>
+            <input
+              id="income-source-name"
+              type="text"
+              v-model="newSource.name"
+              :placeholder="
+                selectedLanguage == 'English' ? 'Enter income name' : 'Gelir adını girin'
+              "
+              class="modal-input"
+              :aria-invalid="!!(errorMessage && errorMessage.toLowerCase().includes('name'))"
+            />
           </div>
-          <button class="add-btn" @click="addIncomeSource">
-            {{ selectedLanguage == 'English' ? 'Add Income' : 'Gelir Ekle' }}
-          </button>
+          <div class="form-group">
+            <label for="income-source-amount">{{
+              selectedLanguage == 'English' ? 'Amount' : 'Miktar'
+            }}</label>
+            <div class="input-with-prefix">
+              <span class="input-prefix">$</span>
+              <input
+                id="income-source-amount"
+                type="number"
+                v-model="newSource.amount"
+                :placeholder="selectedLanguage == 'English' ? '0.00' : '0,00'"
+                class="modal-input"
+                min="0"
+                step="0.01"
+                :aria-invalid="
+                  !!(
+                    errorMessage &&
+                    (errorMessage.toLowerCase().includes('amount') ||
+                      errorMessage.toLowerCase().includes('miktar'))
+                  )
+                "
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="income-source-method">{{
+              selectedLanguage == 'English' ? 'Payment method' : 'Ödeme yöntemi'
+            }}</label>
+            <input
+              id="income-source-method"
+              type="text"
+              v-model="newSource.method"
+              :placeholder="
+                selectedLanguage == 'English' ? 'e.g. Bank transfer, Cash' : 'Örn. Havale, Nakit'
+              "
+              class="modal-input"
+              :aria-invalid="
+                !!(
+                  errorMessage &&
+                  (errorMessage.toLowerCase().includes('payment') ||
+                    errorMessage.toLowerCase().includes('ödeme'))
+                )
+              "
+            />
+          </div>
+          <div class="form-group">
+            <label for="income-source-date">{{
+              selectedLanguage == 'English' ? 'Transaction date' : 'İşlem tarihi'
+            }}</label>
+            <div class="datepicker-wrapper">
+              <Datepicker
+                v-model:value="newSource.transactionDate"
+                :placeholder="selectedLanguage == 'English' ? 'Select date' : 'Tarih seçin'"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="form-group-label">{{
+              selectedLanguage == 'English' ? 'Frequency' : 'Sıklık'
+            }}</span>
+            <div class="frequency-segmented">
+              <button
+                type="button"
+                :class="['frequency-option', { active: newSource.isRecurring === true }]"
+                @click="newSource.isRecurring = true"
+              >
+                {{ selectedLanguage == 'English' ? 'Periodic' : 'Periyodik' }}
+              </button>
+              <button
+                type="button"
+                :class="['frequency-option', { active: newSource.isRecurring === false }]"
+                @click="newSource.isRecurring = false"
+              >
+                {{ selectedLanguage == 'English' ? 'One-time' : 'Tek seferlik' }}
+              </button>
+            </div>
+          </div>
           <div v-if="errorMessage" class="error-message">
             {{ errorMessage }}
           </div>
+          <button type="button" class="add-btn" @click="submitIncomeSource">
+            {{
+              editingSourceId != null
+                ? selectedLanguage == 'English'
+                  ? 'Save'
+                  : 'Kaydet'
+                : selectedLanguage == 'English'
+                  ? 'Add Income'
+                  : 'Gelir Ekle'
+            }}
+          </button>
         </div>
       </div>
     </div>
@@ -138,10 +283,20 @@
 
 <script lang="ts">
 import type { IncomeSource } from '@/interfaces/IncomeSources'
-import { arrowIcons, actionIcons } from '@/icons/fontawesome-icons'
+import {
+  arrowIcons,
+  actionIcons,
+  emptyStateIcons,
+  paginationIcons,
+} from '@/icons/fontawesome-icons'
+import Datepicker from 'vue-datepicker-next'
+import 'vue-datepicker-next/index.css'
 
 export default {
   name: 'UIIncomeSourcesComponent',
+  components: {
+    Datepicker,
+  },
   data() {
     return {
       isAddModalVisible: false,
@@ -155,6 +310,10 @@ export default {
       },
       arrowIcons,
       actionIcons,
+      emptyStateIcons,
+      paginationIcons,
+      pageSizeOptions: [5, 10, 25, 50, 100],
+      editingSourceId: null as number | null,
     }
   },
   props: {
@@ -195,9 +354,166 @@ export default {
       type: Number,
       required: true,
     },
+    startDate: {
+      type: String,
+      default: null,
+    },
+    endDate: {
+      type: String,
+      default: null,
+    },
+    getIncomeById: {
+      type: Function,
+      required: true,
+    },
   },
 
   computed: {
+    dateRangeShortcuts(): Array<{ text: string; onClick: () => [Date, Date] }> {
+      const toDate = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      const isEn = this.selectedLanguage === 'English'
+      return [
+        {
+          text: isEn ? 'Today' : 'Bugün',
+          onClick: () => {
+            const d = toDate(new Date())
+            return [d, d]
+          },
+        },
+        {
+          text: isEn ? 'Yesterday' : 'Dün',
+          onClick: () => {
+            const d = toDate(new Date())
+            d.setDate(d.getDate() - 1)
+            return [d, d]
+          },
+        },
+        {
+          text: isEn ? 'This week' : 'Bu hafta',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            const day = start.getDay()
+            const diff = start.getDate() - day + (day === 0 ? -6 : 1)
+            start.setDate(diff)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'Last week' : 'Geçen hafta',
+          onClick: () => {
+            const end = toDate(new Date())
+            const day = end.getDay()
+            const diff = end.getDate() - day + (day === 0 ? -6 : 1)
+            end.setDate(diff - 1)
+            const start = toDate(new Date(end))
+            start.setDate(start.getDate() - 6)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'Last 7 days' : 'Son 7 gün',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setDate(start.getDate() - 7)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'Last 30 days' : 'Son 30 gün',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setDate(start.getDate() - 30)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'This month' : 'Bu ay',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setDate(1)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'Last month' : 'Geçen ay',
+          onClick: () => {
+            const end = toDate(new Date())
+            end.setMonth(end.getMonth() - 1)
+            end.setDate(0)
+            const start = toDate(new Date(end))
+            start.setDate(1)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'This period' : 'Bu dönem',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setDate(1)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'Last period' : 'Geçen dönem',
+          onClick: () => {
+            const end = toDate(new Date())
+            end.setMonth(end.getMonth() - 1)
+            end.setDate(0)
+            const start = toDate(new Date(end))
+            start.setDate(1)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'This year' : 'Bu yıl',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setMonth(0)
+            start.setDate(1)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'Last year' : 'Geçen yıl',
+          onClick: () => {
+            const end = toDate(new Date())
+            end.setFullYear(end.getFullYear() - 1)
+            end.setMonth(11)
+            end.setDate(31)
+            const start = toDate(new Date(end))
+            start.setMonth(0)
+            start.setDate(1)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'Last 90 days' : 'Son 90 gün',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setDate(start.getDate() - 90)
+            return [start, end]
+          },
+        },
+      ]
+    },
+    dateRangeModel(): [Date, Date] | null {
+      if (!this.startDate || !this.endDate) return null
+      const start = new Date(this.startDate)
+      const end = new Date(this.endDate)
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return null
+      return [start, end]
+    },
+    isTableEmpty(): boolean {
+      const src = this.incomeSources
+      return !src || !Array.isArray(src) || src.length === 0
+    },
     displayedPages() {
       // Display up to 5 page numbers around the current page
       const maxVisiblePages = 5
@@ -254,6 +570,28 @@ export default {
         this.$emit('changePage', pageNumber)
       }
     },
+    onDateRangeChange(value: [Date, Date] | Date | null) {
+      if (!value || !Array.isArray(value) || value.length < 2) {
+        this.$emit('updateDateRange', null, null)
+        return
+      }
+      const [start, end] = value
+      const toYmd = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      this.$emit('updateDateRange', toYmd(start), toYmd(end))
+    },
+    onPageSizeChange(event: Event) {
+      const target = event.target as HTMLSelectElement
+      const size = parseInt(target.value, 10)
+      if (!isNaN(size) && this.pageSizeOptions.includes(size)) {
+        this.$emit('updatePageSize', size)
+      }
+    },
+    disableFutureDates(date: Date): boolean {
+      const today = new Date()
+      today.setHours(23, 59, 59, 999)
+      return date.getTime() > today.getTime()
+    },
 
     deleteSource(source: IncomeSource) {
       this.$emit('deleteSource', source)
@@ -264,7 +602,25 @@ export default {
     hideAddModal() {
       this.isAddModalVisible = false
       this.errorMessage = ''
+      this.editingSourceId = null
       this.resetNewSource()
+    },
+    async openEditModal(source: IncomeSource) {
+      try {
+        const data = await this.getIncomeById(source.id)
+        this.editingSourceId = data.id ?? source.id
+        const txDate = data.transactionDate
+        this.newSource = {
+          name: data.name,
+          amount: data.amount,
+          isRecurring: data.isRecurring,
+          method: data.method,
+          transactionDate: (txDate ? new Date(txDate) : '') as string,
+        }
+        this.isAddModalVisible = true
+      } catch (e) {
+        console.error('Failed to load income for edit:', e)
+      }
     },
     resetNewSource() {
       this.newSource = {
@@ -275,7 +631,7 @@ export default {
         transactionDate: '',
       }
     },
-    addIncomeSource() {
+    submitIncomeSource() {
       this.errorMessage = ''
 
       if (!this.newSource.name) {
@@ -309,7 +665,8 @@ export default {
         return
       }
 
-      if (!this.newSource.transactionDate) {
+      const dateVal = this.newSource.transactionDate
+      if (!dateVal) {
         this.errorMessage =
           this.selectedLanguage === 'English'
             ? 'Please select transaction date'
@@ -317,15 +674,24 @@ export default {
         return
       }
 
-      const newIncomeSource = {
+      const d = (dateVal as unknown) instanceof Date ? (dateVal as unknown as Date) : null
+      const transactionDateStr = d
+        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        : String(dateVal)
+
+      const payload = {
         name: this.newSource.name,
-        amount: amount,
+        amount,
         isRecurring: this.newSource.isRecurring,
         method: this.newSource.method,
-        transactionDate: this.newSource.transactionDate,
+        transactionDate: transactionDateStr,
       }
 
-      this.$emit('addIncomeSource', newIncomeSource)
+      if (this.editingSourceId != null) {
+        this.$emit('updateIncomeSource', this.editingSourceId, payload)
+      } else {
+        this.$emit('addIncomeSource', payload)
+      }
       this.hideAddModal()
     },
   },
@@ -337,180 +703,322 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 80%;
-  background-color: var(--background-color-soft);
+  flex: 1;
+  min-height: 0;
+  background-color: var(--background-color);
   border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  padding: 1.5rem;
+  padding: 1.5rem 1.25rem;
 
   .header {
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: var(--header-text-color);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 
     .title {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
       margin: 0;
+      color: var(--header-text-color);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .date-range-picker-wrap {
+      cursor: pointer;
+
+      :deep(.mx-datepicker) {
+        width: auto;
+        min-width: 16rem;
+        cursor: pointer;
+      }
+
+      :deep(.mx-input) {
+        cursor: pointer;
+        font-size: 0.8125rem;
+        padding: 0.4rem 0.5rem;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        background-color: var(--background-color);
+        color: var(--header-text-color);
+      }
+      :deep(.mx-input) {
+        cursor: pointer;
+      }
     }
 
     .add-source-btn {
-      background-color: var(--background-color);
-      color: var(--header-text-color);
+      background-color: var(--primary-green-color);
+      color: white;
       border: none;
-      border-radius: 5px;
-      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      padding: 0.4rem 0.75rem;
       cursor: pointer;
-      font-weight: 500;
-      font-size: 0.9rem;
+      font-weight: 600;
+      font-size: 0.8125rem;
 
       &:hover {
-        background-color: var(--background-color-reverse);
-        color: var(--reverse-header-text-color);
-        transition: background-color 0.2s;
+        opacity: var(--hover-opacity);
       }
     }
   }
 
-  .sources-list {
+  .table-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    background-color: var(--background-color);
+
+    &.table-wrap--empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .table {
+    width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    width: 100%;
-    height: 100%;
-    gap: 0.4rem;
-
-    .source-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: var(--background-color);
-      border-radius: var(--border-radius);
-      padding: 0.5rem 1rem;
-      margin-bottom: 0.5rem;
-
-      .source-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex: 1;
-
-        .source-details {
-          .source-name {
-            font-weight: 500;
-            color: var(--header-text-color);
-            font-size: 0.9rem;
-          }
-
-          .source-type {
-            font-size: 0.8rem;
-            color: var(--normal-text-color);
-          }
-        }
-      }
-
-      .source-amount {
-        font-weight: 600;
-        color: var(--primary-green-color);
-        font-size: 1rem;
-        margin-right: 1rem;
-      }
-
-      .source-actions {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-
-        img {
-          width: 1.2rem;
-          height: 1.2rem;
-          filter: invert(0.5);
-          transition: filter 0.2s;
-
-          &:hover {
-            scale: 1.1;
-            transition: scale 0.2s;
-          }
-        }
-      }
-    }
   }
 
-  .no-income {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    padding: 1rem;
-    font-size: 1.2rem;
+  .table-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr minmax(5rem, auto) minmax(3rem, auto);
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 0.75rem;
     color: var(--normal-text-color);
   }
 
-  .pagination {
+  .table-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr minmax(5rem, auto) minmax(3rem, auto);
+    gap: 1rem;
+    padding: 0.7rem 1rem;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .col {
+    min-width: 0;
+  }
+
+  .col-name .source-name {
+    font-weight: 600;
+    color: var(--header-text-color);
+    font-size: 0.8125rem;
+  }
+
+  .col-type {
+    font-size: 0.75rem;
+    color: var(--normal-text-color);
+  }
+
+  .col-amount {
+    font-weight: 600;
+    color: var(--primary-green-color);
+    font-size: 0.8125rem;
+    text-align: right;
+  }
+
+  .col-actions {
     display: flex;
+    justify-content: flex-end;
+  }
+
+  .row-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--normal-text-color);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--background-color-soft);
+      color: var(--primary-red-color);
+    }
+
+    .delete-icon,
+    .action-icon {
+      font-size: 0.75rem;
+    }
+  }
+
+  .empty-state {
+    flex: 1;
+    min-height: 16rem;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 15px 0;
+    width: 100%;
+    text-align: center;
+    padding: 3rem 2rem;
+  }
+
+  .empty-state__icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: var(--border-radius);
+    background-color: rgba(92, 184, 92, 0.12);
+    color: var(--primary-green-color);
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-state__icon {
+    font-size: 2.5rem;
+  }
+
+  .empty-state__heading {
+    margin: 0 0 0.75rem;
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--header-text-color);
+  }
+
+  .empty-state__text {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--normal-text-color);
+    max-width: 24rem;
+    line-height: 1.5;
+  }
+
+  .pagination-bar {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 1rem;
-    margin-top: 1rem;
+    padding: 1rem 0 0;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+  }
 
-    .pagination-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
+  .pagination-results {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--normal-text-color);
+
+    .pagination-results-icon {
+      color: var(--header-text-color);
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+
+    .page-size-select {
+      padding: 0.35rem 0.5rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+      background-color: var(--background-color);
+      color: var(--header-text-color);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .pagination-results-label {
+      display: inline;
+    }
+
+    .pagination-count,
+    .pagination-total {
+      font-weight: 600;
+      color: var(--header-text-color);
+    }
+  }
+
+  .pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid var(--primary-green-color);
+    border-radius: var(--border-radius);
+    background-color: var(--primary-green-color);
+    color: white;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      opacity: var(--hover-opacity);
+    }
+
+    .arrow-icon {
+      font-size: 0.65rem;
+    }
+  }
+
+  .pagination-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.4rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
+    color: var(--header-text-color);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+
+    &.active {
+      background-color: var(--primary-green-color);
+      border-color: var(--primary-green-color);
+      color: white;
+    }
+
+    &:hover:not(.active) {
       background-color: var(--background-color-soft);
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      cursor: pointer;
-
-      &:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-
-      .arrow-left {
-        transform: rotate(180deg);
-        width: 16px;
-        height: 16px;
-      }
-
-      .arrow-right {
-        width: 16px;
-        height: 16px;
-      }
     }
+  }
 
-    .page-number {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 4px;
-      cursor: pointer;
-      border: 1px solid var(--border-color);
-      color: var(--normal-text-color);
-
-      &.active {
-        background-color: var(--primary-green-color);
-        border: transparent;
-        color: white;
-      }
-
-      &:hover:not(.active) {
-        background-color: var(--background-color-soft);
-      }
-    }
-
-    .ellipsis {
-      padding: 0 8px;
-    }
+  .pagination-ellipsis {
+    padding: 0 0.25rem;
+    font-size: 0.75rem;
+    color: var(--normal-text-color);
   }
 
   .modal-overlay {
@@ -529,13 +1037,18 @@ export default {
   .modal-content {
     background-color: var(--background-color);
     border-radius: var(--border-radius);
-    width: 40%;
-    height: 50%;
+    width: 90%;
+    max-width: 28rem;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+
     .modal-header {
+      flex-shrink: 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
+      padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border-color);
 
       h3 {
@@ -550,184 +1063,315 @@ export default {
         font-size: 1.5rem;
         cursor: pointer;
         color: var(--normal-text-color);
+        padding: 0.25rem;
+        line-height: 1;
 
         &:hover {
           opacity: 0.8;
-          transition: opacity 0.2s;
         }
       }
     }
+
     .modal-body {
       display: flex;
       flex-direction: column;
-      padding: 1rem;
-      gap: 1.5rem;
+      padding: 1.25rem;
+      gap: 1.25rem;
+      overflow-y: auto;
+      max-height: 85vh;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+
+      label,
+      .form-group-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--normal-text-color);
+      }
+    }
+
+    .modal-input {
+      width: 100%;
+      height: 2.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background-color: var(--background-color);
+      color: var(--header-text-color);
+      font-size: 0.9375rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-green-color);
+        box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2);
+      }
+
+      &[aria-invalid='true'] {
+        border-color: var(--notification-alert-color, #dc3545);
+      }
+    }
+
+    .input-with-prefix {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background-color: var(--background-color);
+      overflow: hidden;
+
+      .input-prefix {
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--normal-text-color);
+        border-right: 1px solid var(--border-color);
+        flex-shrink: 0;
+      }
 
       .modal-input {
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        background-color: var(--background-color-soft);
-        color: var(--normal-text-color);
-        font-size: 0.9rem;
+        flex: 1;
+        min-width: 0;
+        border: none;
+        border-radius: 0;
+        border-top-right-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
 
         &:focus {
-          outline: none;
-          border-color: var(--primary-color);
+          box-shadow: none;
+        }
+
+        /* Hide number input spinners to avoid buggy right-edge appearance */
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        &[type='number'] {
+          -moz-appearance: textfield;
+          appearance: textfield;
         }
       }
 
-      .frequency-buttons {
-        display: flex;
-        gap: 0.5rem;
+      &:focus-within {
+        border-color: var(--primary-green-color);
+        box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2);
 
-        .frequency-btn {
-          flex: 1;
-          padding: 0.5rem;
-          border: 1px solid var(--border-color);
-          border-radius: 5px;
-          background-color: var(--background-color);
-          color: var(--normal-text-color);
-          cursor: pointer;
-
-          &.active {
-            background-color: var(--background-color-reverse);
-            color: var(--reverse-header-text-color);
-          }
-
-          &:hover:not(.active) {
-            background-color: var(--background-color-soft);
-          }
+        .input-prefix {
+          border-right-color: var(--primary-green-color);
         }
       }
+    }
 
-      .add-btn {
-        padding: 0.75rem;
-        border: none;
+    .datepicker-wrapper {
+      width: 100%;
+
+      :deep(.mx-input) {
+        width: 100%;
+        height: 2.75rem;
+        padding: 0.75rem 1rem;
         border-radius: var(--border-radius);
-        background-color: var(--primary-green-color);
-        color: white;
+        border: 1px solid var(--border-color);
+        font-size: 0.9375rem;
+        background-color: var(--background-color);
+        color: var(--header-text-color);
+        cursor: pointer;
+      }
+
+      :deep(.mx-datepicker) {
+        width: 100%;
+      }
+
+      :deep(.mx-input-wrapper .mx-icon),
+      :deep(.mx-calendar-icon) {
+        cursor: pointer;
+      }
+    }
+
+    .frequency-segmented {
+      display: flex;
+      padding: 3px;
+      border-radius: var(--border-radius);
+      background-color: var(--background-color-soft);
+
+      .frequency-option {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--normal-text-color);
+        font-size: 0.875rem;
         font-weight: 500;
         cursor: pointer;
 
-        &:hover {
-          opacity: 0.9;
-          transition: background-color 0.2s;
-        }
-      }
-      .error-message {
-        color: var(--error-color, #e74c3c);
-        font-size: 0.85rem;
-        text-align: center;
-        padding: 0.5rem;
-        background-color: rgba(231, 76, 60, 0.1);
-        border-radius: var(--border-radius);
-        margin-top: 0.5rem;
-      }
-    }
-  }
-}
-@media (max-width: 768px) {
-  .income-sources-container {
-    width: 100%;
-    height: 100%;
-    padding: 1rem;
-
-    .modal-content {
-      width: 90%;
-      height: auto;
-    }
-
-    .header {
-      align-items: flex-start;
-
-      .title {
-        font-size: 1.2rem;
-      }
-    }
-
-    .sources-list {
-      .source-item {
-        .source-info {
-          flex-direction: column;
-          align-items: flex-start;
-
-          .source-details {
-            .source-name {
-              font-size: 1rem;
-            }
-
-            .source-type {
-              font-size: 0.9rem;
-            }
-          }
+        &.active {
+          background-color: var(--primary-green-color);
+          color: white;
         }
 
-        .source-amount {
-          font-size: 1.2rem;
+        &:hover:not(.active) {
+          background-color: var(--hover-color);
         }
-      }
-    }
-
-    .no-income {
-      font-size: 1rem;
-    }
-
-    .pagination {
-      padding: 10px 0;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-
-      .pagination-btn {
-        width: 35px;
-        height: 35px;
-
-        .arrow-left,
-        .arrow-right {
-          width: 14px;
-          height: 14px;
-        }
-      }
-
-      .page-number {
-        width: 35px;
-        height: 35px;
-        font-size: 0.9rem;
-      }
-
-      .ellipsis {
-        padding: 0 4px;
-      }
-    }
-
-    .modal-body {
-      padding: 0.5rem;
-
-      .modal-input {
-        font-size: 0.85rem;
-      }
-
-      .frequency-buttons {
-        flex-direction: column;
-        gap: 0.5rem;
-
-        .frequency-btn {
-          width: 100%;
-        }
-      }
-
-      .add-btn {
-        width: 100%;
       }
     }
 
     .error-message {
-      font-size: 0.8rem;
+      color: var(--notification-alert-color, #dc3545);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 0.5rem 0.75rem;
+      background-color: rgba(220, 53, 69, 0.1);
+      border-radius: var(--border-radius);
     }
 
-    .modal-header {
-      h3 {
-        font-size: 1.2rem;
+    .add-btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: var(--border-radius);
+      background-color: var(--primary-green-color);
+      color: white;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      cursor: pointer;
+
+      &:hover {
+        opacity: var(--hover-opacity);
+      }
+    }
+  }
+}
+@media (max-width: 1024px) {
+  .income-sources-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+  }
+
+  .table-wrap {
+    min-height: 12rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .income-sources-container {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    padding: 1rem;
+
+    .modal-content {
+      width: 90%;
+      max-width: none;
+    }
+
+    .header {
+      flex-direction: column;
+      align-items: stretch;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+
+      .title {
+        font-size: 1.125rem;
+      }
+
+      .header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+
+      .date-range-picker-wrap {
+        flex: 1;
+        min-width: 10rem;
+      }
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      min-height: 10rem;
+    }
+
+    .table {
+      min-width: 20rem;
+    }
+
+    .table-header,
+    .table-row {
+      grid-template-columns: 1fr 1fr minmax(4rem, auto) minmax(2.5rem, auto);
+      gap: 0.5rem;
+      padding: 0.6rem 0.5rem;
+    }
+
+    .table-header {
+      font-size: 0.7rem;
+    }
+
+    .col-name .source-name,
+    .col-type,
+    .col-amount {
+      font-size: 0.75rem;
+    }
+
+    .empty-state {
+      min-height: 14rem;
+      padding: 2rem 1.5rem;
+    }
+    .empty-state__icon-wrap {
+      width: 4.5rem;
+      height: 4.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .empty-state__icon {
+      font-size: 2rem;
+    }
+    .empty-state__heading {
+      font-size: 1.2rem;
+    }
+    .empty-state__text {
+      font-size: 0.9375rem;
+    }
+
+    .pagination-bar {
+      flex-direction: column;
+      align-items: flex-start;
+      padding-top: 0.75rem;
+    }
+
+    .pagination-nav {
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    .modal-content {
+      .modal-body {
+        padding: 1rem;
+      }
+
+      .modal-input,
+      .datepicker-wrapper :deep(.mx-input) {
+        height: 2.5rem;
+        font-size: 0.875rem;
+      }
+
+      .frequency-segmented .frequency-option {
+        font-size: 0.8125rem;
+        padding: 0.45rem 0.75rem;
+      }
+
+      .error-message {
+        font-size: 0.8rem;
+      }
+
+      .modal-header h3 {
+        font-size: 1.125rem;
       }
     }
   }
