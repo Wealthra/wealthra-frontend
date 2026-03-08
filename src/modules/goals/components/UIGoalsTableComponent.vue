@@ -153,13 +153,14 @@
           </div>
           <div class="form-group">
             <label for="create-goal-deadline">{{ t('selectDeadline') }}</label>
-            <input
-              id="create-goal-deadline"
-              v-model="newGoal.deadline"
-              type="date"
-              class="modal-input"
-              :min="todayIso"
-            />
+            <div class="datepicker-wrapper">
+              <Datepicker
+                id="create-goal-deadline"
+                v-model:value="newGoal.deadline"
+                :placeholder="t('selectDeadline')"
+                :disabled-date="disablePastDates"
+              />
+            </div>
           </div>
           <div v-if="createError" class="error-message">{{ createError }}</div>
           <button type="button" class="add-btn" @click="submitCreate">
@@ -219,13 +220,14 @@
           </div>
           <div class="form-group">
             <label for="edit-goal-deadline">{{ t('selectDeadline') }}</label>
-            <input
-              id="edit-goal-deadline"
-              v-model="editForm.deadline"
-              type="date"
-              class="modal-input"
-              :min="todayIso"
-            />
+            <div class="datepicker-wrapper">
+              <Datepicker
+                id="edit-goal-deadline"
+                v-model:value="editForm.deadline"
+                :placeholder="t('selectDeadline')"
+                :disabled-date="disablePastDates"
+              />
+            </div>
           </div>
           <div v-if="editError" class="error-message">{{ editError }}</div>
           <button type="button" class="add-btn" @click="submitEdit">
@@ -242,9 +244,15 @@ import { goalsTexts } from '@/data/goalsTexts'
 import { actionIcons } from '@/icons/fontawesome-icons'
 import { faBullseye } from '@fortawesome/free-solid-svg-icons'
 import type { Goal } from '@/services/api/goal/goal.models'
+import Datepicker from 'vue-datepicker-next'
+import 'vue-datepicker-next/index.css'
 
 export default {
   name: 'UIGoalsTableComponent',
+
+  components: {
+    Datepicker,
+  },
 
   props: {
     goals: {
@@ -284,10 +292,6 @@ export default {
   },
 
   computed: {
-    todayIso(): string {
-      const d = new Date()
-      return d.toISOString().slice(0, 10)
-    },
     filteredGoals(): Goal[] {
       const list = (this.goals as Goal[]) ?? []
       let out = list
@@ -340,8 +344,13 @@ export default {
     statusLabel(goal: Goal): string {
       return goal.isCompleted ? this.t('completed') : this.t('inProgress')
     },
+    disablePastDates(date: Date) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return date < today
+    },
     showCreateModalOpen() {
-      this.newGoal = { name: '', targetAmount: 0, currentAmount: 0, deadline: this.todayIso }
+      this.newGoal = { name: '', targetAmount: 0, currentAmount: 0, deadline: '' }
       this.createError = ''
       this.showCreateModal = true
     },
@@ -367,7 +376,10 @@ export default {
         this.createError = this.t('selectDeadline')
         return
       }
-      const isoDeadline = new Date(deadline + 'T12:00:00').toISOString()
+      const isoDeadline =
+        deadline instanceof Date
+          ? deadline.toISOString()
+          : new Date(deadline + 'T12:00:00').toISOString()
       this.$emit('createGoal', {
         name,
         targetAmount,
@@ -380,12 +392,16 @@ export default {
     openEditModal(goal: Goal) {
       this.editingGoal = goal
       const cur = goal.currentAmount ?? goal.initialAmount ?? 0
-      const deadline = goal.deadline ? goal.deadline.slice(0, 10) : this.todayIso
+      const deadlineVal = goal.deadline
+        ? goal.deadline.includes('T')
+          ? new Date(goal.deadline)
+          : goal.deadline.slice(0, 10)
+        : ''
       this.editForm = {
         name: goal.name ?? '',
         targetAmount: goal.targetAmount ?? 0,
         currentAmount: cur,
-        deadline,
+        deadline: deadlineVal,
       }
       this.editError = ''
       this.showEditModal = true
@@ -414,7 +430,10 @@ export default {
         this.editError = this.t('selectDeadline')
         return
       }
-      const isoDeadline = new Date(deadline + 'T12:00:00').toISOString()
+      const isoDeadline =
+        deadline instanceof Date
+          ? deadline.toISOString()
+          : new Date(deadline + 'T12:00:00').toISOString()
       this.$emit('updateGoal', {
         id: this.editingGoal.id,
         name,
@@ -722,6 +741,23 @@ export default {
         font-size: 0.75rem;
         font-weight: 600;
         color: var(--normal-text-color);
+      }
+    }
+
+    .datepicker-wrapper {
+      width: 100%;
+      :deep(.mx-datepicker) {
+        width: 100%;
+      }
+      :deep(.mx-input) {
+        width: 100%;
+        height: 2.75rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--background-color);
+        color: var(--header-text-color);
+        font-size: 0.9375rem;
       }
     }
 

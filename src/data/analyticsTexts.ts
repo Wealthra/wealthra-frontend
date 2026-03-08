@@ -14,6 +14,14 @@ export const analyticsTexts = {
     dataError: 'Error loading data.',
     retry: 'Retry',
     selectDateRange: '📅 Select Date Range For Analytics 📅',
+    emptyStateHeading: 'View your analytics',
+    emptyStateText:
+      'Select a date range below to see spending by category and income vs expense trends.',
+    incomes: 'Income',
+    spendings: 'Expenses',
+    spendingsBreakdown: 'Spending by category',
+    donutChartText: 'Total: ',
+    noChartData: 'No chart data',
   },
   Turkish: {
     financialReports: 'Finansal Raporlar',
@@ -30,5 +38,13 @@ export const analyticsTexts = {
     dataError: 'Veri yüklenirken hata oluştu.',
     retry: 'Tekrar Dene',
     selectDateRange: '📅 Analiz için Tarih Aralığı Seçin 📅',
+    emptyStateHeading: 'Analizinizi görün',
+    emptyStateText:
+      'Kategoriye göre harcamalar ve gelir–gider trendleri için aşağıdan bir tarih aralığı seçin.',
+    incomes: 'Gelir',
+    spendings: 'Giderler',
+    spendingsBreakdown: 'Kategoriye göre harcamalar',
+    donutChartText: 'Toplam: ',
+    noChartData: 'Grafik verisi yok',
   },
 }

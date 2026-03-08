@@ -1,5 +1,7 @@
 name = "wealthra-frontend"
 compatibility_date = "2024-02-01"
+# Kendi Cloudflare Account ID'nizi buraya yazın (Dashboard > Workers & Pages > sağ üstten alın)
+# account_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 [assets]
 directory = "./dist"

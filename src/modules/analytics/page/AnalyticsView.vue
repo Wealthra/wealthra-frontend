@@ -1,45 +1,68 @@
 <template>
   <UILoading
-      v-if="isLoading || hasError"
-      :isLoading="isLoading"
-      :hasError="hasError"
-      :loadingText="analyticsTexts[selectedLanguage]?.loading || 'Loading...'"
-      :errorMessage="activeErrorMessage"
-      :retryText="analyticsTexts[selectedLanguage]?.retry || 'Retry'"
-      @retry="loadAppropriateData"
-    />
-    <template v-else>
-      <div class="right-side-top-wrapper">
-        <div class="date-range-picker-wrapper">
-          <Datepicker
-            v-model:value="selectedDateRange"
-            range
-            :placeholder="analyticsTexts[selectedLanguage].customDateRange"
-            :disabled-date="disableFutureDates"
-            @change="loadAppropriateData"
-          />
+    v-if="isLoading || hasError"
+    :isLoading="isLoading"
+    :hasError="hasError"
+    :loadingText="analyticsTexts[selectedLanguage]?.loading || 'Loading...'"
+    :errorMessage="activeErrorMessage"
+    :retryText="analyticsTexts[selectedLanguage]?.retry || 'Retry'"
+    @retry="loadAppropriateData"
+  />
+  <template v-else>
+    <div class="right-side-top-wrapper">
+      <div class="date-range-picker-wrapper">
+        <Datepicker
+          v-model:value="selectedDateRange"
+          range
+          :placeholder="analyticsTexts[selectedLanguage].customDateRange"
+          :disabled-date="disableFutureDates"
+          @change="loadAppropriateData"
+        />
+      </div>
+    </div>
+    <div
+      v-if="hasValidDateRange && (breakdown !== null || trends !== null)"
+      class="analytics-data-available"
+    >
+      <div class="analytics-data-wrapper">
+        <div class="chart-box chart-box--pie">
+          <div class="chart-box-inner">
+            <UIDonutChart
+              :categories="breakdownCategories"
+              :title="analyticsTexts[selectedLanguage].spendingsBreakdown"
+              :donutChartText="analyticsTexts[selectedLanguage].donutChartText"
+              :selectedLanguage="selectedLanguage"
+            />
+          </div>
+        </div>
+        <div class="chart-box chart-box--line">
+          <div class="chart-box-inner">
+            <UIIncomeExpenseLineChart
+              :labels="trendsLabels"
+              :incomeValues="trendsIncomeValues"
+              :expenseValues="trendsExpenseValues"
+              :incomeLabel="analyticsTexts[selectedLanguage].incomes"
+              :expenseLabel="analyticsTexts[selectedLanguage].spendings"
+              :noDataText="analyticsTexts[selectedLanguage].noChartData"
+            />
+          </div>
         </div>
       </div>
-      <div
-        class="analytics-data-available"
-        v-if="selectedDateRange && selectedDateRange[0] && selectedDateRange[1]"
-      >
-        <div class="analytics-data-wrapper">
-          <UIGraph
-            :selectedLanguage="selectedLanguage"
-            :incomeExpenseData="financialData.incomeExpenseData"
-          />
-
-          <UIExpenseDistribution
-            :selectedLanguage="selectedLanguage"
-            :expenseDistribution="financialData.expenseDistribution"
-          />
+    </div>
+    <div v-else class="analytics-empty-state">
+      <div class="empty-state">
+        <div class="empty-state__icon-wrap">
+          <font-awesome-icon :icon="emptyStateIcon" class="empty-state__icon" aria-hidden="true" />
         </div>
+        <h2 class="empty-state__heading">
+          {{ analyticsTexts[selectedLanguage].emptyStateHeading }}
+        </h2>
+        <p class="empty-state__text">
+          {{ analyticsTexts[selectedLanguage].emptyStateText }}
+        </p>
       </div>
-      <div class="analytics-data-not-available" v-else>
-        <p>{{ analyticsTexts[selectedLanguage].selectDateRange }}</p>
-      </div>
-    </template>
+    </div>
+  </template>
 </template>
 
 <script lang="ts">
@@ -47,15 +70,15 @@ import UILoading from '@/components/UILoading.vue'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 
-import UIGraph from '@/modules/analytics/components/UIGraph.vue'
-import UIExpenseDistribution from '@/modules/analytics/components/UIExpenseDistribution.vue'
+import UIDonutChart from '@/modules/dashboard/components/UIDonutChart.vue'
+import UIIncomeExpenseLineChart from '@/modules/dashboard/components/UIIncomeExpenseLineChart.vue'
 
 import { analyticsTexts } from '@/data/analyticsTexts'
+import { leftSidebarIconMap } from '@/icons/fontawesome-icons'
 
 import { statisticService } from '@/services/api/statistic/statistic.service'
-import { getUserId } from '@/utils/auth'
 
-import type { FinancialData } from '@/interfaces/FinancialData'
+import type { StatisticsBreakdownResponse, StatisticsTrendsResponse } from '@/services/api/statistic/statistic.models'
 
 export default {
   name: 'AnalyticsView',
@@ -67,8 +90,8 @@ export default {
   },
   components: {
     Datepicker,
-    UIGraph,
-    UIExpenseDistribution,
+    UIDonutChart,
+    UIIncomeExpenseLineChart,
     UILoading,
   },
   data() {
@@ -77,9 +100,49 @@ export default {
       hasError: false,
       selectedDateRange: null as [Date, Date] | null,
       analyticsTexts: analyticsTexts,
-      financialData: {} as FinancialData,
+      breakdown: null as StatisticsBreakdownResponse | null,
+      trends: null as StatisticsTrendsResponse | null,
       activeErrorMessage: '',
+      emptyStateIcon: leftSidebarIconMap.Analytics,
     }
+  },
+  computed: {
+    hasValidDateRange(): boolean {
+      return (
+        Array.isArray(this.selectedDateRange) &&
+        this.selectedDateRange.length === 2 &&
+        this.selectedDateRange[0] instanceof Date &&
+        this.selectedDateRange[1] instanceof Date
+      )
+    },
+    breakdownCategories(): Record<string, number> {
+      if (!this.breakdown?.categoryBreakdown?.length) return {}
+      return this.breakdown.categoryBreakdown.reduce<Record<string, number>>(
+        (acc, item) => {
+          acc[item.categoryName] = item.amount
+          return acc
+        },
+        {}
+      )
+    },
+    trendsLabels(): string[] {
+      if (!this.trends?.monthlyData?.length) return []
+      return [...this.trends.monthlyData]
+        .sort((a, b) => a.month - b.month)
+        .map(d => d.monthName)
+    },
+    trendsIncomeValues(): number[] {
+      if (!this.trends?.monthlyData?.length) return []
+      return [...this.trends.monthlyData]
+        .sort((a, b) => a.month - b.month)
+        .map(d => d.totalIncome)
+    },
+    trendsExpenseValues(): number[] {
+      if (!this.trends?.monthlyData?.length) return []
+      return [...this.trends.monthlyData]
+        .sort((a, b) => a.month - b.month)
+        .map(d => d.totalExpenses)
+    },
   },
   methods: {
     disableFutureDates(date: Date): boolean {
@@ -88,14 +151,9 @@ export default {
       return date > today
     },
     loadAppropriateData() {
-      const isDateRangeValid =
-        Array.isArray(this.selectedDateRange) &&
-        this.selectedDateRange.length === 2 &&
-        this.selectedDateRange[0] instanceof Date &&
-        this.selectedDateRange[1] instanceof Date
-
-      if (!isDateRangeValid) {
-        this.financialData = {} as FinancialData
+      if (!this.hasValidDateRange) {
+        this.breakdown = null
+        this.trends = null
         this.isLoading = false
         this.hasError = false
         this.activeErrorMessage = ''
@@ -105,169 +163,42 @@ export default {
       this.isLoading = true
       this.hasError = false
       this.activeErrorMessage = ''
-
       this.fetchAnalyticsDataFromServer()
     },
 
-    async fetchCategorySpendingByDate(startDate: string, endDate: string, userId: string | null) {
-      if (!userId) {
-        this.hasError = true
-        this.activeErrorMessage = 'User ID is missing.'
-        return
-      }
-
-      try {
-        const data = await statisticService.getCategorySpendingByDateRange(
-          userId,
-          startDate,
-          endDate
-        )
-        return data
-      } catch (error) {
-        console.error('API error:', error)
-        this.hasError = true
-        this.activeErrorMessage = 'Failed to fetch data. Please try again.'
-      }
-    },
-
-    async fetchMonthlyUserExpensesByDate(
-      startDate: string,
-      endDate: string,
-      userId: string | null
-    ) {
-      if (!userId) {
-        this.hasError = true
-        this.activeErrorMessage = 'User ID is missing.'
-        return
-      }
-
-      try {
-        const data = await statisticService.getMonthlyUserExpensesByDateRange(
-          userId,
-          startDate,
-          endDate
-        )
-        return data
-      } catch (error) {
-        console.error('API error:', error)
-        this.hasError = true
-        this.activeErrorMessage = 'Failed to fetch data. Please try again.'
-      }
-    },
-    async fetchMonthlyUserIncomeByDate(startDate: string, endDate: string, userId: string | null) {
-      if (!userId) {
-        this.hasError = true
-        this.activeErrorMessage = 'User ID is missing.'
-        return
-      }
-
-      try {
-        const data = await statisticService.getMonthlyUserIncomesByDateRange(
-          userId,
-          startDate,
-          endDate
-        )
-        return data
-      } catch (error) {
-        console.error('API error:', error)
-        this.hasError = true
-        this.activeErrorMessage = 'Failed to fetch data. Please try again.'
-      }
-    },
-
     async fetchAnalyticsDataFromServer() {
-      if (this.selectedDateRange) {
-        // Add a helper function to add days to a date
-        const addDays = (date: Date, days: number): string => {
-          const result = new Date(date)
-          result.setDate(result.getDate() + days)
-          return result.toISOString().split('T')[0]
-        }
-
-        // Add 1 day to both start and end dates
-        const startDate = addDays(this.selectedDateRange[0], 1)
-        const endDate = addDays(this.selectedDateRange[1], 1)
-
-        const userId = getUserId()
-
-        if (!userId) {
-          this.hasError = true
-          this.activeErrorMessage = 'User ID is missing.'
-          this.isLoading = false
-          return
-        }
-
-        try {
-          const categorySpending = await this.fetchCategorySpendingByDate(
-            startDate,
-            endDate,
-            userId
-          )
-          const expenceData = await this.fetchMonthlyUserExpensesByDate(startDate, endDate, userId)
-          const incomeData = await this.fetchMonthlyUserIncomeByDate(startDate, endDate, userId)
-
-          // Convert CategorySpendingResponse (Record<string, number>) to array format
-          if (categorySpending) {
-            this.financialData.expenseDistribution = Object.entries(categorySpending).map(
-              ([category, amount]) => ({
-                category,
-                amount,
-              })
-            )
-          }
-
-          if (incomeData && expenceData) {
-            this.financialData.incomeExpenseData = this.combineIncomeAndExpenseData(
-              incomeData as Record<string, number>,
-              expenceData as Record<string, number>
-            )
-          }
-
-          this.isLoading = false
-        } catch (error) {
-          console.error('Error fetching data:', error)
-          this.hasError = true
-          this.activeErrorMessage = 'Failed to fetch data. Please try again.'
-          this.isLoading = false
-        }
-      }
-    },
-
-    combineIncomeAndExpenseData(
-      incomeData: Record<string, number>,
-      expenseData: Record<string, number>
-    ) {
-      // Combine income and expense data by month
-      const combinedData: Record<string, { month: string; income: number; expenses: number }> = {}
-      // Process income data
-      for (const [month, amount] of Object.entries(incomeData)) {
-        if (!combinedData[month]) {
-          combinedData[month] = { month, income: 0, expenses: 0 }
-        }
-        combinedData[month].income = amount
+      if (!this.selectedDateRange || !this.hasValidDateRange) {
+        this.isLoading = false
+        return
       }
 
-      // Process expense data
-      for (const [month, amount] of Object.entries(expenseData)) {
-        if (!combinedData[month]) {
-          combinedData[month] = { month, income: 0, expenses: 0 }
-        }
-        combinedData[month].expenses = amount
-      }
+      const start = this.selectedDateRange[0]
+      const end = this.selectedDateRange[1]
+      const startDate = start.toISOString().split('T')[0]
+      const endDate = end.toISOString().split('T')[0]
+      const year = start.getFullYear()
 
-      // Convert to array and sort by month
-      return Object.values(combinedData).sort((a, b) => a.month.localeCompare(b.month))
+      try {
+        const [breakdownRes, trendsRes] = await Promise.all([
+          statisticService.apiGetBreakdown(startDate, endDate),
+          statisticService.apiGetTrends(year),
+        ])
+        this.breakdown = breakdownRes
+        this.trends = trendsRes
+      } catch (error) {
+        console.error('Error fetching analytics data:', error)
+        this.hasError = true
+        this.activeErrorMessage =
+          this.analyticsTexts[this.selectedLanguage]?.dataError || 'Failed to load data.'
+      } finally {
+        this.isLoading = false
+      }
     },
   },
 
   mounted() {
-    this.loadAppropriateData()
+    // Do not auto-fetch; show empty state until user selects a date range
   },
-
-  beforeUnmount() {
-  },
-
-  watch: {},
 }
 </script>
 
@@ -281,14 +212,6 @@ export default {
   padding: 0 2rem;
   gap: 1rem;
 
-  .financial-reports-header {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--header-text-color);
-  }
   .date-range-picker-wrapper {
     display: flex;
     flex-direction: row;
@@ -297,32 +220,84 @@ export default {
     gap: 1rem;
   }
 }
+
 .analytics-data-available {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
   gap: 1rem;
+  padding: 0 2rem;
 
   .analytics-data-wrapper {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     width: 100%;
-    height: 90%;
+    min-height: 320px;
     gap: 1rem;
   }
+
+  .chart-box {
+    flex: 1;
+    min-width: 0;
+
+    .chart-box-inner {
+      width: 100%;
+      height: 100%;
+      min-height: 280px;
+    }
+  }
 }
-.analytics-data-not-available {
+
+.analytics-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
-  gap: 1rem;
-  font-size: 2rem;
+  flex: 1;
+  padding: 2rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  max-width: 24rem;
+}
+
+.empty-state__icon-wrap {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: var(--border-radius);
+  background-color: rgba(92, 184, 92, 0.12);
+  color: var(--primary-green-color);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state__icon {
+  font-size: 2.5rem;
+}
+
+.empty-state__heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--header-text-color);
+}
+
+.empty-state__text {
+  margin: 0;
+  font-size: 1rem;
   color: var(--normal-text-color);
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {
@@ -332,28 +307,19 @@ export default {
     justify-content: center;
     padding: 0 1rem;
     gap: 0.5rem;
-
-    .financial-reports-header {
-      font-size: 1.2rem;
-    }
   }
 
   .analytics-data-available {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100vh;
     padding: 0 1rem;
-    gap: 0.5rem;
 
     .analytics-data-wrapper {
       flex-direction: column;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      padding: 0 1rem;
-      gap: 0.5rem;
+      min-height: auto;
+      gap: 1.5rem;
+    }
+
+    .chart-box .chart-box-inner {
+      min-height: 260px;
     }
   }
 }
