@@ -1,55 +1,55 @@
+/** /api/Goals DTO: no initialAmount, uses currentAmount */
 export interface Goal {
   id: number
   name: string
   targetAmount: number
-  // Legacy field from old API
-  initialAmount: number
-  // New API field corresponding to backend "currentAmount"
-  currentAmount?: number
-  deadline: string
-  created?: string
-  createdBy?: string
-  lastModified?: string
-  lastModifiedBy?: string
-  // New API fields from /api/Goals DTO
+  currentAmount: number
   progressPercentage?: number
+  deadline: string
   isCompleted?: boolean
+  // Optional from /api/Goals/user
+  achievedAmount?: number
+  notAchievedAmount?: number
+  // Legacy/compat
+  initialAmount?: number
 }
 
-export interface PaginatedGoalsResponse {
+/** GET /api/Goals - returns array */
+export type GoalsApiListResponse = Goal[]
+
+/** GET /api/Goals/total */
+export interface GoalsTotalResponse {
+  totalTargetAmount: number
+  totalCurrentAmount: number
+  overallProgressPercentage?: number
+  totalGoals: number
+  achievedGoals: number
+  notAchievedGoals: number
+}
+
+/** GET /api/Goals/user - paginated */
+export interface GoalsUserResponse {
+  items: Goal[]
   pageNumber: number
-  pageSize: number
-  data: Goal[]
-  hasMoreItems: boolean
-  totalCount: number
   totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
 }
 
+/** POST /api/Goals body */
 export interface CreateGoalRequest {
   name: string
   targetAmount: number
-  // Legacy field from old API
-  initialAmount: number
-  // New API field corresponding to backend "currentAmount"
-  currentAmount?: number
+  currentAmount: number
   deadline: string
 }
 
+/** PUT /api/Goals/{id} body */
 export interface UpdateGoalRequest {
+  id: number
   name: string
   targetAmount: number
-  // Legacy field from old API
-  initialAmount: number
-  // New API field corresponding to backend "currentAmount"
-  currentAmount?: number
+  currentAmount: number
   deadline: string
 }
-
-export interface GoalTotalResponse {
-  totalInitialAmount: number
-  totalTargetAmount: number
-}
-
-// New API models based on /api/Goals spec
-
-export type GoalsApiListResponse = Goal[]

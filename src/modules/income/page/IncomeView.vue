@@ -1,10 +1,5 @@
 <template>
-  <ModuleLayout
-    :selectedLanguage="selectedLanguage"
-    :selectedPage="selectedPage"
-    @update-language="handleLanguageUpdate"
-  >
-    <div class="income-content">
+  <div class="income-content">
       <div class="information-wrapper">
         <UIInformationBox
           :currentAmount="financialData.weeklyTotalIncome"
@@ -14,6 +9,7 @@
           :title="incomeTexts[selectedLanguage].weeklyIncome"
           icon="fas fa-calendar-week"
           icon-color="var(--primary-green-color)"
+          :showTrend="false"
         />
         <UIInformationBox
           :currentAmount="financialData.monthlyTotalIncome"
@@ -23,6 +19,7 @@
           :title="incomeTexts[selectedLanguage].monthlyIncome"
           icon="fas fa-calendar-day"
           icon-color="var(--primary-green-color)"
+          :showTrend="false"
         />
         <UIInformationBox
           :currentAmount="financialData.averageMonthlyIncome"
@@ -32,6 +29,7 @@
           :title="incomeTexts[selectedLanguage].averageMonthlyIncome"
           icon="fas fa-chart-line"
           icon-color="var(--primary-green-color)"
+          :showTrend="false"
         />
         <UIInformationBox
           :currentAmount="financialData.yearlyTotalIncome"
@@ -41,6 +39,7 @@
           :title="incomeTexts[selectedLanguage].annualIncome"
           icon="fas fa-calendar"
           icon-color="var(--primary-green-color)"
+          :showTrend="false"
         />
       </div>
       <div class="statistics-wrapper">
@@ -64,13 +63,11 @@
         />
       </div>
     </div>
-  </ModuleLayout>
 </template>
 
 <script lang="ts">
 import UIInformationBox from '@/modules/dashboard/components/UIInformationBox.vue'
 import UIIncomeSourcesComponent from '@/modules/income/components/UIIncomeSourcesComponent.vue'
-import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 import { incomeTexts } from '@/data/incomeTexts'
 import type { FinancialData } from '@/interfaces/FinancialData'
@@ -89,15 +86,19 @@ function getDefaultIncomeDateRange(): { start: string; end: string } {
 
 export default {
   name: 'IncomeView',
+  props: {
+    selectedLanguage: {
+      type: String as () => 'English' | 'Turkish',
+      default: 'English',
+    },
+  },
   components: {
-    ModuleLayout,
     UIInformationBox,
     UIIncomeSourcesComponent,
   },
   data() {
     const { start, end } = getDefaultIncomeDateRange()
     return {
-      selectedLanguage: 'English' as 'English' | 'Turkish',
       incomeTexts: incomeTexts,
       isLoading: false,
       hasError: false,
@@ -108,17 +109,7 @@ export default {
       endDateIncome: end as string | null,
     }
   },
-  computed: {
-    selectedPage() {
-      return this.selectedLanguage === 'English' ? 'Income' : 'Gelir'
-    },
-  },
-
   methods: {
-    handleLanguageUpdate(language: 'English' | 'Turkish') {
-      this.selectedLanguage = language
-      localStorage.setItem('selectedLanguage', language)
-    },
 
     getIncomeById(id: number) {
       return incomeService.getIncomeById(id)
@@ -279,10 +270,6 @@ export default {
     },
   },
   mounted() {
-    const savedLanguage = localStorage.getItem('selectedLanguage')
-    if (savedLanguage) {
-      this.selectedLanguage = savedLanguage as 'English' | 'Turkish'
-    }
     this.loadAppropriateData()
   },
   beforeUnmount() {

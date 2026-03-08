@@ -63,6 +63,7 @@ export interface FinancialData {
   previousMonthTotalExpense: number
   yearlyTotalExpense: number
   previousYearTotalExpense: number
+  recurringExpensesThisMonth?: number
 
   expenseHasMoreItems: boolean
   pageNumberExpense: number
@@ -74,7 +75,8 @@ export interface FinancialData {
     amount: number
     categoryId: number
     categoryName: string
-    created: string
+    created?: string
+    transactionDate?: string
     id: number
     isRecurring: boolean
     description: string

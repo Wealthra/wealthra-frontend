@@ -4,7 +4,7 @@ import type {
   CreateExpenseRequest,
   UpdateExpenseRequest,
   Expense,
-  ExpenseGeneralInfoResponse,
+  ExpenseGeneralInfoApiResponse,
   ExpensesApiListResponse,
   ExpenseApiModel,
   ExpenseSummaryResponse,
@@ -61,8 +61,8 @@ export const expenseService = {
     )
   },
 
-  async getExpenseGeneralInfo(): Promise<ExpenseGeneralInfoResponse> {
-    return apiRequest<ExpenseGeneralInfoResponse>(`Expenses/generalinfo`, {
+  async getExpenseGeneralInfo(): Promise<ExpenseGeneralInfoApiResponse> {
+    return apiRequest<ExpenseGeneralInfoApiResponse>(`Expenses/generalinfo`, {
       method: 'GET',
     })
   },
@@ -104,11 +104,10 @@ export const expenseService = {
     })
   },
 
-  async apiCreateExpense(data: ExpenseApiModel & { id?: number }): Promise<number> {
-    const { id, ...payload } = data
+  async apiCreateExpense(data: CreateExpenseRequest): Promise<number> {
     return apiRequest<number>('Expenses', {
       method: 'POST',
-      body: payload,
+      body: data,
     })
   },
 

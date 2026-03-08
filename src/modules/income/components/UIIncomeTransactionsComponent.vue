@@ -126,6 +126,7 @@ export default {
     min-height: 0;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+    padding-right: 0.75rem;
 
     &.table-wrap--empty {
       display: flex;
@@ -141,20 +142,25 @@ export default {
     flex-direction: column;
   }
 
+  /* Balanced columns: Date & Method share space, Amount fixed width */
   .table-header {
     display: grid;
-    grid-template-columns: 1fr 1fr minmax(5rem, auto);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 6rem;
     gap: 1rem;
     padding: 0.6rem 1rem;
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     font-size: 0.75rem;
     color: var(--normal-text-color);
+
+    .col {
+      text-align: left;
+    }
   }
 
   .table-row {
     display: grid;
-    grid-template-columns: 1fr 1fr minmax(5rem, auto);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 6rem;
     gap: 1rem;
     padding: 0.7rem 1rem;
     align-items: center;
@@ -167,6 +173,7 @@ export default {
 
   .col {
     min-width: 0;
+    text-align: left;
   }
 
   .col-date {
@@ -184,7 +191,7 @@ export default {
     font-weight: 600;
     color: var(--primary-green-color);
     font-size: 0.8125rem;
-    text-align: right;
+    text-align: left;
   }
 
   .empty-state {
@@ -268,8 +275,7 @@ export default {
 
     .table-header,
     .table-row {
-      grid-template-columns: 1fr 1fr minmax(4rem, auto);
-      gap: 0.5rem;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 5rem;
       padding: 0.6rem 0.5rem;
     }
 

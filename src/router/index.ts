@@ -4,7 +4,10 @@ const LoginView = () => import('../auth/login/page/LoginView.vue')
 const ForgetPasswordView = () => import('../auth/forget-password/page/ForgetPasswordView.vue')
 const SignUpView = () => import('../auth/sign-up/page/SignUpView.vue')
 
-// Lazy Loading Authenticated Views
+// Layout wrapper (layout mounted once; only child content swaps)
+const ModuleLayoutWrapper = () => import('../layouts/ModuleLayoutWrapper.vue')
+
+// Lazy Loading Authenticated Module Views (content only, under layout)
 const DashboardView = () => import('../modules/dashboard/page/DashboardView.vue')
 const AdminView = () => import('../auth/admin/page/AdminView.vue')
 const AnalyticsView = () => import('../modules/analytics/page/AnalyticsView.vue')
@@ -40,52 +43,62 @@ const router = createRouter({
       name: 'signup',
       component: SignUpView,
     },
+    // Redirects from old paths to /app/* so existing links keep working
+    { path: '/dashboard', redirect: '/app/dashboard' },
+    { path: '/budget', redirect: '/app/budget' },
+    { path: '/expenses', redirect: '/app/expenses' },
+    { path: '/income', redirect: '/app/income' },
+    { path: '/goals', redirect: '/app/goals' },
+    { path: '/analytics', redirect: '/app/analytics' },
+    { path: '/settings', redirect: '/app/settings' },
+    // Authenticated app shell: layout is parent, content is child
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: DashboardView,
+      path: '/app',
+      component: ModuleLayoutWrapper,
       meta: { requiresAuth: true },
+      children: [
+        { path: '', redirect: { name: 'dashboard' } },
+        {
+          path: 'dashboard',
+          name: 'dashboard',
+          component: DashboardView,
+        },
+        {
+          path: 'budget',
+          name: 'budget',
+          component: BudgetView,
+        },
+        {
+          path: 'expenses',
+          name: 'expenses',
+          component: ExpensesView,
+        },
+        {
+          path: 'income',
+          name: 'income',
+          component: IncomeView,
+        },
+        {
+          path: 'goals',
+          name: 'goals',
+          component: GoalsView,
+        },
+        {
+          path: 'analytics',
+          name: 'analytics',
+          component: AnalyticsView,
+        },
+        {
+          path: 'settings',
+          name: 'settings',
+          component: SettingsView,
+        },
+      ],
     },
     {
       path: '/admin',
       name: 'admin',
       component: AdminView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/analytics',
-      name: 'analytics',
-      component: AnalyticsView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/budget',
-      name: 'budget',
-      component: BudgetView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/expenses',
-      name: 'expenses',
-      component: ExpensesView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/income',
-      name: 'income',
-      component: IncomeView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/goals',
-      name: 'goals',
-      component: GoalsView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/settings',
-      name: 'settings',
-      component: SettingsView,
       meta: { requiresAuth: true },
     },
   ],

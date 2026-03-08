@@ -5,15 +5,17 @@
         {{ selectedLanguage == 'English' ? 'No Data Available' : 'Veri Yok' }}
       </div>
     </div>
-    <div v-else>
+    <div v-else class="chart-content">
       <h2 class="chart-title">{{ title }}</h2>
-      <div class="donut-chart">
-        <Doughnut
-          v-show="hasData"
-          :data="chartData"
-          :options="chartOptions"
-          @click="handleChartClick"
-        />
+      <div class="donut-chart-wrapper">
+        <div class="donut-chart">
+          <Doughnut
+            v-show="hasData"
+            :data="chartData"
+            :options="chartOptions"
+            @click="handleChartClick"
+          />
+        </div>
       </div>
       <div class="segment-data">
         {{
@@ -48,6 +50,7 @@ import {
 
 import type { TooltipItem, ChartEvent } from 'chart.js'
 import type { SpendingCategories } from '@/interfaces/SpendingCategories'
+import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
 
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale)
 
@@ -61,6 +64,8 @@ export default {
       categoriesData: [] as Array<SpendingCategories>,
       clickedSegment: null as SpendingCategories | null,
       isDataOpen: false,
+      themeKey: (typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null) || 'light',
+      themeObserver: null as MutationObserver | null,
     }
   },
 
@@ -97,36 +102,16 @@ export default {
       return this.donutChartText + this.total
     },
     chartData() {
-      // Get CSS variables safely using getComputedStyle on the document root
+      void this.themeKey
       const root = document.documentElement
       const rootStyles = getComputedStyle(root)
+      const borderColor = rootStyles.getPropertyValue('--background-color').trim()
 
-      // Convert CSS variables to actual colors
-      const backgroundColors = this.categoriesData.map((item: SpendingCategories) => {
-        const varName = (item.color || '--category-other-color')
-          .replace('var(', '')
-          .replace(')', '')
-        return rootStyles.getPropertyValue(varName).trim() || '#CCCCCC' // Fallback color
-      })
-
-      // Create highlighted colors for selected segment
+      // Colors are already resolved by getCategoryColorByIndex (theme-dependent)
+      const backgroundColors = this.categoriesData.map(
+        (item: SpendingCategories) => item.color || '#999'
+      )
       const hoverColors = [...backgroundColors]
-
-      if (this.clickedSegment) {
-        const index = this.categoriesData.findIndex(
-          (item: SpendingCategories) => item.name === this.clickedSegment?.name
-        )
-        if (index !== -1) {
-          // Create highlight effect for selected segment
-          const normalizedName = this.getNormalizedCategoryName(this.clickedSegment.name)
-          const reverseVarName = `--category-reverse-${normalizedName}-color`
-          const reverseColor = rootStyles.getPropertyValue(reverseVarName).trim()
-
-          if (reverseColor) {
-            backgroundColors[index] = reverseColor
-          }
-        }
-      }
 
       return {
         labels: this.categoriesData.map((item: SpendingCategories) => item.name),
@@ -135,7 +120,7 @@ export default {
             data: this.categoriesData.map((item: SpendingCategories) => item.value),
             backgroundColor: backgroundColors,
             hoverBackgroundColor: hoverColors,
-            borderColor: rootStyles.getPropertyValue('--background-color').trim(),
+            borderColor,
             borderWidth: 1,
             hoverOffset: 8,
           },
@@ -143,6 +128,7 @@ export default {
       }
     },
     chartOptions() {
+      void this.themeKey
       const root = document.documentElement
       const rootStyles = getComputedStyle(root)
 
@@ -197,58 +183,16 @@ export default {
         this.categoriesData = []
         return
       }
-      // Create a deep copy of the categories array
+      // Use category names from API as-is; assign theme-based colors by index (no hardcoded keys)
       this.categoriesData = Object.entries(this.categories).map(
-        ([key, value]: [string, number]): SpendingCategories => ({
-          name: this.getNormalizedCategoryName(key),
+        ([key, value]: [string, number], index): SpendingCategories => ({
+          name: key,
           value,
-          label: this.getNormalizedCategoryName(key),
-          color: '',
+          label: key,
+          color: getCategoryColorByIndex(index),
         })
       )
       this.categoriesData.sort((a: SpendingCategories, b: SpendingCategories) => b.value - a.value)
-
-      // Assign colors based on category names
-      this.categoriesData.forEach((category: SpendingCategories) => {
-        if (category.name === 'Other' || category.name === 'Diğer') {
-          category.color = 'var(--category-other-color)'
-        } else if (category.name === 'Food' || category.name === 'Yiyecek') {
-          category.color = 'var(--category-food-color)'
-        } else if (category.name === 'Transport' || category.name === 'Ulaşım') {
-          category.color = 'var(--category-transport-color)'
-        } else if (category.name === 'Entertainment' || category.name === 'Eğlence') {
-          category.color = 'var(--category-entertainment-color)'
-        } else if (category.name === 'Health' || category.name === 'Sağlık') {
-          category.color = 'var(--category-healthcare-color)'
-        } else if (category.name === 'Shopping' || category.name === 'Alışveriş') {
-          category.color = 'var(--category-shopping-color)'
-        } else if (category.name === 'Housing' || category.name === 'Konut') {
-          category.color = 'var(--category-housing-color)'
-        } else if (category.name === 'Education' || category.name === 'Eğitim') {
-          category.color = 'var(--category-education-color)'
-        }
-      })
-    },
-
-    getNormalizedCategoryName(categoryName: string): string {
-      if (this.selectedLanguage === 'English') {
-        return categoryName[0].toUpperCase() + categoryName.slice(1).toLowerCase()
-      }
-
-      const categoryMap: Record<string, string> = {
-        other: 'Diğer',
-        food: 'Yiyecek',
-        transport: 'Ulaşım',
-        entertainment: 'Eğlence',
-        health: 'Sağlık',
-        shopping: 'Alışveriş',
-        housing: 'Konut',
-        education: 'Eğitim',
-      }
-      const normalizedCategoryName = categoryMap[categoryName.toLowerCase()]
-      return normalizedCategoryName
-        ? normalizedCategoryName[0].toUpperCase() + normalizedCategoryName.slice(1).toLowerCase()
-        : categoryName
     },
 
     handleChartClick(event: ChartEvent) {
@@ -295,6 +239,19 @@ export default {
 
   mounted() {
     this.processCategoriesData()
+    this.themeObserver = new MutationObserver(() => {
+      this.themeKey = document.documentElement.getAttribute('data-theme') || 'light'
+    })
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    })
+  },
+
+  beforeUnmount() {
+    if (this.themeObserver) {
+      this.themeObserver.disconnect()
+    }
   },
 
   watch: {
@@ -306,6 +263,7 @@ export default {
       handler: 'processCategoriesData',
       immediate: true,
     },
+    themeKey: 'processCategoriesData',
   },
 }
 </script>
@@ -316,98 +274,127 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 0;
   height: 100%;
   width: 100%;
-  background-color: var(--background-color);
-  padding: 1rem;
+  max-width: 100%;
+  padding: 0.5rem;
   box-sizing: border-box;
 
+  .chart-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+  }
+
   .chart-title {
-    font-size: 1.2rem;
+    font-size: 0.9375rem;
     font-weight: 500;
-    color: var(--header-text-color);
+    color: var(--normal-text-color);
     text-align: center;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.35rem;
+    line-height: 1.25;
+  }
+
+  .donut-chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: min(100%, 260px);
+    aspect-ratio: 1;
+    min-height: 140px;
+    max-height: 240px;
+    margin: 0 auto;
+    flex-shrink: 0;
   }
 
   .donut-chart {
-    position: relative;
+    position: absolute;
+    inset: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 70%;
+    height: 100%;
   }
 
   .no-data-message {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
+    min-height: 160px;
+    padding: 1rem;
     color: var(--normal-text-color);
     font-style: italic;
     text-align: center;
+    font-size: 0.8125rem;
   }
 
   .segment-data {
-    font-size: 1rem;
-    margin: 0.8rem 0;
-    font-weight: 500;
+    font-size: 0.875rem;
+    margin: 0.35rem 0;
+    padding: 0 0.5rem;
+    font-weight: 600;
     color: var(--header-text-color);
     text-align: center;
+    word-break: break-word;
+    line-height: 1.25;
   }
 
   .legend {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    margin-top: 0.5rem;
+    gap: 0.2rem 0.5rem;
+    margin-top: 0.35rem;
+    padding: 0 0.25rem;
+    max-width: 100%;
 
     &-item {
       display: flex;
       align-items: center;
-      margin: 0.4rem;
+      flex-shrink: 0;
     }
 
     &-color {
-      width: 12px;
-      height: 12px;
-      border-radius: var(--border-radius);
-      margin-right: 0.4rem;
+      width: 8px;
+      height: 8px;
+      min-width: 8px;
+      min-height: 8px;
+      border-radius: 2px;
+      margin-right: 0.25rem;
     }
 
     &-label {
-      font-size: 0.85rem;
-      color: var(--header-text-color);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--normal-text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 110px;
     }
   }
 
-  @media (max-width: 768px) {
-    max-width: 100%;
-    padding: 0.4rem;
+  @media (max-width: 480px) {
+    padding: 0.35rem;
 
-    .chart-title {
-      font-size: 0.9rem;
-      margin-bottom: 0.3rem;
+    .donut-chart-wrapper {
+      min-height: 120px;
+      max-height: 200px;
     }
 
-    .donut-chart {
-      height: 200px;
+    .legend-label {
+      max-width: 90px;
     }
+  }
 
-    .segment-data {
-      font-size: 0.75rem;
-      margin: 0.3rem 0;
-    }
-
-    .legend {
-      &-item {
-        margin: 0.2rem;
-      }
-
-      &-label {
-        font-size: 0.7rem;
-      }
+  @media (min-width: 769px) {
+    .donut-chart-wrapper {
+      max-width: min(100%, 240px);
+      max-height: 220px;
     }
   }
 }

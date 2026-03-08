@@ -4,7 +4,7 @@ export interface SummaryRecentTransaction {
   description: string
   amount: number
   transactionDate: string
-  categoryName: string
+  categoryName: string | null
 }
 
 export interface SummaryTopSpendingCategory {

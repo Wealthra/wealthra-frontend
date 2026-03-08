@@ -2,8 +2,12 @@
   <div class="kpi-card">
     <div class="kpi-card__main">
       <div class="kpi-card__label">{{ title }}</div>
-      <div class="kpi-card__value">${{ currentAmount.toLocaleString() }}</div>
-      <div class="kpi-card__trend-badge" :class="{ 'kpi-card__trend-badge--negative': isNegative }">
+      <div class="kpi-card__value">{{ valuePrefix }}{{ currentAmount.toLocaleString() }}</div>
+      <div
+        v-if="showTrend"
+        class="kpi-card__trend-badge"
+        :class="{ 'kpi-card__trend-badge--negative': isNegative }"
+      >
         <font-awesome-icon
           :icon="isNegative ? trendIcons.negative : trendIcons.positive"
           class="kpi-card__trend-icon"
@@ -56,6 +60,16 @@ export default defineComponent({
     iconColor: {
       type: String,
       default: '',
+    },
+    /** When false, hides the trend percentage badge */
+    showTrend: {
+      type: Boolean,
+      default: true,
+    },
+    /** Prefix shown before the amount (e.g. '$' for currency, '' for plain number) */
+    valuePrefix: {
+      type: String,
+      default: '$',
     },
   },
   data() {

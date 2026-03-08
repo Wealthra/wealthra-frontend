@@ -1,10 +1,5 @@
 <template>
-  <ModuleLayout
-    :selectedLanguage="selectedLanguage"
-    :selectedPage="selectedPage"
-    @update-language="handleLanguageUpdate"
-  >
-    <UILoading
+  <UILoading
       v-if="isInitialLoading"
       :isLoading="isInitialLoading"
       :hasError="!!initialError"
@@ -241,28 +236,81 @@
               </div>
             </div>
           </section>
+
+          <section class="settings-card danger-zone">
+            <h2>{{ dangerZoneTitle }}</h2>
+            <p class="danger-zone-description">{{ dangerZoneDescription }}</p>
+            <div class="actions-row">
+              <button type="button" class="danger-btn" @click="openDeleteAccountModal">
+                {{ deleteAccountButtonLabel }}
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Delete account confirmation modal (GitHub-style) -->
+      <div v-if="showDeleteAccountModal" class="modal-overlay" @click.self="closeDeleteAccountModal">
+        <div class="modal-content delete-modal">
+          <h3>{{ deleteModalTitle }}</h3>
+          <p class="delete-modal-instruction">{{ deleteModalInstruction }}</p>
+          <p class="delete-modal-phrase">
+            <strong>{{ deleteConfirmationPhrase }}</strong>
+          </p>
+          <div class="form-group">
+            <label for="deleteConfirmInput">{{ deleteModalLabel }}</label>
+            <input
+              id="deleteConfirmInput"
+              v-model="deleteConfirmPhraseInput"
+              type="text"
+              class="delete-confirm-input"
+              :placeholder="deleteConfirmationPhrase"
+              autocomplete="off"
+            />
+          </div>
+          <p v-if="deleteAccountError" class="error-text">{{ deleteAccountError }}</p>
+          <div class="modal-actions">
+            <button type="button" class="secondary-btn" @click="closeDeleteAccountModal">
+              {{ cancelLabel }}
+            </button>
+            <button
+              type="button"
+              class="danger-btn"
+              :disabled="!isDeletePhraseMatch || isDeletingAccount"
+              @click="confirmDeleteAccount"
+            >
+              <span v-if="isDeletingAccount">{{ deletingLabel }}</span>
+              <span v-else>{{ confirmDeleteLabel }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </template>
-  </ModuleLayout>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue'
-import ModuleLayout from '@/layouts/ModuleLayout.vue'
+import { defineComponent, ref, computed, toRef } from 'vue'
+import { useRouter } from 'vue-router'
 import UILoading from '@/components/UILoading.vue'
 import { accountService } from '@/services/api/account/account.service'
 import type { AccountProfileResponse } from '@/services/api/account/account.models'
 import { uploadAvatar } from '@/services/external/imageHost.service'
+import { clearAuth } from '@/utils/auth'
 
 export default defineComponent({
   name: 'SettingsView',
+  props: {
+    selectedLanguage: {
+      type: String as () => 'English' | 'Turkish',
+      default: 'English',
+    },
+  },
   components: {
-    ModuleLayout,
     UILoading,
   },
-  setup() {
-    const selectedLanguage = ref(localStorage.getItem('selectedLanguage') || 'English')
+  setup(props) {
+    const router = useRouter()
+    const selectedLanguage = toRef(props, 'selectedLanguage')
 
     const me = ref<AccountProfileResponse | null>(null)
 
@@ -301,9 +349,10 @@ export default defineComponent({
 
     const avatarInput = ref<HTMLInputElement | null>(null)
 
-    const selectedPage = computed(() =>
-      selectedLanguage.value === 'English' ? 'Settings' : 'Ayarlar'
-    )
+    const showDeleteAccountModal = ref(false)
+    const deleteConfirmPhraseInput = ref('')
+    const isDeletingAccount = ref(false)
+    const deleteAccountError = ref<string | null>(null)
 
     const loadingText = computed(() =>
       selectedLanguage.value === 'English' ? 'Loading your profile...' : 'Profiliniz yükleniyor...'
@@ -344,9 +393,88 @@ export default defineComponent({
       })
     })
 
-    const handleLanguageUpdate = (language: string) => {
-      selectedLanguage.value = language
-      localStorage.setItem('selectedLanguage', language)
+    const deleteConfirmationPhrase = computed(() =>
+      me.value?.email ? `I want to delete user ${me.value.email}` : ''
+    )
+
+    const isDeletePhraseMatch = computed(
+      () =>
+        deleteConfirmationPhrase.value.length > 0 &&
+        deleteConfirmPhraseInput.value.trim() === deleteConfirmationPhrase.value
+    )
+
+    const dangerZoneTitle = computed(() =>
+      selectedLanguage.value === 'English' ? 'Danger zone' : 'Tehlikeli bölge'
+    )
+
+    const dangerZoneDescription = computed(() =>
+      selectedLanguage.value === 'English'
+        ? 'Once you delete your account, there is no going back. Please be certain.'
+        : 'Hesabınızı sildikten sonra geri alınamaz. Lütfen emin olun.'
+    )
+
+    const deleteAccountButtonLabel = computed(() =>
+      selectedLanguage.value === 'English' ? 'Delete account' : 'Hesabı sil'
+    )
+
+    const deleteModalTitle = computed(() =>
+      selectedLanguage.value === 'English' ? 'Delete account' : 'Hesabı sil'
+    )
+
+    const deleteModalInstruction = computed(() =>
+      selectedLanguage.value === 'English'
+        ? 'This action cannot be undone. Type the following to confirm:'
+        : 'Bu işlem geri alınamaz. Onaylamak için aşağıdaki ifadeyi yazın:'
+    )
+
+    const deleteModalLabel = computed(() =>
+      selectedLanguage.value === 'English' ? 'Type the phrase above' : 'Yukarıdaki ifadeyi yazın'
+    )
+
+    const confirmDeleteLabel = computed(() =>
+      selectedLanguage.value === 'English' ? 'Delete my account' : 'Hesabımı sil'
+    )
+
+    const cancelLabel = computed(() =>
+      selectedLanguage.value === 'English' ? 'Cancel' : 'İptal'
+    )
+
+    const deletingLabel = computed(() =>
+      selectedLanguage.value === 'English' ? 'Deleting...' : 'Siliniyor...'
+    )
+
+    const openDeleteAccountModal = () => {
+      deleteConfirmPhraseInput.value = ''
+      deleteAccountError.value = null
+      showDeleteAccountModal.value = true
+    }
+
+    const closeDeleteAccountModal = () => {
+      showDeleteAccountModal.value = false
+      deleteConfirmPhraseInput.value = ''
+      deleteAccountError.value = null
+    }
+
+    const confirmDeleteAccount = async () => {
+      if (!isDeletePhraseMatch.value || isDeletingAccount.value) return
+
+      isDeletingAccount.value = true
+      deleteAccountError.value = null
+
+      try {
+        await accountService.deleteMe()
+        clearAuth()
+        router.push('/')
+      } catch (err: unknown) {
+        // eslint-disable-next-line no-console
+        console.error('deleteMe failed', err)
+        deleteAccountError.value =
+          selectedLanguage.value === 'English'
+            ? 'Could not delete account. Please try again.'
+            : 'Hesap silinemedi. Lütfen tekrar deneyin.'
+      } finally {
+        isDeletingAccount.value = false
+      }
     }
 
     const loadMe = async () => {
@@ -529,7 +657,6 @@ export default defineComponent({
 
     return {
       selectedLanguage,
-      selectedPage,
       loadingText,
       errorMessage,
       profileTitle,
@@ -564,13 +691,31 @@ export default defineComponent({
 
       avatarInput,
 
-      handleLanguageUpdate,
+      showDeleteAccountModal,
+      deleteConfirmPhraseInput,
+      isDeletingAccount,
+      deleteAccountError,
+      deleteConfirmationPhrase,
+      isDeletePhraseMatch,
+      dangerZoneTitle,
+      dangerZoneDescription,
+      deleteAccountButtonLabel,
+      deleteModalTitle,
+      deleteModalInstruction,
+      deleteModalLabel,
+      confirmDeleteLabel,
+      cancelLabel,
+      deletingLabel,
+
       loadMe,
       onSaveProfile,
       onPickAvatar,
       onAvatarSelected,
       onUploadAvatar,
       onChangePassword,
+      openDeleteAccountModal,
+      closeDeleteAccountModal,
+      confirmDeleteAccount,
     }
   },
 })
@@ -582,23 +727,21 @@ export default defineComponent({
   flex: 1;
   min-height: 0;
   padding: var(--spacing-md);
-  background-color: var(--background-color);
-  border-radius: 12px;
   box-sizing: border-box;
 }
 
 .settings-columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--spacing-md);
+  gap: 2rem;
 }
 
 .settings-card {
   background-color: var(--background-color);
   border-radius: var(--border-radius);
-  box-shadow: var(--card-shadow);
-  padding: var(--spacing-md);
-  border: 1px solid var(--border-color);
+  padding: 1.5rem 1.25rem;
+  border: none;
+  box-shadow: none;
 
   h2 {
     font-size: 1.1rem;
@@ -783,6 +926,95 @@ export default defineComponent({
   color: var(--header-text-color);
   font-size: 0.75rem;
   cursor: pointer;
+}
+
+.danger-zone {
+  background-color: rgba(192, 57, 43, 0.06);
+}
+
+.danger-zone-description {
+  font-size: 0.8rem;
+  color: var(--header-text-color);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.danger-btn {
+  padding: 0.4rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--primary-red-color, #c0392b);
+  background: transparent;
+  color: var(--primary-red-color, #c0392b);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.danger-btn:hover:not(:disabled) {
+  background-color: rgba(192, 57, 43, 0.1);
+}
+
+.danger-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content.delete-modal {
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  max-width: 28rem;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+}
+
+.modal-content.delete-modal h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  color: var(--header-text-color);
+}
+
+.delete-modal-instruction {
+  font-size: 0.85rem;
+  color: var(--header-text-color);
+  margin: 0 0 0.5rem 0;
+}
+
+.delete-modal-phrase {
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+  padding: 0.75rem;
+  background-color: var(--background-color-soft);
+  border-radius: 6px;
+  word-break: break-all;
+  color: var(--header-text-color);
+}
+
+.delete-confirm-input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }
 
 .error-text {

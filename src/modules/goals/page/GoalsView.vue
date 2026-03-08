@@ -1,251 +1,182 @@
 <template>
-  <ModuleLayout
-    :selectedLanguage="selectedLanguage"
-    :selectedPage="selectedPage"
-    @update-language="handleLanguageUpdate"
-  >
-    <div class="goals-content">
-      <GoalsOverviewComponent
+  <div class="goals-content">
+    <GoalsOverviewComponent
+      :selectedLanguage="selectedLanguage"
+      :currentAmount="overviewTotalCurrent"
+      :limitAmount="overviewTotalTarget"
+      :totalGoals="totalGoalsCount || goals.length"
+      :achievedGoals="achievedGoalsCount"
+    />
+
+    <div class="goals-table-wrap">
+      <UIGoalsTableComponent
+        :goals="goals"
         :selectedLanguage="selectedLanguage"
-        :totalInitialAmount="financialData.totalInitialAmount"
-        :totalTargetAmount="financialData.totalTargetAmount"
+        @createGoal="handleCreateGoal"
+        @updateGoal="handleUpdateGoal"
+        @deleteGoal="handleDeleteGoal"
       />
-
-      <div class="goals-categories-wrapper">
-        <GoalsCategoriesComponent
-          :selectedLanguage="selectedLanguage"
-          :goalCategoriesData="financialData.goalCategoriesData"
-          @handleDeleteGoalCategoryItem="handleDeleteGoalCategoryItem"
-          @handleUpdateGoalCategoryItem="handleUpdateGoalCategoryItem"
-        />
-
-        <GoalsAddCategoryComponent
-          :selectedLanguage="selectedLanguage"
-          @handleAddNewGoalCategory="handleAddNewGoalCategory"
-        />
-      </div>
     </div>
-  </ModuleLayout>
+  </div>
 </template>
 
 <script lang="ts">
 // Types
-import type { FinancialData } from '@/interfaces/FinancialData'
+import type { Goal } from '@/services/api/goal/goal.models'
 
 // Utilities
 import { goalService } from '@/services/api/goal/goal.service'
-import { goalsTexts } from '@/data/goalsTexts'
-
-// Shared Components
-import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 // Goals Components
 import GoalsOverviewComponent from '@/modules/goals/components/GoalsOverviewComponent.vue'
-import GoalsCategoriesComponent from '@/modules/goals/components/GoalsCategoriesComponent.vue'
-import GoalsAddCategoryComponent from '@/modules/goals/components/GoalsAddCategoryComponent.vue'
+import UIGoalsTableComponent from '@/modules/goals/components/UIGoalsTableComponent.vue'
 
 export default {
   name: 'GoalsView',
+
   components: {
-    ModuleLayout,
     GoalsOverviewComponent,
-    GoalsCategoriesComponent,
-    GoalsAddCategoryComponent,
+    UIGoalsTableComponent,
   },
+
+  props: {
+    selectedLanguage: {
+      type: String as () => 'English' | 'Turkish',
+      default: 'English',
+    },
+  },
+
   data() {
     return {
-      financialData: {} as FinancialData,
-      selectedLanguage: 'English' as 'English' | 'Turkish',
-      goalsTexts: goalsTexts,
       isLoading: false,
       hasError: false,
-      page: 1,
+      overviewTotalCurrent: 0,
+      overviewTotalTarget: 0,
+      goals: [] as Goal[],
+      totalGoalsCount: 0,
+      achievedGoalsCountFromApi: 0,
     }
   },
+
   computed: {
-    selectedPage() {
-      return this.selectedLanguage === 'English' ? 'Goals' : 'Hedefler'
+    achievedGoalsCount(): number {
+      return this.achievedGoalsCountFromApi ?? this.goals.filter((g) => g.isCompleted === true).length
     },
   },
+
   methods: {
-    // Goals categories fetching
-    async fetchGoalCategories() {
+    async fetchGoals() {
       try {
-        const data = await goalService.getUserGoals()
-        this.financialData.goalCategoriesData = data
+        const data = await goalService.getGoals()
+        this.goals = data ?? []
       } catch (error) {
-        console.error('Error fetching goal categories:', error)
+        console.error('Error fetching goals:', error)
       }
     },
 
-    // Monthly goals data fetching
-    async fetchGoalsProgress() {
+    async fetchGoalsTotal() {
       try {
-        const data = await goalService.getGoalTotal()
-        this.financialData.totalInitialAmount = data.totalInitialAmount
-        this.financialData.totalTargetAmount = data.totalTargetAmount
+        const data = await goalService.getGoalsTotal()
+        this.overviewTotalCurrent = data.totalCurrentAmount ?? 0
+        this.overviewTotalTarget = data.totalTargetAmount ?? 0
+        this.totalGoalsCount = data.totalGoals ?? 0
+        this.achievedGoalsCountFromApi = data.achievedGoals ?? 0
       } catch (error) {
-        console.error('Error fetching goals progress:', error)
+        console.error('Error fetching goals total:', error)
       }
     },
 
-    // Create a new goal category
-    async createGoalCategory(newCategory: {
+    async handleCreateGoal(payload: {
       name: string
-      initialDeposit: number
       targetAmount: number
+      initialAmount?: number
+      currentAmount?: number
       deadline: string
     }) {
       try {
+        const currentAmount = payload.currentAmount ?? payload.initialAmount ?? 0
         await goalService.createGoal({
-          name: newCategory.name,
-          targetAmount: newCategory.targetAmount,
-          initialAmount: newCategory.initialDeposit,
-          deadline: newCategory.deadline,
+          name: payload.name,
+          targetAmount: payload.targetAmount,
+          currentAmount,
+          deadline: payload.deadline,
         })
-
-        await this.fetchGoalCategories()
-        await this.fetchGoalsProgress()
-      } catch (error) {
-        console.error('Error creating goal category:', error)
-      }
-    },
-
-    // Delete a goal category
-    async deleteGoalCategoryItem(goalId: number) {
-      try {
-        await goalService.deleteGoal(goalId)
-        await this.fetchGoalCategories()
-        await this.fetchGoalsProgress()
-      } catch (error) {
-        console.error('Error deleting goal category:', error)
-      }
-    },
-
-    // Update a goal category
-    async updateGoalCategoryItem(updatedCategory: {
-      id: number
-      name: string
-      initialAmount: number
-      targetAmount: number
-      deadline: string
-    }) {
-      try {
-        await goalService.updateGoal(updatedCategory.id, {
-          name: updatedCategory.name,
-          targetAmount: updatedCategory.targetAmount,
-          initialAmount: updatedCategory.initialAmount,
-          deadline: updatedCategory.deadline,
-        })
-
-        await this.fetchGoalCategories()
-        await this.fetchGoalsProgress()
-      } catch (error) {
-        console.error('Error updating goal category:', error)
-      }
-    },
-
-    // Helper function to handle the pagination of goal categories
-    handlePrevPage() {
-      if (this.page > 1) {
-        this.page--
         this.loadAppropriateData()
+      } catch (error) {
+        console.error('Error creating goal:', error)
       }
     },
-    handleNextPage() {
-      this.page++
-      this.loadAppropriateData()
-    },
-    handleUpdateGoalCategoryItem(updatedCategory: {
+
+    async handleUpdateGoal(payload: {
       id: number
       name: string
-      initialAmount: number
       targetAmount: number
+      initialAmount?: number
+      currentAmount?: number
       deadline: string
     }) {
-      this.updateGoalCategoryItem(updatedCategory)
+      try {
+        const currentAmount = payload.currentAmount ?? payload.initialAmount ?? 0
+        await goalService.updateGoal(payload.id, {
+          id: payload.id,
+          name: payload.name,
+          targetAmount: payload.targetAmount,
+          currentAmount,
+          deadline: payload.deadline,
+        })
+        this.loadAppropriateData()
+      } catch (error) {
+        console.error('Error updating goal:', error)
+      }
     },
 
-    // Helper function to add a new goal category
-    handleAddNewGoalCategory(newCategory: {
-      name: string
-      initialDeposit: number
-      targetAmount: number
-      deadline: string
-    }) {
-      this.createGoalCategory(newCategory)
-    },
-
-    // Helper function to remove a goal category
-    handleDeleteGoalCategoryItem(goalId: number) {
-      this.deleteGoalCategoryItem(goalId)
-    },
-
-    // Language state management
-    handleLanguageUpdate(language: 'English' | 'Turkish') {
-      this.selectedLanguage = language
-      localStorage.setItem('selectedLanguage', language)
+    async handleDeleteGoal(id: number) {
+      try {
+        await goalService.deleteGoal(id)
+        this.loadAppropriateData()
+      } catch (error) {
+        console.error('Error deleting goal:', error)
+      }
     },
 
     loadAppropriateData() {
-      this.fetchGoalCategories()
-      this.fetchGoalsProgress()
+      this.fetchGoals()
+      this.fetchGoalsTotal()
     },
   },
-  mounted() {
-    const savedLanguage = localStorage.getItem('selectedLanguage')
-    if (savedLanguage) {
-      this.selectedLanguage = savedLanguage as 'English' | 'Turkish'
-    }
 
+  mounted() {
     this.loadAppropriateData()
   },
-
-  beforeUnmount() {
-  },
-
-  watch: {},
 }
 </script>
 
 <style scoped lang="scss">
-.goals-title {
-  display: flex;
-  width: 100%;
-  font-size: 1.5rem;
-  font-weight: bold;
-  padding: 0 2rem;
-  color: var(--header-text-color);
-
-  @media (max-width: 768px) {
-    padding: 0 1rem;
-  }
-}
-
 .goals-content {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
-  align-items: center;
+  min-height: 0;
   gap: 2rem;
-  margin-top: 1rem;
-
-  @media (max-width: 768px) {
-    padding: 0rem 1rem;
-    gap: 0.5rem;
-  }
+  flex: 1 1 auto;
 }
 
-.goals-categories-wrapper {
+.goals-table-wrap {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
-  flex-direction: row;
-  width: 100%;
-  height: 100%;
-  gap: 1rem;
+  flex-direction: column;
+}
 
-  @media (max-width: 768px) {
-    gap: 0.5rem;
+@media (max-width: 768px) {
+  .goals-content {
+    padding: 0 0.5rem;
+    gap: 1rem;
+  }
+
+  .goals-table-wrap {
+    min-height: 18rem;
   }
 }
 </style>

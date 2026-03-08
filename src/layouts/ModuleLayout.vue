@@ -249,7 +249,7 @@ export default defineComponent({
           page = leftBarContentEnglish[index]
         }
       }
-      router.push(page.toLowerCase())
+      router.push({ name: page.toLowerCase() })
     }
 
     const routeToSidebarItem = (item: string, index: number) => {
@@ -258,7 +258,7 @@ export default defineComponent({
     }
 
     const routeToSettings = () => {
-      router.push('settings')
+      router.push({ name: 'settings' })
       isSettingsPanelOpen.value = false
     }
 

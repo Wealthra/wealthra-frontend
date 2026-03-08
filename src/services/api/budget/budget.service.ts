@@ -7,6 +7,7 @@ import type {
   MonthlyBudgetResponse,
   BudgetApiModel,
   BudgetsOverviewResponse,
+  BudgetsMonthlyResponse,
 } from './budget.models'
 
 export const budgetService = {
@@ -103,6 +104,12 @@ export const budgetService = {
 
   async apiGetBudgetsOverview(): Promise<BudgetsOverviewResponse> {
     return apiRequest<BudgetsOverviewResponse>('Budgets/overview', {
+      method: 'GET',
+    })
+  },
+
+  async apiGetBudgetsMonthly(): Promise<BudgetsMonthlyResponse> {
+    return apiRequest<BudgetsMonthlyResponse>('Budgets/monthly', {
       method: 'GET',
     })
   },

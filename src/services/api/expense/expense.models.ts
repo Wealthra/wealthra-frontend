@@ -24,6 +24,7 @@ export interface CreateExpenseRequest {
   paymentMethod: string
   isRecurring: boolean
   categoryId: number
+  transactionDate: string
 }
 
 export interface UpdateExpenseRequest {
@@ -32,8 +33,10 @@ export interface UpdateExpenseRequest {
   paymentMethod: string
   isRecurring: boolean
   categoryId: number
+  transactionDate: string
 }
 
+/** Current backend shape (may include previous-period and recentTransactions). */
 export interface ExpenseGeneralInfoResponse {
   weeklyTotalExpense: number
   monthlyTotalExpense: number
@@ -41,7 +44,16 @@ export interface ExpenseGeneralInfoResponse {
   previousWeekTotalExpense: number
   previousMonthTotalExpense: number
   previousYearTotalExpense: number
-  recentTransactions: Expense[]
+  recurringExpensesThisMonth?: number
+  recentTransactions?: Expense[]
+}
+
+/** Swagger /api/Expenses/generalinfo: weeklyTotal, monthlyTotal, yearlyTotal, recurringExpensesThisMonth */
+export interface ExpenseGeneralInfoApiResponse {
+  weeklyTotal: number
+  monthlyTotal: number
+  yearlyTotal: number
+  recurringExpensesThisMonth: number
 }
 
 // New API models based on /api/Expenses spec

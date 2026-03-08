@@ -1,10 +1,5 @@
 <template>
-  <ModuleLayout
-    :selectedLanguage="selectedLanguage"
-    :selectedPage="selectedPage"
-    @update-language="handleLanguageUpdate"
-  >
-    <UILoading
+  <UILoading
       v-if="isLoading || hasError"
       :isLoading="isLoading"
       :hasError="hasError"
@@ -14,61 +9,94 @@
     />
 
     <template v-else>
-      <div class="welcome-header">
-        <span>{{ dashboardTexts[selectedLanguage].welcomeBack }}</span>
-        <small>{{ dashboardTexts[selectedLanguage].welcomeSubtext }}</small>
-      </div>
-
+      <div class="dashboard-page">
       <div class="information-box-wrapper">
-        <UIInformationBox
-          :currentAmount="dashboardSummary?.totalBalance || 0"
-          :lastAmount="dashboardSummary?.totalBalance || 0"
-          :title="dashboardTexts[selectedLanguage].totalNetWorth"
-          color="yellow"
-          type="income"
-          icon="fas fa-wallet"
-          icon-color="var(--primary-yellow-color)"
-        />
-        <UIInformationBox
-          :currentAmount="dashboardSummary?.totalExpenses || 0"
-          :lastAmount="dashboardSummary?.totalIncome || 0"
-          :title="dashboardTexts[selectedLanguage].totalSpendingThisMonth"
-          color="blue"
-          type="spending"
-          icon="fas fa-credit-card"
-          icon-color="var(--primary-blue-color)"
-        />
-        <UIExpenseBox
-          :title="dashboardTexts[selectedLanguage].upcomingExpenses"
-          :amount="dashboardSummary?.totalExpenses || 0"
-        />
+        <div class="information-box-wrapper__item">
+          <UIInformationBox
+            :currentAmount="dashboardSummary?.totalBalance || 0"
+            :lastAmount="dashboardSummary?.totalBalance || 0"
+            :title="dashboardTexts[selectedLanguage].totalNetWorth"
+            color="yellow"
+            type="income"
+            icon="fas fa-wallet"
+            icon-color="var(--primary-yellow-color)"
+            :showTrend="false"
+          />
+        </div>
+        <div class="information-box-wrapper__item">
+          <UIInformationBox
+            :currentAmount="dashboardSummary?.totalExpenses || 0"
+            :lastAmount="dashboardSummary?.totalIncome || 0"
+            :title="dashboardTexts[selectedLanguage].totalSpendingThisMonth"
+            color="blue"
+            type="spending"
+            icon="fas fa-credit-card"
+            icon-color="var(--primary-blue-color)"
+            :showTrend="false"
+          />
+        </div>
+        <div class="information-box-wrapper__item">
+          <UIInformationBox
+            :currentAmount="dashboardSummary?.totalIncome || 0"
+            :lastAmount="dashboardSummary?.totalIncome || 0"
+            :title="dashboardTexts[selectedLanguage].totalIncome"
+            color="green"
+            type="income"
+            icon="fas fa-arrow-trend-up"
+            icon-color="var(--primary-green-color)"
+            :showTrend="false"
+          />
+        </div>
+        <div class="information-box-wrapper__item">
+          <UIInformationBox
+            :currentAmount="dashboardSummary?.totalExpenses || 0"
+            :lastAmount="dashboardSummary?.totalExpenses || 0"
+            :title="dashboardTexts[selectedLanguage].upcomingExpenses"
+            color="red"
+            type="spending"
+            icon="fas fa-calendar"
+            icon-color="var(--primary-red-color)"
+            :showTrend="false"
+          />
+        </div>
+        <div class="information-box-wrapper__item">
+          <UIInformationBox
+            :currentAmount="dashboardSummary?.unreadNotificationsCount ?? 0"
+            :lastAmount="dashboardSummary?.unreadNotificationsCount ?? 0"
+            :title="dashboardTexts[selectedLanguage].unreadNotifications"
+            color="pink"
+            type="income"
+            icon="fas fa-bell"
+            icon-color="var(--primary-pink-color)"
+            :showTrend="false"
+            valuePrefix=""
+          />
+        </div>
       </div>
 
       <div class="data-wrapper">
-        <div class="chart-wrapper">
-          <UIDonutChart
-            :categories="categorySpending"
-            :title="dashboardTexts[selectedLanguage].spendingsBreakdown"
-            :donutChartText="dashboardTexts[selectedLanguage].donutChartText"
-            :selectedLanguage="selectedLanguage"
-          />
-        </div>
-
-        <div class="chart-bar-wrapper">
-          <div class="chart-wrapper">
-            <UIDataChart
-              :data="{}"
-              :title="dashboardTexts[selectedLanguage].spendings"
-              color="blue"
-            />
+        <div class="charts-row">
+          <div class="chart-box chart-box--pie">
+            <div class="chart-box-inner">
+              <UIDonutChart
+                :categories="categorySpending"
+                :title="dashboardTexts[selectedLanguage].spendingsBreakdown"
+                :donutChartText="dashboardTexts[selectedLanguage].donutChartText"
+                :selectedLanguage="selectedLanguage"
+              />
+            </div>
           </div>
-
-          <div class="chart-wrapper">
-            <UIDataChart
-              :data="{}"
-              :title="dashboardTexts[selectedLanguage].incomes"
-              color="green"
-            />
+          <div class="chart-box chart-box--line">
+            <div class="chart-box-inner">
+              <UIIncomeExpenseLineChart
+                :labels="lineChartLabels"
+                :incomeValues="lineChartIncomeValues"
+                :expenseValues="lineChartExpenseValues"
+                :incomeLabel="dashboardTexts[selectedLanguage].incomes"
+                :expenseLabel="dashboardTexts[selectedLanguage].spendings"
+                :noDataText="dashboardTexts[selectedLanguage].noChartData"
+              />
+            </div>
           </div>
         </div>
 
@@ -80,48 +108,64 @@
               :selectedLanguage="selectedLanguage"
             />
           </div>
-          <div class="goal-container">
-            <UIGoalBox :selectedLanguage="selectedLanguage" />
+          <div class="recent-transactions-container">
+            <UIRecentTransactionsCard
+              :transactions="dashboardSummary?.recentTransactions ?? []"
+              :title="dashboardTexts[selectedLanguage].recentTransactions"
+              :emptyText="dashboardTexts[selectedLanguage].noRecentTransactions"
+              :selectedLanguage="selectedLanguage"
+            />
+          </div>
+          <div class="budget-alerts-container">
+            <UIBudgetAlertsCard
+              :alerts="dashboardSummary?.budgetAlerts ?? []"
+              :title="dashboardTexts[selectedLanguage].budgetAlerts"
+              :emptyText="dashboardTexts[selectedLanguage].noBudgetAlerts"
+              :statusExceededText="dashboardTexts[selectedLanguage].statusExceeded"
+              :statusWarningText="dashboardTexts[selectedLanguage].statusWarning"
+            />
           </div>
         </div>
       </div>
+      </div>
     </template>
-  </ModuleLayout>
 </template>
 
 <script lang="ts">
 import UILoading from '../../../components/UILoading.vue'
-import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 import UIInformationBox from '../components/UIInformationBox.vue'
-import UIExpenseBox from '../components/UIExpenseBox.vue'
 import UIDonutChart from '../components/UIDonutChart.vue'
-import UIDataChart from '../components/UIDataChart.vue'
-import UIGoalBox from '../components/UIGoalBox.vue'
+import UIIncomeExpenseLineChart from '../components/UIIncomeExpenseLineChart.vue'
 import UITopSpendingsBox from '../components/UITopSpendingsBox.vue'
+import UIRecentTransactionsCard from '../components/UIRecentTransactionsCard.vue'
+import UIBudgetAlertsCard from '../components/UIBudgetAlertsCard.vue'
 
 import type { Spendings } from '@/interfaces/Spendings'
 import type { DashboardSummaryResponse } from '@/services/api/summary/summary.models'
 import { summaryService } from '@/services/api/summary/summary.service'
 import { dashboardTexts } from '@/data/dashboardTexts'
-
-type Language = 'English' | 'Turkish'
+import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
 
 export default {
   name: 'DashboardView',
+  props: {
+    selectedLanguage: {
+      type: String as () => 'English' | 'Turkish',
+      default: 'English',
+    },
+  },
   components: {
-    ModuleLayout,
     UIInformationBox,
-    UIExpenseBox,
     UIDonutChart,
-    UIDataChart,
-    UIGoalBox,
+    UIIncomeExpenseLineChart,
     UITopSpendingsBox,
+    UIRecentTransactionsCard,
+    UIBudgetAlertsCard,
     UILoading,
   },
   data() {
     return {
-      selectedLanguage: 'English' as Language,
       isLoading: false,
       hasError: false,
       dashboardSummary: {} as DashboardSummaryResponse,
@@ -131,16 +175,63 @@ export default {
     }
   },
   computed: {
-    selectedPage() {
-      return this.selectedLanguage === 'English' ? 'Dashboard' : 'Kontrol Paneli'
+    spendingsByMonth(): Record<string, number> {
+      const list = this.dashboardSummary?.recentTransactions ?? []
+      const byMonth: Record<string, number> = {}
+      list.forEach(tx => {
+        if (tx.type !== 'Expense') return
+        const date = new Date(tx.transactionDate)
+        const key = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+        byMonth[key] = (byMonth[key] ?? 0) + tx.amount
+      })
+      return this.sortMonthKeys(byMonth)
+    },
+    incomesByMonth(): Record<string, number> {
+      const list = this.dashboardSummary?.recentTransactions ?? []
+      const byMonth: Record<string, number> = {}
+      list.forEach(tx => {
+        if (tx.type !== 'Income') return
+        const date = new Date(tx.transactionDate)
+        const key = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+        byMonth[key] = (byMonth[key] ?? 0) + tx.amount
+      })
+      return this.sortMonthKeys(byMonth)
+    },
+    lineChartLabels(): string[] {
+      const spendings = this.spendingsByMonth
+      const incomes = this.incomesByMonth
+      const allKeys = new Set([...Object.keys(spendings), ...Object.keys(incomes)])
+      const sorted = Array.from(allKeys).sort((a, b) => {
+        const dA = new Date(a)
+        const dB = new Date(b)
+        return dA.getTime() - dB.getTime()
+      })
+      return sorted
+    },
+    lineChartIncomeValues(): number[] {
+      return this.lineChartLabels.map(
+        label => this.incomesByMonth[label] ?? 0
+      )
+    },
+    lineChartExpenseValues(): number[] {
+      return this.lineChartLabels.map(
+        label => this.spendingsByMonth[label] ?? 0
+      )
     },
   },
   methods: {
-    handleLanguageUpdate(language: string) {
-      this.selectedLanguage = language as Language
-      localStorage.setItem('selectedLanguage', this.selectedLanguage)
+    sortMonthKeys(byMonth: Record<string, number>): Record<string, number> {
+      const keys = Object.keys(byMonth)
+      if (keys.length === 0) return {}
+      const sorted = keys.sort((a, b) => {
+        const dA = new Date(a)
+        const dB = new Date(b)
+        return dA.getTime() - dB.getTime()
+      })
+      const out: Record<string, number> = {}
+      sorted.forEach(k => { out[k] = byMonth[k] })
+      return out
     },
-
     async fetchFinancialData() {
       this.isLoading = true
       this.hasError = false
@@ -150,18 +241,20 @@ export default {
 
         this.dashboardSummary = data
 
-        // Map top spending categories into a Record for the donut chart
+        // Aggregate top spending categories by categoryName (sum amounts for duplicates)
         const categories: Record<string, number> = {}
         data.topSpendingCategories.forEach(item => {
-          categories[item.categoryName] = item.totalAmount
+          const name = item.categoryName
+          categories[name] = (categories[name] ?? 0) + item.totalAmount
         })
         this.categorySpending = categories
 
-        // Map top spending categories into Spendings[] for the top spendings box
-        this.topSpendings = data.topSpendingCategories.map((item, index) => ({
+        // Map aggregated categories into Spendings[] for the top spendings box (colors by index, no hardcoded keys)
+        this.topSpendings = Object.entries(categories).map(([categoryName, totalAmount], index) => ({
           categoryId: index,
-          categoryName: item.categoryName,
-          totalAmount: item.totalAmount,
+          categoryName,
+          totalAmount,
+          color: getCategoryColorByIndex(index),
         }))
       } catch {
         this.hasError = true
@@ -171,13 +264,6 @@ export default {
     },
   },
   mounted() {
-    // Load saved preferences
-    const savedLanguage = localStorage.getItem('selectedLanguage')
-    if (savedLanguage) {
-      this.selectedLanguage = savedLanguage as Language
-    }
-
-    // Fetch data
     this.fetchFinancialData()
   },
 
@@ -189,121 +275,136 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.welcome-header {
+.dashboard-page {
+  width: 100%;
+  min-width: 0;
+  min-height: min-content;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width: 100%;
-  padding: 0 0.7rem;
-
-  span {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--header-text-color);
-  }
-
-  small {
-    font-size: 0.7rem;
-    color: var(--normal-text-color);
-  }
+  gap: 1.2rem;
 }
 
 .information-box-wrapper {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.7rem;
   width: 100%;
+
+  .information-box-wrapper__item {
+    flex: 1 1 0;
+    min-width: 160px;
+    min-height: 0;
+  }
 }
 
 .data-wrapper {
   display: flex;
-  align-items: start;
+  flex-direction: column;
   gap: 1.2rem;
   width: 100%;
-  height: 100%;
+  min-height: 0;
 
-  .chart-wrapper {
+  .charts-row {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    gap: 1rem;
     width: 100%;
-    height: 95%;
-    padding: 0.7rem;
-    gap: 1.2rem;
-    border: var(--border-color) solid 1px;
-    border-radius: var(--border-radius);
+    min-width: 0;
+  }
 
-    &.no-data-container {
+  .chart-box {
+    min-width: 0;
+    min-height: 240px;
+    max-height: 500px;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    &.chart-box--pie {
+      flex: 0 0 25%;
+    }
+
+    &.chart-box--line {
+      flex: 1;
+    }
+
+    .chart-box-inner {
+      width: 100%;
+      height: 100%;
+      min-height: 240px;
+      max-height: 500px;
+      min-width: 0;
+      padding: 0.75rem;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      min-height: 240px;
+      align-items: stretch;
+      overflow: hidden;
 
-      .no-data-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 1.5rem;
-        max-width: 80%;
-
-        .no-data-icon {
-          font-size: 2.5rem;
-          margin-bottom: 1rem;
-          opacity: 0.6;
-        }
-
-        .no-data-message {
-          font-size: 1rem;
-          color: var(--normal-text-color);
-          text-align: center;
-          line-height: 1.5;
-        }
+      > * {
+        flex: 1;
+        min-height: 0;
       }
     }
   }
 
-  .chart-bar-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 95%;
-    width: 100%;
-    gap: 1rem;
-  }
-
   .additional-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    height: 95%;
-    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
+    width: 100%;
+    min-height: 0;
 
     .spendings-container,
-    .goal-container {
+    .recent-transactions-container,
+    .budget-alerts-container {
       width: 100%;
-      height: 100%;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .recent-transactions-container,
+    .budget-alerts-container {
+      max-height: 280px;
+      overflow: auto;
     }
   }
 }
 
 @media (max-width: 768px) {
   .information-box-wrapper {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 1rem;
     width: 100%;
+
+    .information-box-wrapper__item {
+      min-width: 0;
+    }
   }
 
   .data-wrapper {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 1rem;
     width: 100%;
+
+    .charts-row {
+      flex-direction: column;
+
+      .chart-box--pie,
+      .chart-box--line {
+        flex: 0 0 auto;
+        width: 100%;
+      }
+    }
+
+    .additional-info {
+      grid-template-columns: 1fr;
+    }
   }
 }
 </style>

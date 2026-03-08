@@ -1,123 +1,126 @@
 <template>
-  <ModuleLayout
-    :selectedLanguage="selectedLanguage"
-    :selectedPage="selectedPage"
-    @update-language="handleLanguageUpdate"
-  >
-    <div class="budget-content">
+  <div class="budget-content">
       <BudgetOverviewComponent
         :selectedLanguage="selectedLanguage"
-        :currentAmount="financialData.currentAmount"
-        :limitAmount="financialData.limitAmount"
+        :currentAmount="overviewTotalSpent"
+        :limitAmount="overviewTotalLimit"
       />
 
       <div class="budget-categories-notifications">
-        <BudgetCategoriesComponent
-          :selectedLanguage="selectedLanguage"
-          :budgetCategoriesData="financialData.budgetCategoriesData"
-          :budgetHasMoreItems="financialData.budgetHasMoreItems"
-          :pageNumberBudget="financialData.pageNumberBudget"
-          :pageSizeBudget="financialData.pageSizeBudget"
-          :totalCountBudget="financialData.totalCountBudget"
-          :totalPagesBudget="financialData.totalPagesBudget"
-          :page="page"
-          @changePage="handleChangePage"
-          @handleAddNewBudgetCategory="handleAddNewBudgetCategory"
-          @handleDeleteBudgetCategoryItem="handleDeleteBudgetCategoryItem"
-        />
-        <NotificationsComponent
-          :selectedLanguage="selectedLanguage"
-          :notifications="financialData.budgetNotifications"
-          @deleteNotifications="handleDeleteNotifications"
-        />
+        <div class="budget-table-wrap">
+          <UIBudgetTableComponent
+            :budgets="budgets"
+            :categories="categories"
+            :selectedLanguage="selectedLanguage"
+            @createBudget="handleCreateBudget"
+            @updateBudget="handleUpdateBudget"
+            @deleteBudget="handleDeleteBudget"
+            @categoriesUpdated="fetchCategories"
+          />
+        </div>
+        <div class="budget-notifications-wrap">
+          <NotificationsComponent
+            :selectedLanguage="selectedLanguage"
+            :notifications="financialData.budgetNotifications"
+            @deleteNotifications="handleDeleteNotifications"
+          />
+        </div>
       </div>
     </div>
-  </ModuleLayout>
 </template>
 
 <script lang="ts">
 // Types
 import type { FinancialData } from '@/interfaces/FinancialData'
+import type { BudgetApiModel } from '@/services/api/budget/budget.models'
+import type { Category } from '@/services/api/category/category.models'
 
 // Utilities
 import { budgetTexts } from '@/data/budgetTexts'
 import { budgetService } from '@/services/api/budget/budget.service'
+import { categoryService } from '@/services/api/category/category.service'
 import { notificationService } from '@/services/api/notification/notification.service'
-
-// Shared Layout
-import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 // Budget Components
 import BudgetOverviewComponent from '@/modules/budget/components/BudgetOverviewComponent.vue'
 import NotificationsComponent from '@/modules/budget/components/NotificationsComponent.vue'
-import BudgetCategoriesComponent from '@/modules/budget/components/BudgetCategoriesComponent.vue'
+import UIBudgetTableComponent from '@/modules/budget/components/UIBudgetTableComponent.vue'
 
 export default {
   name: 'BudgetView',
+  props: {
+    selectedLanguage: {
+      type: String as () => 'English' | 'Turkish',
+      default: 'English',
+    },
+  },
   components: {
-    ModuleLayout,
     BudgetOverviewComponent,
     NotificationsComponent,
-    BudgetCategoriesComponent,
+    UIBudgetTableComponent,
   },
   data() {
     return {
       financialData: {} as FinancialData,
-      selectedLanguage: 'English' as 'English' | 'Turkish',
       budgetTexts: budgetTexts,
       isLoading: false,
       hasError: false,
-      page: 1,
+      overviewTotalSpent: 0,
+      overviewTotalLimit: 0,
+      budgets: [] as BudgetApiModel[],
+      categories: [] as Category[],
     }
   },
-  computed: {
-    selectedPage() {
-      return this.selectedLanguage === 'English' ? 'Budget' : 'Bütçe'
-    },
-  },
   methods: {
-    // Budget categories fetching
-    async fetchBudgetCategories() {
+    async fetchOverview() {
       try {
-        const data = await budgetService.getUserBudgets(this.page, 3)
-        this.financialData.budgetCategoriesData = data.data
-        this.financialData.budgetHasMoreItems = data.hasMoreItems
-        this.financialData.pageNumberBudget = data.pageNumber
-        this.financialData.pageSizeBudget = data.pageSize
-        this.financialData.totalCountBudget = data.totalCount
-        this.financialData.totalPagesBudget = data.totalPages
+        const data = await budgetService.apiGetBudgetsOverview()
+        this.overviewTotalSpent = data.totalSpent ?? 0
+        this.overviewTotalLimit = data.totalLimit ?? 0
       } catch {
-        console.error('Error fetching budget categories')
-      }
-    },
-
-    // Monthly budget data fetching
-    async fetchMonthlyBudget() {
-      try {
-        const data = await budgetService.getMonthlyBudget()
-        this.financialData.currentAmount = data.currentAmount
-        this.financialData.limitAmount = data.limitAmount
-      } catch {
-        console.error('Error fetching monthly budget data')
+        console.error('Error fetching budget overview')
         this.hasError = true
       }
     },
 
-    // Notification fetching
+    async fetchBudgets() {
+      try {
+        const data = await budgetService.apiGetBudgets()
+        this.budgets = data ?? []
+      } catch {
+        console.error('Error fetching budgets')
+      }
+    },
+
+    async fetchCategories() {
+      try {
+        const data = await categoryService.apiGetCategories()
+        this.categories = data ?? []
+      } catch {
+        console.error('Error fetching categories')
+      }
+    },
+
     async fetchNotifications() {
       try {
-        const data = await notificationService.getNotifications()
-        this.financialData.budgetNotifications = data
+        const data = await notificationService.apiGetNotifications(false)
+        this.financialData.budgetNotifications = data.map((n) => ({
+          id: n.id,
+          message: n.message,
+          type: n.type,
+          created: n.createdOn,
+          budgetId: n.relatedEntityId,
+          categoryName: '',
+        }))
       } catch {
         console.error('Error fetching notifications')
         this.hasError = true
       }
     },
 
-    // Remove notifications
     async deleteNotifications() {
       try {
-        await notificationService.deleteNotifications()
+        await notificationService.apiDeleteNotifications({ clearAll: true, notificationIds: [] })
         this.loadAppropriateData()
       } catch (error) {
         console.error('Error deleting notifications:', error)
@@ -125,165 +128,121 @@ export default {
       }
     },
 
-    // Create a new budget category
-    async createBudgetCategory(newCategory: {
-      categoryId: number
-      limitAmount: number
-      currentAmount: number
-    }) {
+    async handleCreateBudget(payload: { categoryId: number; limitAmount: number }) {
       try {
-        await budgetService.createBudget({
-          limitAmount: newCategory.limitAmount,
-          categoryId: newCategory.categoryId,
-        })
+        await budgetService.apiCreateBudget(payload)
         this.loadAppropriateData()
       } catch (error) {
-        console.error('Error creating budget category:', error)
+        console.error('Error creating budget:', error)
       }
     },
 
-    // Delete a budget category
-    async deleteBudgetCategoryItem(categoryId: number) {
+    async handleUpdateBudget(id: number, limitAmount: number) {
       try {
-        await budgetService.deleteBudget(categoryId)
+        await budgetService.apiUpdateBudget(id, limitAmount)
         this.loadAppropriateData()
       } catch (error) {
-        console.error('Error deleting budget category:', error)
+        console.error('Error updating budget:', error)
       }
     },
 
-    // Helper function to handle the deletion of notifications
+    async handleDeleteBudget(id: number) {
+      try {
+        await budgetService.apiDeleteBudget(id)
+        this.loadAppropriateData()
+      } catch (error) {
+        console.error('Error deleting budget:', error)
+      }
+    },
+
     handleDeleteNotifications() {
       this.deleteNotifications()
     },
 
-    // Helper function to handle page changes
-    handleChangePage(page: number) {
-      this.page = page
-      this.fetchBudgetCategories()
-    },
-
-    // Helper function to add a new budget category
-    handleAddNewBudgetCategory(newCategory: {
-      categoryId: number
-      limitAmount: number
-      currentAmount: number
-    }) {
-      this.createBudgetCategory(newCategory)
-    },
-
-    // Helper function to remove a budget category
-    handleDeleteBudgetCategoryItem(categoryId: number) {
-      this.deleteBudgetCategoryItem(categoryId)
-    },
-
-    // Language state management
-    handleLanguageUpdate(language: 'English' | 'Turkish') {
-      this.selectedLanguage = language
-      localStorage.setItem('selectedLanguage', language)
-    },
-
     loadAppropriateData() {
-      this.fetchMonthlyBudget()
-      this.fetchBudgetCategories()
+      this.fetchOverview()
+      this.fetchBudgets()
+      this.fetchCategories()
       this.fetchNotifications()
     },
   },
   mounted() {
-    const savedLanguage = localStorage.getItem('selectedLanguage')
-    if (savedLanguage) {
-      this.selectedLanguage = savedLanguage as 'English' | 'Turkish'
-    }
-
     this.loadAppropriateData()
   },
-  watch: {},
 }
 </script>
 
 <style scoped lang="scss">
-.budget-c {
+/* Same structure as expenses-content: column layout, proper gap and responsive stacking */
+.budget-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  gap: 2rem;
+  flex: 1 1 auto;
+}
+
+.budget-categories-notifications {
   display: flex;
   flex-direction: row;
   width: 100%;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  gap: 1rem;
+}
 
-  .right-wrapper {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    flex-direction: column;
+.budget-table-wrap {
+  flex: 0.75;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-    width: 100%;
-    height: 100vh;
-    padding: 0.5rem;
-    background-color: var(--background-color);
-    overflow-y: auto;
-    gap: 1rem;
+.budget-notifications-wrap {
+  flex: 0.25;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-    @media (max-width: 768px) {
-      padding: 0.3rem;
-    }
+@media (max-width: 1024px) {
+  .budget-content {
+    flex: 0 0 auto;
+    min-height: min-content;
+  }
 
-    .budget-title {
-      display: flex;
-      width: 100%;
-      font-size: 1.5rem;
-      font-weight: bold;
-      padding: 0 2rem;
-      color: var(--header-text-color);
+  .budget-categories-notifications {
+    flex: none;
+    min-height: 0;
+  }
 
-      @media (max-width: 768px) {
-        padding: 0 1rem;
-      }
-    }
-
-    .budget-content {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      height: 100%;
-      align-items: center;
-      gap: 2rem;
-      margin-top: 1rem;
-
-      @media (max-width: 768px) {
-        padding: 0rem 1rem;
-        gap: 0.5rem;
-      }
-      .budget-categories-notifications {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        gap: 1rem;
-      }
-    }
+  .budget-table-wrap {
+    min-height: 20rem;
   }
 }
+
 @media (max-width: 768px) {
-  .budget-c {
+  .budget-content {
+    padding: 0 0.5rem;
+    gap: 1rem;
+  }
+
+  .budget-categories-notifications {
     flex-direction: column;
-    align-items: center;
-    .right-wrapper {
-      width: 100%;
-      padding: 0.5rem;
-      gap: 1rem;
-      overflow-y: auto;
-      S .budget-title {
-        font-size: 1.2rem;
-        padding: 0 1rem;
-      }
+    gap: 1rem;
+  }
 
-      .budget-content {
-        padding: 0rem 1rem;
-        gap: 0.5rem;
+  .budget-table-wrap {
+    flex: 1 1 auto;
+    min-height: 18rem;
+  }
 
-        .budget-categories-notifications {
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-      }
-    }
+  .budget-notifications-wrap {
+    flex: 0 0 auto;
   }
 }
 </style>

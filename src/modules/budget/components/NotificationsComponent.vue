@@ -4,9 +4,13 @@
       <div class="notifications-component-title">
         {{ notificationsTitleText }}
       </div>
-      <div class="notifications-component-list">
-        <div v-if="processedNotifications.length === 0" class="notifications-component-empty">
-          {{ noNotificationsText }}
+      <div class="notifications-component-list" :class="{ 'notifications-component-list--empty': processedNotifications.length === 0 }">
+        <div v-if="processedNotifications.length === 0" class="empty-state">
+          <div class="empty-state__icon-wrap">
+            <font-awesome-icon :icon="emptyStateIcon" class="empty-state__icon" aria-hidden="true" />
+          </div>
+          <h2 class="empty-state__heading">{{ noNotificationsHeading }}</h2>
+          <p class="empty-state__text">{{ noNotificationsDescription }}</p>
         </div>
         <div
           v-for="notification in processedNotifications"
@@ -25,7 +29,7 @@
               {{ getNotificationClass(notification.type) }}
             </div>
             <div class="notification-item-message">{{ notification.message }}</div>
-            <div class="notification-item-timestamp">{{ formatDate(notification.created) }}</div>
+            <div class="notification-item-timestamp">{{ formatDate(notification.createdOn ?? notification.created) }}</div>
           </div>
         </div>
       </div>
@@ -34,14 +38,15 @@
         class="notifications-component-clear-button"
         @click="clearNotifications"
       >
-        <div class="notifications-component-clear-notifications-text">
-          {{ clearNotificationsText }}
-        </div>
+        {{ clearNotificationsText }}
       </button>
     </div>
   </div>
 </template>
 <script lang="ts">
+import { budgetTexts } from '@/data/budgetTexts'
+import { faBell } from '@fortawesome/free-solid-svg-icons'
+
 export default {
   name: 'NotificationsComponent',
 
@@ -55,28 +60,25 @@ export default {
         id: number
         message: string
         type: number
-        created: string
-        budgetId: number
-        categoryName: string
+        created?: string
+        createdOn?: string
+        budgetId?: number
+        categoryName?: string
       }>,
       default: () => [],
     },
   },
 
-  computed: {
-    processedNotifications(): Array<{
-      id: number
-      message: string
-      type: number
-      created: string
-      budgetId: number
-      categoryName: string
-    }> {
-      if (Array.isArray(this.notifications)) {
-        return this.notifications
-      }
+  data() {
+    return {
+      emptyStateIcon: faBell,
+    }
+  },
 
-      return []
+  computed: {
+    processedNotifications() {
+      if (!Array.isArray(this.notifications)) return []
+      return this.notifications
     },
     notificationsTitleText(): string {
       return this.selectedLanguage === 'English' ? 'Notifications' : 'Bildirimler'
@@ -84,10 +86,13 @@ export default {
     clearNotificationsText(): string {
       return this.selectedLanguage === 'English' ? 'Clear Notifications' : 'Bildirimleri Temizle'
     },
-    noNotificationsText(): string {
-      return this.selectedLanguage === 'English'
-        ? '🔔 No new notifications. 🔔'
-        : '🔔 Yeni bildirim yok. 🔔'
+    noNotificationsHeading(): string {
+      const texts = budgetTexts[this.selectedLanguage as 'English' | 'Turkish']
+      return (texts as Record<string, string>).noNotificationsHeading ?? 'No notifications'
+    },
+    noNotificationsDescription(): string {
+      const texts = budgetTexts[this.selectedLanguage as 'English' | 'Turkish']
+      return (texts as Record<string, string>).noNotificationsDescription ?? 'Budget alerts and updates will appear here.'
     },
   },
 
@@ -115,7 +120,8 @@ export default {
           return 'Unknown'
       }
     },
-    formatDate(date: string): string {
+    formatDate(date: string | undefined): string {
+      if (!date) return '—'
       const d = new Date(date)
 
       const year = d.getFullYear()
@@ -134,15 +140,16 @@ export default {
 </script>
 
 <style scoped lang="scss">
+/* Styling aligned with UIBudgetTableComponent: same container, borders, empty state, button */
 .notifications-component-c {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 85%;
-  background-color: var(--background-color-soft);
+  flex: 1;
+  min-height: 0;
+  background-color: var(--background-color);
   border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  padding: 1.5rem;
+  padding: 1.5rem 1.25rem;
   box-sizing: border-box;
 }
 
@@ -151,41 +158,86 @@ export default {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  min-height: 0;
   gap: 1rem;
 
   .notifications-component-title {
-    font-size: 1.75rem;
-    font-weight: bold;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
     color: var(--header-text-color);
+    flex-shrink: 0;
   }
 
   .notifications-component-list {
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    height: 100%;
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
 
-    .notifications-component-empty {
+    &.notifications-component-list--empty {
       display: flex;
-      justify-content: center;
       align-items: center;
-      width: 100%;
-      height: 100%;
-      font-size: 1.5rem;
-
-      color: var(--normal-text-color);
-      text-align: center;
-      padding: 1rem;
+      justify-content: center;
     }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 12rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .empty-state__icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: var(--border-radius);
+    background-color: rgba(92, 184, 92, 0.12);
+    color: var(--primary-green-color);
+    margin-bottom: 1.25rem;
+  }
+
+  .empty-state__icon {
+    font-size: 1.75rem;
+  }
+
+  .empty-state__heading {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--header-text-color);
+  }
+
+  .empty-state__text {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--normal-text-color);
+    line-height: 1.5;
+    max-width: 18rem;
   }
 
   .notification-item {
     display: flex;
     align-items: flex-start;
-    padding: 0.3rem 1rem;
-    border-radius: var(--border-radius);
-    gap: 0.2rem;
+    padding: 0.7rem 1rem;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--background-color);
+
+    &:last-child {
+      border-bottom: none;
+    }
 
     &-warning {
       background-color: var(--notification-warning-color-soft);
@@ -232,50 +284,53 @@ export default {
     .notification-item-content {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
+      gap: 0.25rem;
       flex-grow: 1;
+      min-width: 0;
 
       .notification-item-header {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-weight: bold;
-        font-size: 1rem;
+        font-weight: 600;
+        font-size: 0.8125rem;
 
         .notification-item-indicator {
-          width: 12px;
-          height: 12px;
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
           flex-shrink: 0;
         }
       }
 
       .notification-item-message {
-        font-size: 0.8rem;
+        font-size: 0.8125rem;
         color: var(--normal-text-color);
+        line-height: 1.35;
       }
 
       .notification-item-timestamp {
-        font-size: 0.6rem;
+        font-size: 0.75rem;
         color: var(--normal-text-color);
       }
     }
   }
 
   .notifications-component-clear-button {
-    padding: 0.5rem 1rem;
-    background-color: var(--background-color);
-    color: var(--normal-text-color);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--border-radius);
+    font-size: 0.8125rem;
+    font-weight: 600;
     cursor: pointer;
+    border: 1px solid var(--border-color);
+    background-color: var(--background-color);
+    color: var(--header-text-color);
     align-self: center;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
+    flex-shrink: 0;
 
     &:hover {
-      background-color: var(--background-color-reverse);
-      color: var(--reverse-header-text-color);
-      transition: background-color 0.3s ease;
+      opacity: var(--hover-opacity, 0.9);
     }
   }
 }

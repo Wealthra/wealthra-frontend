@@ -38,29 +38,39 @@
             {{ selectedLanguage == 'English' ? 'Actions' : 'İşlemler' }}
           </div>
         </div>
-        <div v-for="(source, index) in incomeSources" :key="index" class="table-row" role="row">
+        <div v-for="(source, index) in incomeSources" :key="index" class="table-row income-card" role="row">
           <div class="col col-name">
+            <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Name' : 'Ad' }}</span>
             <div class="source-name">{{ source.name }}</div>
           </div>
-          <div class="col col-type">{{ isRecurrent(source) }} – {{ source.method }}</div>
-          <div class="col col-amount">${{ source.amount }}</div>
+          <div class="col col-type">
+            <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Type' : 'Tür' }}</span>
+            <span class="col-value">{{ isRecurrent(source) }} – {{ source.method }}</span>
+          </div>
+          <div class="col col-amount">
+            <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Amount' : 'Miktar' }}</span>
+            <span class="col-value">${{ source.amount }}</span>
+          </div>
           <div class="col col-actions">
-            <button
-              type="button"
-              class="row-action-btn"
-              @click="openEditModal(source)"
-              :aria-label="selectedLanguage == 'English' ? 'Edit source' : 'Kaynağı düzenle'"
-            >
-              <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
-            </button>
-            <button
-              type="button"
-              class="row-action-btn"
-              @click="deleteSource(source)"
-              :aria-label="selectedLanguage == 'English' ? 'Delete source' : 'Kaynağı sil'"
-            >
-              <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
-            </button>
+            <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Actions' : 'İşlemler' }}</span>
+            <div class="col-actions-buttons">
+              <button
+                type="button"
+                class="row-action-btn"
+                @click="openEditModal(source)"
+                :aria-label="selectedLanguage == 'English' ? 'Edit source' : 'Kaynağı düzenle'"
+              >
+                <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
+              </button>
+              <button
+                type="button"
+                class="row-action-btn"
+                @click="deleteSource(source)"
+                :aria-label="selectedLanguage == 'English' ? 'Delete source' : 'Kaynağı sil'"
+              >
+                <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -715,57 +725,64 @@ export default {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.25rem;
+    gap: 1rem;
+  }
 
-    .title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin: 0;
-      color: var(--header-text-color);
+  .header .title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--header-text-color);
+    flex-shrink: 0;
+  }
+
+  .header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+
+  .header .add-source-btn {
+    flex-shrink: 0;
+    background-color: var(--primary-green-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+
+    &:hover {
+      opacity: var(--hover-opacity);
     }
+  }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
+  .header .date-range-picker-wrap {
+    flex-shrink: 0;
+    min-width: 12rem;
+    cursor: pointer;
 
-    .date-range-picker-wrap {
+    :deep(.mx-datepicker) {
+      width: 100%;
+      min-width: 0;
       cursor: pointer;
-
-      :deep(.mx-datepicker) {
-        width: auto;
-        min-width: 16rem;
-        cursor: pointer;
-      }
-
-      :deep(.mx-input) {
-        cursor: pointer;
-        font-size: 0.8125rem;
-        padding: 0.4rem 0.5rem;
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-color);
-        background-color: var(--background-color);
-        color: var(--header-text-color);
-      }
-      :deep(.mx-input) {
-        cursor: pointer;
-      }
     }
 
-    .add-source-btn {
-      background-color: var(--primary-green-color);
-      color: white;
-      border: none;
-      border-radius: var(--border-radius);
-      padding: 0.4rem 0.75rem;
+    :deep(.mx-input) {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       cursor: pointer;
-      font-weight: 600;
       font-size: 0.8125rem;
-
-      &:hover {
-        opacity: var(--hover-opacity);
-      }
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+      background-color: var(--background-color);
+      color: var(--header-text-color);
     }
   }
 
@@ -775,6 +792,7 @@ export default {
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     background-color: var(--background-color);
+    padding-right: 0.75rem;
 
     &.table-wrap--empty {
       display: flex;
@@ -790,20 +808,29 @@ export default {
     flex-direction: column;
   }
 
+  /* Balanced columns: Name & Type share space, Amount and Actions fixed width */
   .table-header {
     display: grid;
-    grid-template-columns: 1fr 1fr minmax(5rem, auto) minmax(3rem, auto);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 6rem 5.5rem;
     gap: 1rem;
     padding: 0.6rem 1rem;
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     font-size: 0.75rem;
     color: var(--normal-text-color);
+
+    .col {
+      text-align: left;
+    }
+
+    .col-actions {
+      justify-content: flex-start;
+    }
   }
 
   .table-row {
     display: grid;
-    grid-template-columns: 1fr 1fr minmax(5rem, auto) minmax(3rem, auto);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 6rem 5.5rem;
     gap: 1rem;
     padding: 0.7rem 1rem;
     align-items: center;
@@ -816,6 +843,11 @@ export default {
 
   .col {
     min-width: 0;
+    text-align: left;
+  }
+
+  .col-mobile-label {
+    display: none;
   }
 
   .col-name .source-name {
@@ -833,12 +865,20 @@ export default {
     font-weight: 600;
     color: var(--primary-green-color);
     font-size: 0.8125rem;
-    text-align: right;
+    text-align: left;
   }
 
   .col-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .col-actions-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
   }
 
   .row-action-btn {
@@ -1254,6 +1294,11 @@ export default {
     height: auto;
   }
 
+  .header .date-range-picker-wrap {
+    width: 12rem;
+    min-width: 10rem;
+  }
+
   .table-wrap {
     min-height: 12rem;
   }
@@ -1265,114 +1310,175 @@ export default {
     min-height: 0;
     height: auto;
     padding: 1rem;
+  }
 
-    .modal-content {
-      width: 90%;
-      max-width: none;
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 1rem;
+    gap: 0.75rem;
+  }
+
+  .header .title {
+    display: none; /* Remove "Income Sources" header on mobile */
+  }
+
+  .header .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .header .add-source-btn {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .header .date-range-picker-wrap {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .header .date-range-picker-wrap :deep(.mx-datepicker) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .header .date-range-picker-wrap :deep(.mx-input) {
+    width: 100%;
+    min-height: 2.75rem;
+    font-size: 1rem;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .table-wrap {
+    overflow: visible;
+    min-height: 10rem;
+  }
+
+  .income-sources-container .table-header,
+  .table .table-header {
+    display: none !important;
+  }
+
+  .table-row.income-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    grid-template-columns: unset;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .table-row.income-card:last-child {
+    margin-bottom: 0;
+  }
+
+  .table-row .col {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0;
+    border: none;
+  }
+
+  .table-row .col-mobile-label {
+    display: inline;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--normal-text-color);
+    min-width: 5rem;
+  }
+
+  .table-row .col-name .source-name,
+  .table-row .col-value {
+    font-size: 0.875rem;
+    color: var(--header-text-color);
+  }
+
+  .table-row .col-actions {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    width: 100%;
+  }
+
+  .table-row .col-actions-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .empty-state {
+    min-height: 14rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .empty-state__icon-wrap {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .empty-state__icon {
+    font-size: 2rem;
+  }
+
+  .empty-state__heading {
+    font-size: 1.2rem;
+  }
+
+  .empty-state__text {
+    font-size: 0.9375rem;
+  }
+
+  .pagination-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 0.75rem;
+  }
+
+  .pagination-nav {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .modal-content {
+    width: 90%;
+    max-width: none;
+
+    .modal-body {
+      padding: 1rem;
     }
 
-    .header {
-      flex-direction: column;
-      align-items: stretch;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-
-      .title {
-        font-size: 1.125rem;
-      }
-
-      .header-actions {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-
-      .date-range-picker-wrap {
-        flex: 1;
-        min-width: 10rem;
-      }
+    .modal-input,
+    .datepicker-wrapper :deep(.mx-input) {
+      height: 2.5rem;
+      font-size: 0.875rem;
     }
 
-    .table-wrap {
-      overflow-x: auto;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      min-height: 10rem;
+    .frequency-segmented .frequency-option {
+      font-size: 0.8125rem;
+      padding: 0.45rem 0.75rem;
     }
 
-    .table {
-      min-width: 20rem;
+    .error-message {
+      font-size: 0.8rem;
     }
 
-    .table-header,
-    .table-row {
-      grid-template-columns: 1fr 1fr minmax(4rem, auto) minmax(2.5rem, auto);
-      gap: 0.5rem;
-      padding: 0.6rem 0.5rem;
-    }
-
-    .table-header {
-      font-size: 0.7rem;
-    }
-
-    .col-name .source-name,
-    .col-type,
-    .col-amount {
-      font-size: 0.75rem;
-    }
-
-    .empty-state {
-      min-height: 14rem;
-      padding: 2rem 1.5rem;
-    }
-    .empty-state__icon-wrap {
-      width: 4.5rem;
-      height: 4.5rem;
-      margin-bottom: 1.25rem;
-    }
-    .empty-state__icon {
-      font-size: 2rem;
-    }
-    .empty-state__heading {
-      font-size: 1.2rem;
-    }
-    .empty-state__text {
-      font-size: 0.9375rem;
-    }
-
-    .pagination-bar {
-      flex-direction: column;
-      align-items: flex-start;
-      padding-top: 0.75rem;
-    }
-
-    .pagination-nav {
-      width: 100%;
-      justify-content: flex-end;
-    }
-
-    .modal-content {
-      .modal-body {
-        padding: 1rem;
-      }
-
-      .modal-input,
-      .datepicker-wrapper :deep(.mx-input) {
-        height: 2.5rem;
-        font-size: 0.875rem;
-      }
-
-      .frequency-segmented .frequency-option {
-        font-size: 0.8125rem;
-        padding: 0.45rem 0.75rem;
-      }
-
-      .error-message {
-        font-size: 0.8rem;
-      }
-
-      .modal-header h3 {
-        font-size: 1.125rem;
-      }
+    .modal-header h3 {
+      font-size: 1.125rem;
     }
   }
 }

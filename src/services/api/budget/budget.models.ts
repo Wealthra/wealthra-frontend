@@ -53,3 +53,25 @@ export interface BudgetsOverviewResponse {
   budgetsExceeded: number
   budgetsWarning: number
 }
+
+export interface BudgetMonthlyCategoryBreakdownItem {
+  budgetId: number
+  categoryName: string
+  limitAmount: number
+  spentThisMonth: number
+  remainingAmount: number
+  percentageUsed: number
+  status: string
+}
+
+export interface BudgetsMonthlyResponse {
+  totalLimitAmount: number
+  totalSpentThisMonth: number
+  totalRemainingAmount: number
+  overallPercentageUsed: number
+  overallStatus: string
+  totalBudgets: number
+  budgetsExceeded: number
+  budgetsOnWarning: number
+  categoryBreakdown: BudgetMonthlyCategoryBreakdownItem[]
+}

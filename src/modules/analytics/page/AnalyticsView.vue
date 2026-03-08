@@ -1,10 +1,5 @@
 <template>
-  <ModuleLayout
-    :selectedLanguage="selectedLanguage"
-    :selectedPage="selectedPage"
-    @update-language="handleLanguageUpdate"
-  >
-    <UILoading
+  <UILoading
       v-if="isLoading || hasError"
       :isLoading="isLoading"
       :hasError="hasError"
@@ -45,7 +40,6 @@
         <p>{{ analyticsTexts[selectedLanguage].selectDateRange }}</p>
       </div>
     </template>
-  </ModuleLayout>
 </template>
 
 <script lang="ts">
@@ -55,7 +49,6 @@ import 'vue-datepicker-next/index.css'
 
 import UIGraph from '@/modules/analytics/components/UIGraph.vue'
 import UIExpenseDistribution from '@/modules/analytics/components/UIExpenseDistribution.vue'
-import ModuleLayout from '@/layouts/ModuleLayout.vue'
 
 import { analyticsTexts } from '@/data/analyticsTexts'
 
@@ -66,8 +59,13 @@ import type { FinancialData } from '@/interfaces/FinancialData'
 
 export default {
   name: 'AnalyticsView',
+  props: {
+    selectedLanguage: {
+      type: String as () => 'English' | 'Turkish',
+      default: 'English',
+    },
+  },
   components: {
-    ModuleLayout,
     Datepicker,
     UIGraph,
     UIExpenseDistribution,
@@ -75,7 +73,6 @@ export default {
   },
   data() {
     return {
-      selectedLanguage: 'English' as 'English' | 'Turkish',
       isLoading: false,
       hasError: false,
       selectedDateRange: null as [Date, Date] | null,
@@ -84,19 +81,7 @@ export default {
       activeErrorMessage: '',
     }
   },
-  computed: {
-    selectedPage() {
-      return this.selectedLanguage === 'English' ? 'Analytics' : 'Analizler'
-    },
-  },
-
   methods: {
-    handleLanguageUpdate(language: 'English' | 'Turkish') {
-      this.selectedLanguage = language
-      localStorage.setItem('selectedLanguage', language)
-      this.loadAppropriateData()
-    },
-
     disableFutureDates(date: Date): boolean {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
@@ -276,11 +261,6 @@ export default {
   },
 
   mounted() {
-    const savedLanguage = localStorage.getItem('selectedLanguage')
-    if (savedLanguage) {
-      this.selectedLanguage = savedLanguage as 'English' | 'Turkish'
-    }
-
     this.loadAppropriateData()
   },
 

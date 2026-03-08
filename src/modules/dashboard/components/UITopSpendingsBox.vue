@@ -14,6 +14,7 @@
 
 <script lang="ts">
 import type { Spendings } from '@/interfaces/Spendings'
+import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
 
 export default {
   name: 'TopSpendingsBox',
@@ -40,120 +41,20 @@ export default {
 
   methods: {
     processSpendingsData() {
-      if (!this.spendings) {
+      if (!this.spendings || !Array.isArray(this.spendings)) {
         this.spendingsData = []
         return
       }
-
-      // Translate category names to Turkish if needed
-      if (this.selectedLanguage === 'Turkish') {
-        this.spendings.forEach(spending => {
-          if (spending.categoryName === 'Food') {
-            spending.categoryName = 'Yiyecek'
-          } else if (spending.categoryName === 'Transport') {
-            spending.categoryName = 'Ulaşım'
-          } else if (spending.categoryName === 'Entertainment') {
-            spending.categoryName = 'Eğlence'
-          } else if (spending.categoryName === 'Health') {
-            spending.categoryName = 'Sağlık'
-          } else if (spending.categoryName === 'Shopping') {
-            spending.categoryName = 'Alışveriş'
-          } else if (spending.categoryName === 'Housing') {
-            spending.categoryName = 'Konut'
-          } else if (spending.categoryName === 'Healthcare') {
-            spending.categoryName = 'Sağlık'
-          } else if (spending.categoryName === 'Education') {
-            spending.categoryName = 'Eğitim'
-          }
-        })
-      } else {
-        this.spendings.forEach(spending => {
-          if (spending.categoryName === 'Yiyecek') {
-            spending.categoryName = 'Food'
-          } else if (spending.categoryName === 'Ulaşım') {
-            spending.categoryName = 'Transport'
-          } else if (spending.categoryName === 'Eğlence') {
-            spending.categoryName = 'Entertainment'
-          } else if (spending.categoryName === 'Sağlık') {
-            spending.categoryName = 'Health'
-          } else if (spending.categoryName === 'Alışveriş') {
-            spending.categoryName = 'Shopping'
-          } else if (spending.categoryName === 'Konut') {
-            spending.categoryName = 'Housing'
-          } else if (spending.categoryName === 'Eğitim') {
-            spending.categoryName = 'Education'
-          }
-        })
-      }
-
-      // Create a deep copy of the spendings array
-      this.spendingsData = JSON.parse(JSON.stringify(this.spendings))
-
-      for (let i: number = 0; i < this.spendingsData.length; i++) {
-        if (
-          this.spendingsData[i].categoryName === 'Other' ||
-          this.spendingsData[i].categoryName === 'Diğer'
-        ) {
-          this.spendingsData[i].color = 'var(--category-other-color)'
-        }
-        if (
-          this.spendingsData[i].categoryName === 'Food' ||
-          this.spendingsData[i].categoryName === 'Yiyecek'
-        ) {
-          this.spendingsData[i].color = 'var(--category-food-color)'
-        }
-        if (
-          this.spendingsData[i].categoryName === 'Transport' ||
-          this.spendingsData[i].categoryName === 'Ulaşım'
-        ) {
-          this.spendingsData[i].color = 'var(--category-transport-color)'
-        }
-        if (
-          this.spendingsData[i].categoryName === 'Entertainment' ||
-          this.spendingsData[i].categoryName === 'Eğlence'
-        ) {
-          this.spendingsData[i].color = 'var(--category-entertainment-color)'
-        }
-        if (
-          this.spendingsData[i].categoryName === 'Health' ||
-          this.spendingsData[i].categoryName === 'Sağlık'
-        ) {
-          this.spendingsData[i].color = 'var(--category-healthcare-color)'
-        }
-        if (
-          this.spendingsData[i].categoryName === 'Shopping' ||
-          this.spendingsData[i].categoryName === 'Alışveriş'
-        ) {
-          this.spendingsData[i].color = 'var(--category-shopping-color)'
-        }
-        if (
-          this.spendingsData[i].categoryName === 'Housing' ||
-          this.spendingsData[i].categoryName === 'Konut'
-        ) {
-          this.spendingsData[i].color = 'var(--category-housing-color)'
-        }
-        if (
-          this.spendingsData[i].categoryName === 'Healthcare' ||
-          this.spendingsData[i].categoryName === 'Sağlık'
-        ) {
-          this.spendingsData[i].color = 'var(--category-healthcare-color)'
-        }
-        if (
-          this.spendingsData[i].categoryName === 'Education' ||
-          this.spendingsData[i].categoryName === 'Eğitim'
-        ) {
-          this.spendingsData[i].color = 'var(--category-education-color)'
-        }
-      }
+      // Use category names from API as-is; colors from parent or by index (no hardcoded keys)
+      this.spendingsData = this.spendings.map((s, index) => ({
+        ...s,
+        color: s.color || getCategoryColorByIndex(index),
+      }))
     },
   },
 
   watch: {
     spendings: {
-      handler: 'processSpendingsData',
-      immediate: true,
-    },
-    selectedLanguage: {
       handler: 'processSpendingsData',
       immediate: true,
     },
@@ -168,9 +69,9 @@ export default {
   width: 100%;
   height: 100%;
   padding: 1.2rem;
-  border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   font-family: var(--main-font);
+  background: var(--background-color);
 
   .title {
     height: fit-content;

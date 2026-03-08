@@ -92,4 +92,10 @@ export const accountService = {
       body: data,
     })
   },
+
+  async deleteMe(): Promise<void> {
+    return apiRequest<void>('Account/me', {
+      method: 'DELETE',
+    })
+  },
 }
