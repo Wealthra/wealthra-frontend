@@ -62,8 +62,11 @@ export const accountService = {
   },
 
   async refreshToken(): Promise<AccountAuthResponse> {
+    // Refresh relies on the backend-managed refresh-token cookie, not the access token.
+    // We explicitly disable requiresAuth so that 401 handling does not recurse on this call.
     return apiRequest<AccountAuthResponse>('Account/refresh-token', {
       method: 'POST',
+      requiresAuth: false,
     })
   },
 

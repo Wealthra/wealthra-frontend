@@ -3,7 +3,8 @@ import { getAuthToken } from '../utils/auth'
 
 export interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
-  body?: any
+  // Accept any payload type; serialization/casting is handled inside apiRequest.
+  body?: unknown
   headers?: Record<string, string>
   requiresAuth?: boolean
   isFormData?: boolean
@@ -56,7 +57,7 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
 
     if (body) {
       if (isFormData) {
-        init.body = body
+        init.body = body as BodyInit
       } else {
         init.body = JSON.stringify(body)
       }
@@ -65,7 +66,7 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
     return init
   }
 
-  let response = await fetch(url, createRequestInit())
+  const response = await fetch(url, createRequestInit())
 
   if (!response.ok) {
     let errorData: ApiError
@@ -80,67 +81,9 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
       errorData = { message: response.statusText || 'An error occurred', status: response.status }
     }
 
-    // Handle 401 Unauthorized - try refresh once, then redirect to login
+    // Handle 401 Unauthorized - for now, do not auto-refresh to avoid
+    // spamming the refresh-token endpoint while backend cookies are unstable.
     if (response.status === 401 && requiresAuth) {
-      try {
-        const [{ accountService }, authUtils] = await Promise.all([
-          import('./api/account/account.service'),
-          import('../utils/auth'),
-        ])
-
-        const refreshData = await accountService.refreshToken()
-
-        if (refreshData && refreshData.token) {
-          authUtils.setAuth(refreshData.token, refreshData.id)
-
-          const refreshedHeaders: Record<string, string> = { ...headers }
-          if (!isFormData && !refreshedHeaders['Content-Type']) {
-            refreshedHeaders['Content-Type'] = 'application/json'
-          }
-
-          const refreshedToken = authUtils.getAuthToken()
-          if (refreshedToken) {
-            refreshedHeaders['Authorization'] = `Bearer ${refreshedToken}`
-          }
-
-          const retryInit: RequestInit = {
-            method,
-            headers: refreshedHeaders,
-            credentials: 'include',
-          }
-
-          if (body) {
-            if (isFormData) {
-              retryInit.body = body
-            } else {
-              retryInit.body = JSON.stringify(body)
-            }
-          }
-
-          response = await fetch(url, retryInit)
-
-          if (response.ok) {
-            const contentType = response.headers.get('content-type')
-            if (contentType && contentType.includes('image')) {
-              return (await response.blob()) as T
-            }
-
-            const text = await response.text()
-            if (!text) {
-              return {} as T
-            }
-
-            try {
-              return JSON.parse(text) as T
-            } catch {
-              return text as T
-            }
-          }
-        }
-      } catch {
-        // Intentionally swallow refresh errors and fall through to clearAuth + redirect
-      }
-
       const authUtils = await import('../utils/auth')
       authUtils.clearAuth()
       if (window.location.pathname !== '/login') {

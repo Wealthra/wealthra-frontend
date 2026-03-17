@@ -186,9 +186,11 @@ export default {
       // Use category names from API as-is; assign theme-based colors by index (no hardcoded keys)
       this.categoriesData = Object.entries(this.categories).map(
         ([key, value]: [string, number], index): SpendingCategories => ({
-          name: key,
+          // Strip technical suffixes like " #1" from keys so the user
+          // only sees the raw category name on the chart/legend.
+          name: key.replace(/\s+#\d+$/, ''),
           value,
-          label: key,
+          label: key.replace(/\s+#\d+$/, ''),
           color: getCategoryColorByIndex(index),
         })
       )

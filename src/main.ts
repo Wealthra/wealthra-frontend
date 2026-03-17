@@ -73,20 +73,25 @@ library.add(
   faEyeSlash,
 )
 
-// Initialize the app
-const app = createApp(App)
-app.component('font-awesome-icon', FontAwesomeIcon)
-app.use(createPinia())
-app.use(router)
+async function initApp() {
+  const app = createApp(App)
+  app.component('font-awesome-icon', FontAwesomeIcon)
+  app.use(createPinia())
+  app.use(router)
 
-// Check for existing authentication before mounting
-const isUserAuthenticated = isAuthenticated()
-const isUserAdmin = isAdmin()
+  // Determine initial route based on current in-memory auth state
+  const isUserAuthenticated = isAuthenticated()
+  const isUserAdmin = isAdmin()
 
-// If the user is authenticated and if admin direct to admin page if not direct to dashboard if not authenticated direct to landing page
-const initialRoute = isUserAuthenticated ? (isUserAdmin ? '/admin' : '/dashboard') : '/'
+  // If the user is authenticated and admin, go to admin; otherwise go to dashboard under /app.
+  // If not authenticated, stay on landing page.
+  const initialRoute = isUserAuthenticated ? (isUserAdmin ? '/admin' : '/app/dashboard') : '/'
 
-// Mount the app with initial route if needed
-app.mount('#app')
+  app.mount('#app')
 
-router.push(initialRoute)
+  if (router.currentRoute.value.fullPath !== initialRoute) {
+    await router.push(initialRoute)
+  }
+}
+
+initApp()

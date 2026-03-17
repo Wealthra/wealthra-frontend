@@ -1,6 +1,7 @@
-// In-memory authentication state. Tokens are not persisted in storage.
+// In-memory authentication state. Tokens and identity are not persisted in storage.
 let currentAccessToken: string | null = null
 let currentRoles: string[] = []
+let currentUserId: string | null = null
 
 export function isAuthenticated(): boolean {
   return !!currentAccessToken
@@ -15,26 +16,19 @@ export function getAuthToken(): string | null {
 }
 
 export function getUserId(): string | null {
-  return localStorage.getItem('userId')
-}
-
-export function setUserId(userId: string): void {
-  localStorage.setItem('userId', userId)
+  return currentUserId
 }
 
 export function setAuth(token: string, userId: string, roles: Array<string> = []): void {
   currentAccessToken = token
   currentRoles = roles
-
-  if (userId) {
-    setUserId(userId)
-  }
+  currentUserId = userId || null
 }
 
 export function clearAuth(): void {
   currentAccessToken = null
   currentRoles = []
-  localStorage.removeItem('userId')
+  currentUserId = null
 }
 
 export function getAuthenticatedURL(route: string = '/dashboard'): string {
@@ -47,4 +41,11 @@ export function getAuthenticatedURL(route: string = '/dashboard'): string {
 
 export function getUserRoles(): Array<string> {
   return currentRoles
+}
+
+// NOTE: bootstrapAuth is intentionally a no-op for now to avoid
+// hitting the refresh-token endpoint automatically before the
+// backend cookie setup is finalized.
+export async function bootstrapAuth(): Promise<void> {
+  return
 }

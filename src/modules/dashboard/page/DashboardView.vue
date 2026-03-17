@@ -13,8 +13,8 @@
       <div class="information-box-wrapper">
         <div class="information-box-wrapper__item">
           <UIInformationBox
-            :currentAmount="dashboardSummary?.totalBalance || 0"
-            :lastAmount="dashboardSummary?.totalBalance || 0"
+            :currentAmount="summaryHeader.totalBalance"
+            :lastAmount="summaryHeader.totalBalance"
             :title="dashboardTexts[selectedLanguage].totalNetWorth"
             color="yellow"
             type="income"
@@ -25,8 +25,8 @@
         </div>
         <div class="information-box-wrapper__item">
           <UIInformationBox
-            :currentAmount="dashboardSummary?.totalExpenses || 0"
-            :lastAmount="dashboardSummary?.totalIncome || 0"
+            :currentAmount="summaryHeader.totalExpenses"
+            :lastAmount="summaryHeader.totalIncome"
             :title="dashboardTexts[selectedLanguage].totalSpendingThisMonth"
             color="blue"
             type="spending"
@@ -37,8 +37,8 @@
         </div>
         <div class="information-box-wrapper__item">
           <UIInformationBox
-            :currentAmount="dashboardSummary?.totalIncome || 0"
-            :lastAmount="dashboardSummary?.totalIncome || 0"
+            :currentAmount="summaryHeader.totalIncome"
+            :lastAmount="summaryHeader.totalIncome"
             :title="dashboardTexts[selectedLanguage].totalIncome"
             color="green"
             type="income"
@@ -49,8 +49,8 @@
         </div>
         <div class="information-box-wrapper__item">
           <UIInformationBox
-            :currentAmount="dashboardSummary?.totalExpenses || 0"
-            :lastAmount="dashboardSummary?.totalExpenses || 0"
+            :currentAmount="summaryHeader.totalExpenses"
+            :lastAmount="summaryHeader.totalExpenses"
             :title="dashboardTexts[selectedLanguage].upcomingExpenses"
             color="red"
             type="spending"
@@ -61,8 +61,8 @@
         </div>
         <div class="information-box-wrapper__item">
           <UIInformationBox
-            :currentAmount="dashboardSummary?.unreadNotificationsCount ?? 0"
-            :lastAmount="dashboardSummary?.unreadNotificationsCount ?? 0"
+            :currentAmount="summaryHeader.unreadNotificationsCount"
+            :lastAmount="summaryHeader.unreadNotificationsCount"
             :title="dashboardTexts[selectedLanguage].unreadNotifications"
             color="pink"
             type="income"
@@ -75,7 +75,8 @@
       </div>
 
       <div class="data-wrapper">
-        <div class="charts-row">
+        <!-- Row 1: Donut + Top Spendings + Budget Alerts -->
+        <div class="row row--top">
           <div class="chart-box chart-box--pie">
             <div class="chart-box-inner">
               <UIDonutChart
@@ -86,6 +87,26 @@
               />
             </div>
           </div>
+          <div class="info-box info-box--top-spendings">
+            <UITopSpendingsBox
+              :spendings="topSpendings"
+              :title="dashboardTexts[selectedLanguage].topSpendings"
+              :selectedLanguage="selectedLanguage"
+            />
+          </div>
+          <div class="info-box info-box--budget-alerts">
+            <UIBudgetAlertsCard
+              :alerts="budgetAlerts"
+              :title="dashboardTexts[selectedLanguage].budgetAlerts"
+              :emptyText="dashboardTexts[selectedLanguage].noBudgetAlerts"
+              :statusExceededText="dashboardTexts[selectedLanguage].statusExceeded"
+              :statusWarningText="dashboardTexts[selectedLanguage].statusWarning"
+            />
+          </div>
+        </div>
+
+        <!-- Row 2: Line chart full width -->
+        <div class="row row--middle">
           <div class="chart-box chart-box--line">
             <div class="chart-box-inner">
               <UIIncomeExpenseLineChart
@@ -100,29 +121,88 @@
           </div>
         </div>
 
-        <div class="additional-info">
-          <div class="spendings-container">
-            <UITopSpendingsBox
-              :spendings="topSpendings"
-              :title="dashboardTexts[selectedLanguage].topSpendings"
-              :selectedLanguage="selectedLanguage"
-            />
+        <!-- Row 3: Goals, Recommendations, Recent Transactions -->
+        <div class="row row--bottom">
+          <div class="info-box info-box--goals">
+            <div class="goals-overview-card">
+              <div class="goals-overview-card__title">
+                {{ dashboardTexts[selectedLanguage].savingsGoal }}
+              </div>
+              <GoalsOverviewComponent
+                v-if="goalsOverview"
+                :selectedLanguage="selectedLanguage"
+                :currentAmount="goalsOverview.currentAmount"
+                :limitAmount="goalsOverview.limitAmount"
+                :totalGoals="goalsOverview.totalGoals"
+                :achievedGoals="goalsOverview.achievedGoals"
+              />
+              <div v-else class="dashboard-empty-state">
+                <div class="dashboard-empty-state__icon-wrap">
+                  <font-awesome-icon
+                    :icon="emptySavingsIcon"
+                    class="dashboard-empty-state__icon"
+                    aria-hidden="true"
+                  />
+                </div>
+                <h2 class="dashboard-empty-state__heading">
+                  {{ dashboardTexts[selectedLanguage].savingsGoal }}
+                </h2>
+                <p class="dashboard-empty-state__text">
+                  {{ dashboardTexts[selectedLanguage].noGoals }}
+                </p>
+              </div>
+            </div>
           </div>
-          <div class="recent-transactions-container">
+
+          <div class="info-box info-box--recommendations">
+            <div class="recommendations-card">
+              <div class="recommendations-card__title">
+                {{ dashboardTexts[selectedLanguage].recommendations }}
+              </div>
+              <div
+                v-if="!recommendations || recommendations.length === 0"
+                class="dashboard-empty-state"
+              >
+                <div class="dashboard-empty-state__icon-wrap">
+                  <font-awesome-icon
+                    :icon="emptyRecommendationsIcon"
+                    class="dashboard-empty-state__icon"
+                    aria-hidden="true"
+                  />
+                </div>
+                <h2 class="dashboard-empty-state__heading">
+                  {{ dashboardTexts[selectedLanguage].recommendations }}
+                </h2>
+                <p class="dashboard-empty-state__text">
+                  {{ dashboardTexts[selectedLanguage].noRecommendations }}
+                </p>
+              </div>
+              <ul v-else class="recommendations-card__list">
+                <li
+                  v-for="rec in recommendations"
+                  :key="rec.id"
+                  class="recommendations-card__item"
+                >
+                  <div class="recommendations-card__item-header">
+                    <span class="recommendations-card__item-title">{{ rec.title }}</span>
+                    <span v-if="rec.severity" class="recommendations-card__item-severity">
+                      {{ rec.severity }}
+                    </span>
+                  </div>
+                  <div class="recommendations-card__item-body">
+                    {{ rec.description }}
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="info-box info-box--recent-transactions">
             <UIRecentTransactionsCard
-              :transactions="dashboardSummary?.recentTransactions ?? []"
+              :transactions="recentTransactions"
               :title="dashboardTexts[selectedLanguage].recentTransactions"
               :emptyText="dashboardTexts[selectedLanguage].noRecentTransactions"
               :selectedLanguage="selectedLanguage"
-            />
-          </div>
-          <div class="budget-alerts-container">
-            <UIBudgetAlertsCard
-              :alerts="dashboardSummary?.budgetAlerts ?? []"
-              :title="dashboardTexts[selectedLanguage].budgetAlerts"
-              :emptyText="dashboardTexts[selectedLanguage].noBudgetAlerts"
-              :statusExceededText="dashboardTexts[selectedLanguage].statusExceeded"
-              :statusWarningText="dashboardTexts[selectedLanguage].statusWarning"
             />
           </div>
         </div>
@@ -140,9 +220,19 @@ import UIIncomeExpenseLineChart from '../components/UIIncomeExpenseLineChart.vue
 import UITopSpendingsBox from '../components/UITopSpendingsBox.vue'
 import UIRecentTransactionsCard from '../components/UIRecentTransactionsCard.vue'
 import UIBudgetAlertsCard from '../components/UIBudgetAlertsCard.vue'
+import GoalsOverviewComponent from '@/modules/goals/components/GoalsOverviewComponent.vue'
+import { emptyStateIcons } from '@/icons/fontawesome-icons'
 
 import type { Spendings } from '@/interfaces/Spendings'
-import type { DashboardSummaryResponse } from '@/services/api/summary/summary.models'
+import type {
+  DashboardSummaryResponse,
+  DashboardSummaryHeader,
+  DashboardCharts,
+  DashboardLists,
+  DashboardGoalsOverview,
+  DashboardRecommendation,
+  IncomeExpenseTrendPoint,
+} from '@/services/api/summary/summary.models'
 import { summaryService } from '@/services/api/summary/summary.service'
 import { dashboardTexts } from '@/data/dashboardTexts'
 import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
@@ -162,6 +252,7 @@ export default {
     UITopSpendingsBox,
     UIRecentTransactionsCard,
     UIBudgetAlertsCard,
+    GoalsOverviewComponent,
     UILoading,
   },
   data() {
@@ -169,14 +260,30 @@ export default {
       isLoading: false,
       hasError: false,
       dashboardSummary: {} as DashboardSummaryResponse,
+      summaryHeader: {
+        totalBalance: 0,
+        totalIncome: 0,
+        totalExpenses: 0,
+        unreadNotificationsCount: 0,
+      } as DashboardSummaryHeader,
+      charts: {} as DashboardCharts,
+      lists: {
+        recentTransactions: [],
+        topSpendingCategories: [],
+        budgetAlerts: [],
+      } as DashboardLists,
+      goalsOverview: null as DashboardGoalsOverview | null,
+      recommendations: [] as DashboardRecommendation[],
       categorySpending: {} as Record<string, number>,
       topSpendings: [] as Spendings[],
       dashboardTexts: dashboardTexts,
+      emptySavingsIcon: emptyStateIcons.incomeSources,
+      emptyRecommendationsIcon: emptyStateIcons.transactions,
     }
   },
   computed: {
     spendingsByMonth(): Record<string, number> {
-      const list = this.dashboardSummary?.recentTransactions ?? []
+      const list = this.recentTransactions || []
       const byMonth: Record<string, number> = {}
       list.forEach(tx => {
         if (tx.type !== 'Expense') return
@@ -187,7 +294,7 @@ export default {
       return this.sortMonthKeys(byMonth)
     },
     incomesByMonth(): Record<string, number> {
-      const list = this.dashboardSummary?.recentTransactions ?? []
+      const list = this.recentTransactions || []
       const byMonth: Record<string, number> = {}
       list.forEach(tx => {
         if (tx.type !== 'Income') return
@@ -198,6 +305,10 @@ export default {
       return this.sortMonthKeys(byMonth)
     },
     lineChartLabels(): string[] {
+      const trend = this.charts.incomeExpenseTrend
+      if (trend && Array.isArray(trend.points) && trend.points.length > 0) {
+        return trend.points.map((p: IncomeExpenseTrendPoint) => p.label)
+      }
       const spendings = this.spendingsByMonth
       const incomes = this.incomesByMonth
       const allKeys = new Set([...Object.keys(spendings), ...Object.keys(incomes)])
@@ -209,14 +320,24 @@ export default {
       return sorted
     },
     lineChartIncomeValues(): number[] {
-      return this.lineChartLabels.map(
-        label => this.incomesByMonth[label] ?? 0
-      )
+      const trend = this.charts.incomeExpenseTrend
+      if (trend && Array.isArray(trend.points) && trend.points.length > 0) {
+        return trend.points.map((p: IncomeExpenseTrendPoint) => p.income)
+      }
+      return this.lineChartLabels.map(label => this.incomesByMonth[label] ?? 0)
     },
     lineChartExpenseValues(): number[] {
-      return this.lineChartLabels.map(
-        label => this.spendingsByMonth[label] ?? 0
-      )
+      const trend = this.charts.incomeExpenseTrend
+      if (trend && Array.isArray(trend.points) && trend.points.length > 0) {
+        return trend.points.map((p: IncomeExpenseTrendPoint) => p.expense)
+      }
+      return this.lineChartLabels.map(label => this.spendingsByMonth[label] ?? 0)
+    },
+    recentTransactions() {
+      return (this.lists && this.lists.recentTransactions) || this.dashboardSummary?.recentTransactions || []
+    },
+    budgetAlerts() {
+      return (this.lists && this.lists.budgetAlerts) || this.dashboardSummary?.budgetAlerts || []
     },
   },
   methods: {
@@ -240,20 +361,40 @@ export default {
         const data = await summaryService.getDashboardSummary()
 
         this.dashboardSummary = data
+        this.summaryHeader = data.summary ?? {
+          totalBalance: data.totalBalance,
+          totalIncome: data.totalIncome,
+          totalExpenses: data.totalExpenses,
+          unreadNotificationsCount: data.unreadNotificationsCount,
+        }
+        this.charts = data.charts ?? {}
+        this.lists = data.lists ?? {
+          recentTransactions: data.recentTransactions ?? [],
+          topSpendingCategories: data.topSpendingCategories ?? [],
+          budgetAlerts: data.budgetAlerts ?? [],
+        }
+        this.goalsOverview = data.goalsOverview ?? null
+        this.recommendations = data.recommendations ?? []
 
-        // Aggregate top spending categories by categoryName (sum amounts for duplicates)
+        // Use top spending categories from either lists.topSpendingCategories or legacy array
+        // IMPORTANT: keep each item as an individual entry (no aggregation by name)
+        const sourceTopCategories = (this.lists.topSpendingCategories && this.lists.topSpendingCategories.length > 0
+          ? this.lists.topSpendingCategories
+          : data.topSpendingCategories) || []
         const categories: Record<string, number> = {}
-        data.topSpendingCategories.forEach(item => {
-          const name = item.categoryName
-          categories[name] = (categories[name] ?? 0) + item.totalAmount
+        sourceTopCategories.forEach((item, index) => {
+          const labelBase = item.categoryName || 'Category'
+          const key = `${labelBase} #${index + 1}`
+          categories[key] = item.totalAmount
         })
         this.categorySpending = categories
 
-        // Map aggregated categories into Spendings[] for the top spendings box (colors by index, no hardcoded keys)
-        this.topSpendings = Object.entries(categories).map(([categoryName, totalAmount], index) => ({
+        // Map individual top spending items into Spendings[] for the top spendings box
+        // (no aggregation by categoryName; each entry from the API is shown separately)
+        this.topSpendings = sourceTopCategories.map((item, index) => ({
           categoryId: index,
-          categoryName,
-          totalAmount,
+          categoryName: item.categoryName,
+          totalAmount: item.totalAmount,
           color: getCategoryColorByIndex(index),
         }))
       } catch {
@@ -307,13 +448,6 @@ export default {
   width: 100%;
   min-height: 0;
 
-  .charts-row {
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-    min-width: 0;
-  }
-
   .chart-box {
     min-width: 0;
     min-height: 240px;
@@ -325,11 +459,11 @@ export default {
     overflow: hidden;
 
     &.chart-box--pie {
-      flex: 0 0 25%;
+      flex: 0 0 auto;
     }
 
     &.chart-box--line {
-      flex: 1;
+      flex: 0 0 auto;
     }
 
     .chart-box-inner {
@@ -351,25 +485,124 @@ export default {
     }
   }
 
-  .additional-info {
+  .row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
     width: 100%;
     min-height: 0;
 
-    .spendings-container,
-    .recent-transactions-container,
-    .budget-alerts-container {
+    &.row--middle {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .info-box,
+    .chart-box {
       width: 100%;
       min-width: 0;
       min-height: 0;
     }
 
-    .recent-transactions-container,
-    .budget-alerts-container {
-      max-height: 280px;
-      overflow: auto;
+    .goals-overview-card,
+    .recommendations-card {
+      width: 100%;
+      height: 100%;
+      padding: 1.2rem;
+      border-radius: var(--border-radius);
+      background: var(--background-color);
+      font-family: var(--main-font);
+      box-sizing: border-box;
+    }
+
+    .goals-overview-card__title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--header-text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .recommendations-card__title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--header-text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .recommendations-card__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .recommendations-card__item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .recommendations-card__item-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--header-text-color);
+    }
+
+    .recommendations-card__item-severity {
+      font-size: 0.75rem;
+      text-transform: capitalize;
+      color: var(--normal-text-color);
+      opacity: 0.9;
+    }
+
+    .recommendations-card__item-body {
+      font-size: 0.85rem;
+      color: var(--normal-text-color);
+    }
+
+    .dashboard-empty-state {
+      flex: 1;
+      min-height: 10rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 1.5rem 1rem;
+    }
+
+    .dashboard-empty-state__icon-wrap {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: var(--border-radius);
+      background-color: rgba(92, 184, 92, 0.12);
+      color: var(--primary-green-color);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dashboard-empty-state__icon {
+      font-size: 1.6rem;
+    }
+
+    .dashboard-empty-state__heading {
+      margin: 0 0 0.35rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--header-text-color);
+    }
+
+    .dashboard-empty-state__text {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--normal-text-color);
+      max-width: 22rem;
+      line-height: 1.5;
     }
   }
 }
@@ -402,7 +635,7 @@ export default {
       }
     }
 
-    .additional-info {
+    .row {
       grid-template-columns: 1fr;
     }
   }

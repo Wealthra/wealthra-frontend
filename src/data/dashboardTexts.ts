@@ -27,6 +27,8 @@ export const dashboardTexts = {
     noGoals: 'No savings goals created yet',
     noChartData: 'No chart data available. Start tracking your finances to see insights here.',
     noSpendingData: 'No spending data available yet.',
+    recommendations: 'Recommendations',
+    noRecommendations: 'No recommendations available yet.',
   },
   Turkish: {
     welcomeBack: 'Tekrar Hoşgeldiniz',
@@ -57,5 +59,7 @@ export const dashboardTexts = {
     noChartData:
       'Grafik verisi yok. Finanslarınızı takip etmeye başlayarak burada içgörüler görün.',
     noSpendingData: 'Henüz harcama verisi yok.',
+    recommendations: 'Öneriler',
+    noRecommendations: 'Henüz öneri yok.',
   },
 }

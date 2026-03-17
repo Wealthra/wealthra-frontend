@@ -3,8 +3,11 @@
     <div class="title">{{ title }}</div>
     <div class="spendings" v-for="spending in spendingsData" :key="spending.categoryName">
       <div class="name-and-price">
-        <div class="name" :style="{ backgroundColor: spending.color }">
-          {{ spending.categoryName }}
+        <div class="name">
+          <span class="name__dot" :style="{ backgroundColor: spending.color }"></span>
+          <span class="name__label">
+            {{ spending.categoryName }}
+          </span>
         </div>
         <div class="amount">{{ '-$' + spending.totalAmount }}</div>
       </div>
@@ -97,15 +100,33 @@ export default {
       gap: 1.5rem;
 
       .name {
-        display: flex;
-        justify-content: center;
+        display: inline-flex;
+        justify-content: flex-start;
         align-items: center;
+        gap: 0.45rem;
         font-size: 0.8rem;
-        color: white;
-        padding: 0.6rem;
-        border-radius: 15px;
+        color: var(--header-text-color);
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
         font-weight: 500;
-        width: 140px;
+        min-width: 0;
+        max-width: 160px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
+      }
+
+      .name__dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+      }
+
+      .name__label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .amount {
