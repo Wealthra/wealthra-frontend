@@ -43,7 +43,6 @@ export const leftSidebarIconMap: Record<string, IconDefinition> = {
   Expenses: faReceipt,
   Budget: faPiggyBank,
   Goals: faBullseye,
-  Analytics: faChartLine,
   Settings: faGear,
 }
 

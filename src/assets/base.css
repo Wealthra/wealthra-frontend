@@ -162,22 +162,123 @@
   --notification-info-color-text: #cff4fc;
 }
 
+/* Global datepicker (vue-datepicker-next) – use green instead of default blue */
+.mx-datepicker-main {
+  border-color: var(--border-color) !important;
+}
+
+.mx-datepicker-popup {
+  --mx-calendar-bg: var(--background-color) !important;
+  --mx-calendar-border: var(--border-color) !important;
+  --mx-calendar-text: var(--header-text-color) !important;
+  --mx-calendar-text-muted: var(--normal-text-color) !important;
+  --mx-calendar-hover: var(--background-color-soft) !important;
+  --mx-calendar-active: var(--primary-green-color) !important;
+}
+
+.mx-calendar-header-label {
+  color: var(--header-text-color) !important;
+}
+
+.mx-calendar-content .cell {
+  color: var(--header-text-color) !important;
+}
+
+.mx-calendar-content .cell:hover {
+  background-color: var(--background-color-soft) !important;
+}
+
+.mx-calendar-content .cell.active {
+  color: var(--text-color-reverse) !important;
+  background-color: var(--primary-green-color) !important;
+}
+
+.mx-calendar-content .cell.in-range,
+.mx-calendar-content .cell.hover-in-range {
+  background-color: rgba(92, 184, 92, 0.12) !important;
+  color: var(--header-text-color) !important;
+}
+
+.mx-time {
+  background: var(--background-color) !important;
+}
+
+.mx-time + .mx-time {
+  border-left-color: var(--border-color) !important;
+}
+
+.mx-time-header {
+  border-bottom-color: var(--border-color) !important;
+}
+
+.mx-time-column {
+  border-left-color: var(--border-color) !important;
+}
+
+.mx-time-column .mx-time-item:hover,
+.mx-time-option:hover {
+  background-color: var(--background-color-soft) !important;
+}
+
+.mx-time-column .mx-time-item.active,
+.mx-time-option.active {
+  color: var(--primary-green-color) !important;
+  background-color: transparent;
+}
+
+.mx-btn-primary,
+.mx-btn.mx-btn-primary {
+  background-color: var(--primary-green-color) !important;
+  border-color: var(--primary-green-color) !important;
+}
+
+.mx-btn-primary:hover,
+.mx-btn.mx-btn-primary:hover {
+  opacity: var(--hover-opacity) !important;
+}
+
+/* Datepicker shortcut buttons (e.g. "Last 7 days") */
+.mx-btn.mx-btn-text.mx-btn-shortcut {
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--normal-text-color) !important;
+  background-color: transparent;
+}
+
+.mx-btn.mx-btn-text.mx-btn-shortcut:hover {
+  background-color: rgba(92, 184, 92, 0.08) !important;
+  color: var(--header-text-color) !important;
+}
+
+.mx-btn.mx-btn-text.mx-btn-shortcut.mx-active {
+  background-color: rgba(92, 184, 92, 0.16);
+  color: var(--primary-green-color) !important;
+}
+
 /* Income datepicker: wider sidebar, no scroll – show all shortcut options */
 .income-datepicker-popup.mx-datepicker-popup {
   max-height: none;
 }
+
+.mx-datepicker-sidebar {
+  width: max-content !important;
+  height: 100% !important;
+}
+
 .income-datepicker-popup .mx-datepicker-sidebar {
-  width: 11rem;
-  min-width: 11rem;
+  width: 12rem;
+  min-width: 12rem;
   overflow: visible;
   max-height: none;
 }
 .income-datepicker-popup .mx-datepicker-sidebar + .mx-datepicker-content {
-  margin-left: 11rem;
+  margin-left: 14rem !important;
 }
 .income-datepicker-popup .mx-datepicker-main {
-  max-height: none;
-  overflow: visible;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 /* Dark theme: datepicker popup (vue-datepicker-next, teleported to body) */
@@ -320,4 +421,42 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global iOS-style scrollbars */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+html[data-theme='dark'] {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4x;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.16);
+  border-radius: 999px;
+  border: 2px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.22);
+}
+
+html[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.32);
 }

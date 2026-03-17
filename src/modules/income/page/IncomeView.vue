@@ -44,13 +44,14 @@
       </div>
       <div class="statistics-wrapper">
         <UIIncomeSourcesComponent
+          v-if="financialData && Array.isArray(financialData.incomeSources)"
           :incomeSources="financialData.incomeSources"
-          :hasMoreItems="financialData.incomeHasMoreItems"
+          :hasMoreItems="financialData.incomeHasMoreItems ?? false"
           :selectedLanguage="selectedLanguage"
-          :pageNumber="financialData.pageNumberIncome"
-          :pageSize="financialData.pageSizeIncome"
-          :totalCount="financialData.totalCountIncome"
-          :totalPages="financialData.totalPagesIncome"
+          :pageNumber="financialData.pageNumberIncome ?? page"
+          :pageSize="financialData.pageSizeIncome ?? pageSizeIncome"
+          :totalCount="financialData.totalCountIncome ?? 0"
+          :totalPages="financialData.totalPagesIncome ?? 0"
           :startDate="startDateIncome ?? undefined"
           :endDate="endDateIncome ?? undefined"
           :getIncomeById="getIncomeById"

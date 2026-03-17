@@ -10,7 +10,6 @@ const ModuleLayoutWrapper = () => import('../layouts/ModuleLayoutWrapper.vue')
 // Lazy Loading Authenticated Module Views (content only, under layout)
 const DashboardView = () => import('../modules/dashboard/page/DashboardView.vue')
 const AdminView = () => import('../auth/admin/page/AdminView.vue')
-const AnalyticsView = () => import('../modules/analytics/page/AnalyticsView.vue')
 const BudgetView = () => import('../modules/budget/page/BudgetView.vue')
 const ExpensesView = () => import('../modules/expenses/page/ExpensesView.vue')
 const IncomeView = () => import('../modules/income/page/IncomeView.vue')
@@ -49,7 +48,6 @@ const router = createRouter({
     { path: '/expenses', redirect: '/app/expenses' },
     { path: '/income', redirect: '/app/income' },
     { path: '/goals', redirect: '/app/goals' },
-    { path: '/analytics', redirect: '/app/analytics' },
     { path: '/settings', redirect: '/app/settings' },
     // Authenticated app shell: layout is parent, content is child
     {
@@ -82,11 +80,6 @@ const router = createRouter({
           path: 'goals',
           name: 'goals',
           component: GoalsView,
-        },
-        {
-          path: 'analytics',
-          name: 'analytics',
-          component: AnalyticsView,
         },
         {
           path: 'settings',

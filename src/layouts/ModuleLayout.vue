@@ -197,19 +197,11 @@ export default defineComponent({
     const userLastName = ref<string>('')
     const userAvatarUrl = ref<string | null>(null)
 
-    const leftBarContentEnglish = [
-      'Dashboard',
-      'Income',
-      'Expenses',
-      'Budget',
-      'Goals',
-      'Analytics',
-      'Settings',
-    ] as const
+    const leftBarContentEnglish = ['Dashboard', 'Income', 'Expenses', 'Budget', 'Goals', 'Settings'] as const
 
     const leftBarContent: Record<Language, readonly string[]> = {
       English: leftBarContentEnglish as readonly string[],
-      Turkish: ['Kontrol Paneli', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Analizler', 'Ayarlar'],
+      Turkish: ['Kontrol Paneli', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Ayarlar'],
     }
 
     const settingsLabelEnglish = 'Settings'

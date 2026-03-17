@@ -23,7 +23,6 @@ const ROUTE_NAME_TO_PAGE: Record<string, { en: string; tr: string }> = {
   expenses: { en: 'Expenses', tr: 'Giderler' },
   budget: { en: 'Budget', tr: 'Bütçe' },
   goals: { en: 'Goals', tr: 'Hedefler' },
-  analytics: { en: 'Analytics', tr: 'Analizler' },
   settings: { en: 'Settings', tr: 'Ayarlar' },
 }
 

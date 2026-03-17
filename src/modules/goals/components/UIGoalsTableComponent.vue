@@ -275,14 +275,14 @@ export default {
         name: '' as string,
         targetAmount: 0 as number,
         currentAmount: 0 as number,
-        deadline: '' as string,
+        deadline: '' as string | Date,
       },
       editingGoal: null as Goal | null,
       editForm: {
         name: '' as string,
         targetAmount: 0 as number,
         currentAmount: 0 as number,
-        deadline: '' as string,
+        deadline: '' as string | Date,
       },
       createError: '' as string,
       editError: '' as string,
@@ -376,10 +376,11 @@ export default {
         this.createError = this.t('selectDeadline')
         return
       }
+      const rawDeadline = this.newGoal.deadline as any
       const isoDeadline =
-        deadline instanceof Date
-          ? deadline.toISOString()
-          : new Date(deadline + 'T12:00:00').toISOString()
+        rawDeadline instanceof Date
+          ? rawDeadline.toISOString()
+          : new Date(String(rawDeadline) + 'T12:00:00').toISOString()
       this.$emit('createGoal', {
         name,
         targetAmount,
@@ -430,10 +431,11 @@ export default {
         this.editError = this.t('selectDeadline')
         return
       }
+      const rawDeadline = this.editForm.deadline as any
       const isoDeadline =
-        deadline instanceof Date
-          ? deadline.toISOString()
-          : new Date(deadline + 'T12:00:00').toISOString()
+        rawDeadline instanceof Date
+          ? rawDeadline.toISOString()
+          : new Date(String(rawDeadline) + 'T12:00:00').toISOString()
       this.$emit('updateGoal', {
         id: this.editingGoal.id,
         name,
