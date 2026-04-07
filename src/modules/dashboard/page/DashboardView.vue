@@ -49,14 +49,15 @@
         </div>
         <div class="information-box-wrapper__item">
           <UIInformationBox
-            :currentAmount="summaryHeader.totalExpenses"
-            :lastAmount="summaryHeader.totalExpenses"
-            :title="dashboardTexts[selectedLanguage].upcomingExpenses"
+            :currentAmount="budgetAlerts.length"
+            :lastAmount="0"
+            :title="dashboardTexts[selectedLanguage].budgetAlerts"
             color="red"
             type="spending"
-            icon="fas fa-calendar"
+            icon="fas fa-triangle-exclamation"
             icon-color="var(--primary-red-color)"
             :showTrend="false"
+            valuePrefix=""
           />
         </div>
         <div class="information-box-wrapper__item">
@@ -382,19 +383,19 @@ export default {
           ? this.lists.topSpendingCategories
           : data.topSpendingCategories) || []
         const categories: Record<string, number> = {}
-        sourceTopCategories.forEach((item, index) => {
-          const labelBase = item.categoryName || 'Category'
-          const key = `${labelBase} #${index + 1}`
-          categories[key] = item.totalAmount
+        sourceTopCategories.forEach(item => {
+          if (item.categoryName) {
+            categories[item.categoryName] = item.totalAmount
+          }
         })
         this.categorySpending = categories
 
         // Map individual top spending items into Spendings[] for the top spendings box
-        // (no aggregation by categoryName; each entry from the API is shown separately)
         this.topSpendings = sourceTopCategories.map((item, index) => ({
           categoryId: index,
           categoryName: item.categoryName,
           totalAmount: item.totalAmount,
+          transactionCount: item.transactionCount,
           color: getCategoryColorByIndex(index),
         }))
       } catch {
@@ -406,9 +407,11 @@ export default {
   },
   mounted() {
     this.fetchFinancialData()
+    window.addEventListener('app:refetch', this.fetchFinancialData)
   },
 
   beforeUnmount() {
+    window.removeEventListener('app:refetch', this.fetchFinancialData)
   },
 
   watch: {},

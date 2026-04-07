@@ -1,8 +1,28 @@
 <template>
-  <div class="ui-loader">
-    <div v-if="!hasError" class="loading-container">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">{{ loadingText }}</div>
+  <div class="ui-loader skeleton-shiver">
+    <div v-if="!hasError" class="skeleton-container">
+      <!-- Title row equivalent skeleton -->
+      <div class="skeleton-row header-row">
+        <div class="skeleton-box title-box"></div>
+      </div>
+      
+      <!-- Top info boxes equivalent skeleton -->
+      <div class="skeleton-row info-row">
+        <div class="skeleton-box card-box"></div>
+        <div class="skeleton-box card-box"></div>
+        <div class="skeleton-box card-box"></div>
+        <div class="skeleton-box card-box"></div>
+      </div>
+      
+      <!-- Main content sections equivalent skeleton -->
+      <div class="skeleton-row main-row">
+        <div class="skeleton-box large-box"></div>
+        <div class="skeleton-box large-box"></div>
+      </div>
+    </div>
+    <div v-else class="error-container">
+       <div class="error-text">{{ errorMessage }}</div>
+       <button v-if="showRetryButton" class="btn-retry">{{ retryText }}</button>
     </div>
   </div>
 </template>
@@ -42,36 +62,97 @@ export default {
 <style scoped lang="scss">
 .ui-loader {
   width: 100%;
-  .loading-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 1.5rem;
-    gap: 0.5rem;
-
-    .loading-spinner {
-      width: 30px;
-      height: 30px;
-      border: 3px solid var(--border-color);
-      border-top: 3px solid var(--primary-blue-color);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    .loading-text {
-      font-size: 0.875rem;
-      color: var(--normal-text-color);
-    }
-  }
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
-@keyframes spin {
+
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  gap: 1.5rem;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.header-row {
+  margin-bottom: 0.5rem;
+}
+
+.title-box {
+  width: 250px;
+  height: 32px;
+}
+
+.info-row {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.card-box {
+  flex: 1;
+  min-width: 200px;
+  height: 100px;
+}
+
+.main-row {
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.large-box {
+  flex: 1;
+  min-width: 300px;
+  height: 300px;
+}
+
+@keyframes shimmer {
   0% {
-    transform: rotate(0deg);
+    background-position: -1000px 0;
   }
   100% {
-    transform: rotate(360deg);
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-box {
+  background: linear-gradient(
+    90deg,
+    var(--background-color-soft) 8%,
+    var(--border-color) 18%,
+    var(--background-color-soft) 33%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: var(--border-radius);
+  opacity: 0.7;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  gap: 1rem;
+
+  .error-text {
+    color: var(--notification-alert-color-text);
+  }
+
+  .btn-retry {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    background: var(--primary-blue-color);
+    color: #fff;
+    border: none;
+    cursor: pointer;
   }
 }
 </style>

@@ -22,5 +22,9 @@ export interface UpdateCategoryRequest {
 }
 
 // New API models based on /api/Categories spec
+export interface ApiCategory {
+  id: number
+  categoryName: string
+}
 
-export type CategoriesListResponse = Category[]
+export type CategoriesListResponse = ApiCategory[]
