@@ -106,9 +106,18 @@
         </div>
 
         <div class="top-bar-right">
+          <!-- Refetch button -->
+          <button 
+            v-if="['Dashboard', 'Kontrol Paneli', 'Income', 'Gelir', 'Expenses', 'Giderler', 'Budget', 'Bütçe', 'Goals', 'Hedefler'].includes(selectedPage)"
+            class="refetch-btn" 
+            @click="handleRefetch" 
+            :title="texts.refetch"
+          >
+            <font-awesome-icon icon="rotate-right" />
+          </button>
+
           <UILanguageButton @updateLanguage="emitUpdateLanguage" />
           <UIThemeButton />
-
           <!-- Profile Section -->
           <div class="profile-section-wrapper" ref="profileWrapperRef">
             <div class="profile-section" @click="toggleSettingsPanel">
@@ -154,6 +163,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Copilot Chatbot -->
+    <CopilotChat :selectedLanguage="selectedLanguage" />
   </div>
 </template>
 
@@ -162,6 +174,7 @@ import { computed, defineComponent, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import UILanguageButton from '@/components/UILanguageButton.vue'
 import UIThemeButton from '@/components/UIThemeButton.vue'
+import CopilotChat from '@/components/CopilotChat.vue'
 import { clearAuth, getUserId } from '@/utils/auth'
 import { arrowIcons, leftSidebarIconMap, profileIcon } from '@/icons/fontawesome-icons'
 import { accountService } from '@/services/api/account/account.service'
@@ -171,6 +184,7 @@ export default defineComponent({
   components: {
     UILanguageButton,
     UIThemeButton,
+    CopilotChat,
   },
   props: {
     selectedLanguage: {
@@ -313,6 +327,7 @@ export default defineComponent({
       logout: normalizedLanguage.value === 'English' ? 'Logout' : 'Çıkış Yap',
       yes: normalizedLanguage.value === 'English' ? 'Yes, Logout' : 'Evet, Çıkış Yap',
       no: normalizedLanguage.value === 'English' ? 'Cancel' : 'İptal',
+      refetch: normalizedLanguage.value === 'English' ? 'Refresh Data' : 'Verileri Yenile',
     }))
 
     const userInitials = computed(() => {
@@ -361,6 +376,7 @@ export default defineComponent({
       handleLogoutClick,
       toggleLogoutTooltip,
       handleLogout,
+      handleRefetch: () => window.dispatchEvent(new CustomEvent('app:refetch')),
     }
   },
 })
@@ -457,6 +473,25 @@ export default defineComponent({
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+
+    .refetch-btn {
+      background: transparent;
+      border: none;
+      color: var(--normal-text-color);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, color 0.2s ease;
+
+      &:hover {
+        color: var(--primary-green-color);
+        transform: rotate(45deg);
+      }
+    }
 
     .profile-section-wrapper {
       position: relative;

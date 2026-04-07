@@ -8,6 +8,9 @@
           <span class="name__label">
             {{ spending.categoryName }}
           </span>
+          <span v-if="spending.transactionCount" class="name__count">
+            ({{ spending.transactionCount }})
+          </span>
         </div>
         <div class="amount">{{ '-$' + spending.totalAmount }}</div>
       </div>
@@ -127,6 +130,13 @@ export default {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .name__count {
+        font-size: 0.75rem;
+        color: var(--normal-text-color);
+        opacity: 0.8;
+        flex-shrink: 0;
       }
 
       .amount {

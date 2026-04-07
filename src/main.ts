@@ -35,6 +35,11 @@ import {
   faWallet,
   faEye,
   faEyeSlash,
+  faComments,
+  faRobot,
+  faCommentDots,
+  faXmark,
+  faRotateRight,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -71,6 +76,11 @@ library.add(
   faWallet,
   faEye,
   faEyeSlash,
+  faComments,
+  faRobot,
+  faCommentDots,
+  faXmark,
+  faRotateRight
 )
 
 async function initApp() {

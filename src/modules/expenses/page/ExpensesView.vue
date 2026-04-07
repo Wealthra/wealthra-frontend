@@ -305,6 +305,10 @@ export default {
   mounted() {
     this.fetchCategories()
     this.loadAppropriateData()
+    window.addEventListener('app:refetch', this.loadAppropriateData)
+  },
+  beforeUnmount() {
+    window.removeEventListener('app:refetch', this.loadAppropriateData)
   },
 }
 </script>
