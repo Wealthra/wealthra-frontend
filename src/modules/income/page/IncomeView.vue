@@ -243,7 +243,7 @@ export default {
       this.hasError = false
 
       try {
-        const data = await incomeService.getIncomeGeneralInfo(this.currencyHelper.currency.value)
+        const data = await incomeService.getIncomeGeneralInfo(this.currencyHelper.currency)
 
         this.financialData.weeklyTotalIncome = data.weeklyTotal
         this.financialData.monthlyTotalIncome = data.monthlyTotal

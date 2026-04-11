@@ -354,7 +354,7 @@ export default {
       this.hasError = false
 
       try {
-        const data = await summaryService.getDashboardSummary({ currency: this.currencyHelper.currency.value })
+        const data = await summaryService.getDashboardSummary({ currency: this.currencyHelper.currency })
 
         this.dashboardSummary = data
         this.summaryHeader = data.summary ?? {

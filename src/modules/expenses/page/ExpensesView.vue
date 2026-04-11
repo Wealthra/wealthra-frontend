@@ -238,7 +238,7 @@ export default {
 
     async fetchExpenseGeneralInfo() {
       try {
-        const data = await expenseService.getExpenseGeneralInfo(this.currencyHelper.currency.value)
+        const data = await expenseService.getExpenseGeneralInfo(this.currencyHelper.currency)
         return data
       } catch (error) {
         console.error('Error fetching expense general info:', error)
