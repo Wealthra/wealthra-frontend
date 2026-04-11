@@ -1,72 +1,77 @@
 <template>
   <div class="expenses-content">
-      <div class="information-wrapper">
-        <UIInformationBox
-          :currentAmount="financialData?.weeklyTotalExpense ?? 0"
-          :lastAmount="0"
-          color="green"
-          type="spending"
-          :title="expensesTexts[selectedLanguage].weeklyExpenses"
-          icon="fas fa-calendar-week"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-        <UIInformationBox
-          :currentAmount="financialData?.monthlyTotalExpense ?? 0"
-          :lastAmount="0"
-          color="green"
-          type="spending"
-          :title="expensesTexts[selectedLanguage].monthlyExpenses"
-          icon="fas fa-calendar-day"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-        <UIInformationBox
-          :currentAmount="financialData?.recurringExpensesThisMonth ?? 0"
-          :lastAmount="0"
-          color="green"
-          type="spending"
-          :title="expensesTexts[selectedLanguage].recurringThisMonth"
-          icon="fas fa-chart-line"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-        <UIInformationBox
-          :currentAmount="financialData?.yearlyTotalExpense ?? 0"
-          :lastAmount="0"
-          color="green"
-          type="spending"
-          :title="expensesTexts[selectedLanguage].annualExpenses"
-          icon="fas fa-calendar"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-      </div>
-      <div class="statistics-wrapper">
-        <UIExpenseHistoryComponent
-          :expenseHistory="financialData.expenseSources ?? []"
-          :hasMoreItems="!!financialData.expenseHasMoreItems"
-          :pageNumber="financialData.pageNumberExpense ?? 1"
-          :pageSize="financialData.pageSizeExpense ?? 10"
-          :totalCount="financialData.totalCountExpense ?? 0"
-          :totalPages="financialData.totalPagesExpense ?? 0"
-          :startDate="startDateExpense ?? undefined"
-          :endDate="endDateExpense ?? undefined"
-          :categoryId="categoryIdFilter ?? undefined"
-          :categories="categories"
-          :selectedLanguage="selectedLanguage"
-          :getExpenseById="getExpenseById"
-          @changePage="handleChangePage"
-          @updateDateRange="handleDateRangeUpdate"
-          @updateCategory="handleCategoryUpdate"
-          @categoriesUpdated="fetchCategories"
-          @updatePageSize="handlePageSizeUpdate"
-          @addExpense="handleAddExpense"
-          @updateExpense="handleUpdateExpense"
-          @deleteExpense="handleDeleteExpense"
-        />
-      </div>
+    <div class="information-wrapper">
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="financialData?.weeklyTotalExpense ?? 0"
+        :lastAmount="0"
+        color="green"
+        type="spending"
+        :title="expensesTexts[selectedLanguage].weeklyExpenses"
+        icon="fas fa-calendar-week"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="financialData?.monthlyTotalExpense ?? 0"
+        :lastAmount="0"
+        color="green"
+        type="spending"
+        :title="expensesTexts[selectedLanguage].monthlyExpenses"
+        icon="fas fa-calendar-day"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="financialData?.recurringExpensesThisMonth ?? 0"
+        :lastAmount="0"
+        color="green"
+        type="spending"
+        :title="expensesTexts[selectedLanguage].recurringThisMonth"
+        icon="fas fa-chart-line"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="financialData?.yearlyTotalExpense ?? 0"
+        :lastAmount="0"
+        color="green"
+        type="spending"
+        :title="expensesTexts[selectedLanguage].annualExpenses"
+        icon="fas fa-calendar"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
     </div>
+    <div class="statistics-wrapper">
+      <UIExpenseHistoryComponent
+        :loading="isLoading"
+        :expenseHistory="financialData.expenseSources ?? []"
+        :hasMoreItems="!!financialData.expenseHasMoreItems"
+        :pageNumber="financialData.pageNumberExpense ?? 1"
+        :pageSize="financialData.pageSizeExpense ?? 10"
+        :totalCount="financialData.totalCountExpense ?? 0"
+        :totalPages="financialData.totalPagesExpense ?? 0"
+        :startDate="startDateExpense ?? undefined"
+        :endDate="endDateExpense ?? undefined"
+        :categoryId="categoryIdFilter ?? undefined"
+        :categories="categories"
+        :selectedLanguage="selectedLanguage"
+        :getExpenseById="getExpenseById"
+        @changePage="handleChangePage"
+        @updateDateRange="handleDateRangeUpdate"
+        @updateCategory="handleCategoryUpdate"
+        @categoriesUpdated="fetchCategories"
+        @updatePageSize="handlePageSizeUpdate"
+        @addExpense="handleAddExpense"
+        @updateExpense="handleUpdateExpense"
+        @deleteExpense="handleDeleteExpense"
+      />
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -212,7 +217,12 @@ export default {
     async fetchCategories() {
       try {
         const list = await categoryService.apiGetCategories()
-        this.categories = Array.isArray(list) ? list : []
+        this.categories = Array.isArray(list)
+          ? list.map(c => ({
+              id: c.id,
+              name: c.categoryName,
+            }))
+          : []
       } catch (error) {
         console.error('Error fetching categories:', error)
         this.categories = []
@@ -227,8 +237,6 @@ export default {
         console.error('Error fetching expense general info:', error)
         this.hasError = true
         return null
-      } finally {
-        this.isLoading = false
       }
     },
 

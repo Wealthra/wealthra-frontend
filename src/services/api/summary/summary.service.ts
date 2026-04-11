@@ -43,7 +43,7 @@ export const summaryService = {
    * without breaking the call sites.
    */
   async getDashboardSummary(_request?: DashboardSummaryRequest): Promise<DashboardSummaryResponse> {
-    return apiRequest<DashboardSummaryResponse>('Summary/dashboard', {
+    return apiRequest<DashboardSummaryResponse>('Summary/dashboard-web', {
       method: 'GET',
     })
   },

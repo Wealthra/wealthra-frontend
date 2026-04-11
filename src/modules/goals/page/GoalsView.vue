@@ -6,12 +6,14 @@
       :limitAmount="overviewTotalTarget"
       :totalGoals="totalGoalsCount || goals.length"
       :achievedGoals="achievedGoalsCount"
+      :loading="isLoading"
     />
 
     <div class="goals-table-wrap">
       <UIGoalsTableComponent
         :goals="goals"
         :selectedLanguage="selectedLanguage"
+        :loading="isLoading"
         @createGoal="handleCreateGoal"
         @updateGoal="handleUpdateGoal"
         @deleteGoal="handleDeleteGoal"
@@ -139,9 +141,16 @@ export default {
       }
     },
 
-    loadAppropriateData() {
-      this.fetchGoals()
-      this.fetchGoalsTotal()
+    async loadAppropriateData() {
+      this.isLoading = true
+      try {
+        await Promise.all([
+          this.fetchGoals(),
+          this.fetchGoalsTotal()
+        ])
+      } finally {
+        this.isLoading = false
+      }
     },
   },
 

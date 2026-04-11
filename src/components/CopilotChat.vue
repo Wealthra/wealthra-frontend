@@ -921,7 +921,7 @@ export default defineComponent({
    ============================ */
 .copilot-root {
   position: fixed;
-  bottom: 24px;
+  bottom: 80px;
   right: 24px;
   z-index: 9000;
   font-family: var(--main-font);

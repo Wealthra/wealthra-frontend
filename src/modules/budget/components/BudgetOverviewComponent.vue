@@ -1,33 +1,43 @@
 <template>
   <div class="budget-overview-component-c">
     <div class="budget-overview-component">
-      <div class="budget-overview-component-title">
+      <div v-if="loading" class="skeleton-box title-skeleton"></div>
+      <div v-else class="budget-overview-component-title">
         {{ budgetOverviewText }}
       </div>
+
       <div class="budget-overview-component-content">
-        <div v-if="!isMobile" class="budget-overview-component-amount">
-          {{ budgetAmount }}
-        </div>
-        <!-- Desktop: progress bar -->
-        <div v-if="!isMobile" class="budget-overview-component-progress-bar">
-          <div
-            class="budget-overview-component-progress-bar-fill"
-            :style="{ width: progressBarWidthPercentage + '%' }"
-          ></div>
-        </div>
-        <!-- Mobile only: doughnut chart + center text -->
-        <div v-if="isMobile" class="budget-overview-doughnut-wrap">
-          <Doughnut
-            ref="doughnutRef"
-            :data="doughnutData"
-            :options="doughnutOptions"
-            class="budget-overview-doughnut"
-          />
-          <div class="budget-overview-doughnut-center" aria-hidden="true">
-            {{ centerText }}
+        <template v-if="loading">
+          <div v-if="!isMobile" class="skeleton-box amount-skeleton"></div>
+          <div v-if="!isMobile" class="skeleton-box progress-bar-skeleton"></div>
+          <div v-if="isMobile" class="skeleton-box doughnut-skeleton"></div>
+          <div v-if="!isMobile" class="skeleton-box percentage-skeleton"></div>
+        </template>
+        <template v-else>
+          <div v-if="!isMobile" class="budget-overview-component-amount">
+            {{ budgetAmount }}
           </div>
-        </div>
-        <div v-if="!isMobile" class="budget-overview-component-percentage">{{ displayPercentage }}</div>
+          <!-- Desktop: progress bar -->
+          <div v-if="!isMobile" class="budget-overview-component-progress-bar">
+            <div
+              class="budget-overview-component-progress-bar-fill"
+              :style="{ width: progressBarWidthPercentage + '%' }"
+            ></div>
+          </div>
+          <!-- Mobile only: doughnut chart + center text -->
+          <div v-if="isMobile" class="budget-overview-doughnut-wrap">
+            <Doughnut
+              ref="doughnutRef"
+              :data="doughnutData"
+              :options="doughnutOptions"
+              class="budget-overview-doughnut"
+            />
+            <div class="budget-overview-doughnut-center" aria-hidden="true">
+              {{ centerText }}
+            </div>
+          </div>
+          <div v-if="!isMobile" class="budget-overview-component-percentage">{{ displayPercentage }}</div>
+        </template>
       </div>
     </div>
   </div>
@@ -59,6 +69,10 @@ export default {
     selectedLanguage: {
       type: String,
       default: 'English',
+    },
+    loading: {
+      type: Boolean,
+      default: false,
     },
     currentAmount: {
       type: Number,
@@ -182,7 +196,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-/* Same idea as NotificationsComponent / UIBudgetTable: white background, no borders */
+
 .budget-overview-component-c {
   display: flex;
   flex-direction: column;
@@ -200,6 +214,35 @@ export default {
     justify-content: flex-start;
     align-items: flex-start;
     gap: 1rem;
+
+    .title-skeleton {
+      width: 200px;
+      height: 1.5rem;
+    }
+
+    .amount-skeleton {
+      width: 120px;
+      height: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .progress-bar-skeleton {
+      flex-grow: 1;
+      height: 22px;
+    }
+
+    .doughnut-skeleton {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      margin: 0 auto;
+    }
+
+    .percentage-skeleton {
+      width: 50px;
+      height: 1.25rem;
+      flex-shrink: 0;
+    }
 
     .budget-overview-component-title {
       font-size: 1.25rem;

@@ -80,6 +80,10 @@
   --notification-info-color-soft: #cff4fc;
   --notification-info-color-header: #055160;
   --notification-info-color-text: #087990;
+
+  /* Skeleton Loading */
+  --skeleton-bg: #e8e8e8;
+  --skeleton-shimmer: #fcfcfc;
 }
 
 /* Dark theme variables */
@@ -160,6 +164,10 @@
   --notification-info-color-soft: #033a46;
   --notification-info-color-header: #0dcaf0;
   --notification-info-color-text: #cff4fc;
+
+  /* Skeleton Loading */
+  --skeleton-bg: #2a2a2a;
+  --skeleton-shimmer: #3a3a3a;
 }
 
 /* Global datepicker (vue-datepicker-next) – use green instead of default blue */
@@ -478,4 +486,29 @@ html[data-theme='dark'] ::-webkit-scrollbar-thumb {
 
 html[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(170, 170, 170, 0.7);
+}
+
+/* Global Skeleton Loader Animation */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-box {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-bg) 0%,
+    var(--skeleton-shimmer) 50%,
+    var(--skeleton-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--border-radius);
+  display: inline-block;
+  width: 100%;
+  height: 1.25rem;
 }

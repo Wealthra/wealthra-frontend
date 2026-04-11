@@ -1,27 +1,42 @@
 <template>
   <div class="transactions-container">
-    <div class="transactions-title">
+    <div v-if="loading" class="skeleton-box title-skeleton"></div>
+    <div v-else class="transactions-title">
       {{ selectedLanguage == 'English' ? 'Recent Transactions' : 'Son Aktarımlar' }}
     </div>
     <div class="transactions-list">
-      <div class="transaction-header">
+      <div v-if="loading" class="transaction-header">
+        <div class="header-date"><div class="skeleton-box cell-skeleton"></div></div>
+        <div class="header-method"><div class="skeleton-box cell-skeleton"></div></div>
+        <div class="header-amount"><div class="skeleton-box cell-skeleton"></div></div>
+      </div>
+      <div v-else class="transaction-header">
         <div class="header-date">{{ selectedLanguage == 'English' ? 'Date' : 'Tarih' }}</div>
         <div class="header-method">{{ selectedLanguage == 'English' ? 'Method' : 'Yöntem' }}</div>
         <div class="header-amount">{{ selectedLanguage == 'English' ? 'Amount' : 'Miktar' }}</div>
       </div>
 
-      <div v-for="(transaction, index) in transactions" :key="index" class="transaction-item">
-        <div class="transaction-date">{{ formatDate(transaction.created) }}</div>
-        <div class="transaction-description">{{ transaction.paymentMethod }}</div>
-        <div class="transaction-amount">${{ transaction.amount }}</div>
-      </div>
-      <div v-if="!transactions || transactions.length === 0" class="no-transactions">
-        {{
-          selectedLanguage == 'English'
-            ? '💸 No transactions available 💸'
-            : '💸 Hiçbir aktarım yok 💸'
-        }}
-      </div>
+      <template v-if="loading">
+        <div v-for="i in 5" :key="i" class="transaction-item">
+          <div class="transaction-date"><div class="skeleton-box cell-skeleton"></div></div>
+          <div class="transaction-description"><div class="skeleton-box cell-skeleton"></div></div>
+          <div class="transaction-amount"><div class="skeleton-box cell-skeleton"></div></div>
+        </div>
+      </template>
+      <template v-else>
+        <div v-for="(transaction, index) in transactions" :key="index" class="transaction-item">
+          <div class="transaction-date">{{ formatDate(transaction.created) }}</div>
+          <div class="transaction-description">{{ transaction.paymentMethod }}</div>
+          <div class="transaction-amount">${{ transaction.amount }}</div>
+        </div>
+        <div v-if="!transactions || transactions.length === 0" class="no-transactions">
+          {{
+            selectedLanguage == 'English'
+              ? '💸 No transactions available 💸'
+              : '💸 Hiçbir aktarım yok 💸'
+          }}
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -47,6 +62,10 @@ export default {
     selectedLanguage: {
       type: String,
       default: 'English',
+    },
+    loading: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -107,6 +126,19 @@ export default {
     font-weight: 700;
     margin-bottom: 1rem;
     color: var(--header-text-color);
+  }
+
+  .title-skeleton {
+    width: 200px;
+    height: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+  }
+
+  .cell-skeleton {
+    width: 80%;
+    height: 1rem;
+    border-radius: 4px;
   }
 
   .transactions-list {

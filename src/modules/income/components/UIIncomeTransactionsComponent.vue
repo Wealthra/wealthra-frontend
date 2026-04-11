@@ -1,6 +1,7 @@
 <template>
   <div class="transactions-container">
-    <h1 class="transactions-title">
+    <div v-if="loading" class="skeleton-box title-skeleton"></div>
+    <h1 v-else class="transactions-title" :loading="loading">
       {{ selectedLanguage == 'English' ? 'Recent Transactions' : 'Son Aktarımlar' }}
     </h1>
     <div class="table-wrap" :class="{ 'table-wrap--empty': isTableEmpty }">
@@ -9,7 +10,12 @@
         class="table"
         role="table"
       >
-        <div class="table-header" role="row">
+        <div v-if="loading" class="table-header" role="row">
+          <div class="col col-date" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-method" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-amount" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+        </div>
+        <div v-else class="table-header" role="row">
           <div class="col col-date" role="columnheader">
             {{ selectedLanguage == 'English' ? 'Date' : 'Tarih' }}
           </div>
@@ -20,16 +26,25 @@
             {{ selectedLanguage == 'English' ? 'Amount' : 'Miktar' }}
           </div>
         </div>
-        <div
-          v-for="(transaction, index) in incomeRecentTransactions"
-          :key="index"
-          class="table-row"
-          role="row"
-        >
-          <div class="col col-date">{{ formatDate(transaction.created) }}</div>
-          <div class="col col-method">{{ transaction.method }}</div>
-          <div class="col col-amount">${{ transaction.amount }}</div>
-        </div>
+        <template v-if="loading">
+          <div v-for="i in 5" :key="i" class="table-row" role="row">
+            <div class="col col-date"><div class="skeleton-box cell-skeleton"></div></div>
+            <div class="col col-method"><div class="skeleton-box cell-skeleton"></div></div>
+            <div class="col col-amount"><div class="skeleton-box cell-skeleton"></div></div>
+          </div>
+        </template>
+        <template v-else>
+          <div
+            v-for="(transaction, index) in incomeRecentTransactions"
+            :key="index"
+            class="table-row"
+            role="row"
+          >
+            <div class="col col-date">{{ formatDate(transaction.created) }}</div>
+            <div class="col col-method">{{ transaction.method }}</div>
+            <div class="col col-amount">${{ transaction.amount }}</div>
+          </div>
+        </template>
       </div>
       <div v-if="isTableEmpty" class="empty-state">
         <div class="empty-state__icon-wrap">
@@ -88,6 +103,10 @@ export default {
       type: String,
       default: 'English',
     },
+    loading: {
+      type: Boolean,
+      default: false,
+    },
   },
   methods: {
     formatDate(dateString: string): string {
@@ -121,6 +140,19 @@ export default {
     color: var(--header-text-color);
   }
 
+  .title-skeleton {
+    width: 200px;
+    height: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+  }
+
+  .cell-skeleton {
+    width: 80%;
+    height: 0.75rem;
+    border-radius: 4px;
+  }
+
   .table-wrap {
     flex: 1;
     min-height: 0;
@@ -152,6 +184,12 @@ export default {
     font-weight: 600;
     font-size: 0.75rem;
     color: var(--normal-text-color);
+
+    .header-skeleton {
+      width: 80%;
+      height: 0.75rem;
+      border-radius: 4px;
+    }
 
     .col {
       text-align: left;

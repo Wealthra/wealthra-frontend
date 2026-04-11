@@ -1,10 +1,15 @@
 <template>
   <div class="income-sources-container">
     <div class="header">
-      <h1 class="title">
+      <div v-if="loading" class="skeleton-box title-skeleton"></div>
+      <h1 v-else class="title">
         {{ selectedLanguage == 'English' ? 'Income Sources' : 'Gelir Kaynakları' }}
       </h1>
-      <div class="header-actions">
+      <div v-if="loading" class="header-actions">
+        <div class="skeleton-box btn-skeleton"></div>
+        <div class="skeleton-box date-skeleton"></div>
+      </div>
+      <div v-else class="header-actions">
         <button class="add-source-btn" @click="showAddModal">
           {{ selectedLanguage == 'English' ? 'Add Source' : 'Kaynak Ekle' }}
         </button>
@@ -24,7 +29,13 @@
 
     <div class="table-wrap" :class="{ 'table-wrap--empty': isTableEmpty }">
       <div v-if="incomeSources && incomeSources.length > 0" class="table" role="table">
-        <div class="table-header" role="row">
+        <div v-if="loading" class="table-header" role="row">
+          <div class="col col-name" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-type" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-amount" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-actions" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+        </div>
+        <div v-else class="table-header" role="row">
           <div class="col col-name" role="columnheader">
             {{ selectedLanguage == 'English' ? 'Name' : 'Ad' }}
           </div>
@@ -38,41 +49,51 @@
             {{ selectedLanguage == 'English' ? 'Actions' : 'İşlemler' }}
           </div>
         </div>
-        <div v-for="(source, index) in incomeSources" :key="index" class="table-row income-card" role="row">
-          <div class="col col-name">
-            <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Name' : 'Ad' }}</span>
-            <div class="source-name">{{ source.name }}</div>
+        <template v-if="loading">
+          <div v-for="i in 5" :key="i" class="table-row skeleton-row" role="row">
+            <div class="col col-name"><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-type"><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-amount"><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-actions"><div class="skeleton-box row-skeleton"></div></div>
           </div>
-          <div class="col col-type">
-            <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Type' : 'Tür' }}</span>
-            <span class="col-value">{{ isRecurrent(source) }} – {{ source.method }}</span>
-          </div>
-          <div class="col col-amount">
-            <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Amount' : 'Miktar' }}</span>
-            <span class="col-value">${{ source.amount }}</span>
-          </div>
-          <div class="col col-actions">
-            <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Actions' : 'İşlemler' }}</span>
-            <div class="col-actions-buttons">
-              <button
-                type="button"
-                class="row-action-btn"
-                @click="openEditModal(source)"
-                :aria-label="selectedLanguage == 'English' ? 'Edit source' : 'Kaynağı düzenle'"
-              >
-                <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
-              </button>
-              <button
-                type="button"
-                class="row-action-btn"
-                @click="deleteSource(source)"
-                :aria-label="selectedLanguage == 'English' ? 'Delete source' : 'Kaynağı sil'"
-              >
-                <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
-              </button>
+        </template>
+        <template v-else>
+          <div v-for="(source, index) in incomeSources" :key="index" class="table-row income-card" role="row">
+            <div class="col col-name">
+              <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Name' : 'Ad' }}</span>
+              <div class="source-name">{{ source.name }}</div>
+            </div>
+            <div class="col col-type">
+              <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Type' : 'Tür' }}</span>
+              <span class="col-value">{{ isRecurrent(source) }} – {{ source.method }}</span>
+            </div>
+            <div class="col col-amount">
+              <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Amount' : 'Miktar' }}</span>
+              <span class="col-value">${{ source.amount }}</span>
+            </div>
+            <div class="col col-actions">
+              <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Actions' : 'İşlemler' }}</span>
+              <div class="col-actions-buttons">
+                <button
+                  type="button"
+                  class="row-action-btn"
+                  @click="openEditModal(source)"
+                  :aria-label="selectedLanguage == 'English' ? 'Edit source' : 'Kaynağı düzenle'"
+                >
+                  <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
+                </button>
+                <button
+                  type="button"
+                  class="row-action-btn"
+                  @click="deleteSource(source)"
+                  :aria-label="selectedLanguage == 'English' ? 'Delete source' : 'Kaynağı sil'"
+                >
+                  <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </template>
       </div>
 
       <div v-if="isTableEmpty" class="empty-state">
@@ -97,7 +118,10 @@
     </div>
 
     <!-- Pagination bar (layout like reference: page size dropdown left, page nav right) -->
-    <div v-if="incomeSources && incomeSources.length > 0 && totalPages > 0" class="pagination-bar">
+    <div v-if="loading" class="pagination-bar pagination-bar--skeleton">
+      <div class="skeleton-box pagination-skeleton"></div>
+    </div>
+    <div v-else-if="incomeSources && incomeSources.length > 0 && totalPages > 0" class="pagination-bar">
       <div class="pagination-results">
         <font-awesome-icon
           :icon="paginationIcons.results"
@@ -375,6 +399,10 @@ export default {
     getIncomeById: {
       type: Function,
       required: true,
+    },
+    loading: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -761,6 +789,31 @@ export default {
     }
   }
 
+  .title-skeleton {
+    width: 200px;
+    height: 1.5rem;
+    border-radius: 4px;
+    margin: 0;
+  }
+
+  .btn-skeleton {
+    width: 100px;
+    height: 2.25rem;
+    border-radius: var(--border-radius);
+  }
+
+  .date-skeleton {
+    width: 12rem;
+    height: 2.25rem;
+    border-radius: var(--border-radius);
+  }
+
+  .row-skeleton {
+    width: 80%;
+    height: 1rem;
+    border-radius: 4px;
+  }
+
   .header .date-range-picker-wrap {
     flex-shrink: 0;
     min-width: 12rem;
@@ -818,6 +871,14 @@ export default {
     font-weight: 600;
     font-size: 0.75rem;
     color: var(--normal-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    .header-skeleton {
+      width: 80%;
+      height: 0.75rem;
+      border-radius: 4px;
+    }
 
     .col {
       text-align: left;
@@ -950,6 +1011,18 @@ export default {
   }
 
   .pagination-bar {
+    &--skeleton {
+      justify-content: center;
+      padding: 1rem 0;
+    }
+
+    .pagination-skeleton {
+      width: 100%;
+      max-width: 400px;
+      height: 2.25rem;
+      border-radius: var(--border-radius);
+    }
+
     flex-shrink: 0;
     display: flex;
     justify-content: space-between;

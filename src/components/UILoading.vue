@@ -112,27 +112,6 @@ export default {
   height: 300px;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.skeleton-box {
-  background: linear-gradient(
-    90deg,
-    var(--background-color-soft) 8%,
-    var(--border-color) 18%,
-    var(--background-color-soft) 33%
-  );
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite linear;
-  border-radius: var(--border-radius);
-  opacity: 0.7;
-}
 
 .error-container {
   display: flex;

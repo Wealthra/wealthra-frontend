@@ -1,35 +1,68 @@
 <template>
-  <div class="chart-container" ref="chartContainer">
-    <div class="chart-no-data" v-if="!hasData">
-      <div v-if="!hasData" class="no-data-message">
+  <div class="donut-chart-container">
+    <div class="card-header">
+      <div v-if="loading" class="skeleton-box title-skeleton"></div>
+      <h3 v-else class="card-title">{{ title }}</h3>
+    </div>
+
+    <div v-if="loading" class="chart-content">
+      <div class="chart-main-visual">
+        <div class="skeleton-box donut-skeleton"></div>
+      </div>
+      <div class="custom-legend">
+        <div v-for="i in 4" :key="i" class="legend-row skeleton-item">
+          <div class="legend-info">
+            <div class="skeleton-box dot-skeleton"></div>
+            <div class="skeleton-box name-skeleton"></div>
+          </div>
+          <div class="legend-stats">
+            <div class="skeleton-box pct-skeleton"></div>
+            <div class="skeleton-box val-skeleton"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="!hasData" class="empty-state">
+      <div class="no-data-message">
         {{ selectedLanguage == 'English' ? 'No Data Available' : 'Veri Yok' }}
       </div>
     </div>
+
     <div v-else class="chart-content">
-      <h2 class="chart-title">{{ title }}</h2>
-      <div class="donut-chart-wrapper">
-        <div class="donut-chart">
+      <div class="chart-main-visual">
+        <div class="donut-wrapper">
           <Doughnut
-            v-show="hasData"
             :data="chartData"
             :options="chartOptions"
             @click="handleChartClick"
           />
+          <div class="donut-center">
+            <span class="total-label">{{ selectedLanguage === 'English' ? 'Total' : 'Toplam' }}</span>
+            <span class="total-value">{{ total }}</span>
+          </div>
         </div>
       </div>
-      <div class="segment-data">
-        {{
-          isDataOpen
-            ? clickedSegment
-              ? clickedSegment.name + ' - $' + clickedSegment.value
-              : ''
-            : computedText
-        }}
-      </div>
-      <div class="legend">
-        <div v-for="(category, index) in categoriesData" :key="index" class="legend-item">
-          <div class="legend-color" :style="{ backgroundColor: category.color }"></div>
-          <div class="legend-label">{{ category.label || category.name }}</div>
+
+      <div class="custom-legend">
+        <div 
+          v-for="(category, index) in categoriesData.slice(0, 5)" 
+          :key="index" 
+          class="legend-row"
+          @mouseenter="hoverSegment(index)"
+          @mouseleave="hoverSegment(null)"
+        >
+          <div class="legend-info">
+            <span class="color-dot" :style="{ backgroundColor: category.color }"></span>
+            <span class="category-name">{{ category.name }}</span>
+          </div>
+          <div class="legend-stats">
+            <span class="category-pct">{{ calculatePercentage(category.value) }}</span>
+            <span class="category-val">{{ formatCurrency(category.value) }}</span>
+          </div>
+        </div>
+        <div v-if="categoriesData.length > 5" class="legend-more">
+          + {{ categoriesData.length - 5 }} {{ selectedLanguage === 'English' ? 'more' : 'daha fazla' }}
         </div>
       </div>
     </div>
@@ -48,7 +81,6 @@ import {
   LinearScale,
 } from 'chart.js'
 
-import type { TooltipItem, ChartEvent } from 'chart.js'
 import type { SpendingCategories } from '@/interfaces/SpendingCategories'
 import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
 
@@ -59,186 +91,97 @@ export default {
   components: {
     Doughnut,
   },
+  props: {
+    title: { type: String, default: 'Spendings' },
+    loading: { type: Boolean, default: false },
+    categories: { type: Object as () => Record<string, number>, required: true },
+    donutChartText: { type: String, default: 'Total' },
+    selectedLanguage: { type: String, default: 'English' },
+  },
   data() {
     return {
       categoriesData: [] as Array<SpendingCategories>,
-      clickedSegment: null as SpendingCategories | null,
-      isDataOpen: false,
       themeKey: (typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null) || 'light',
       themeObserver: null as MutationObserver | null,
     }
   },
-
-  props: {
-    title: {
-      type: String,
-      default: 'Spendings',
-    },
-    categories: {
-      type: Object as () => Record<string, number>,
-      required: true,
-    },
-    donutChartText: {
-      type: String,
-      default: 'Total: ',
-    },
-    selectedLanguage: {
-      type: String,
-      default: 'English',
-    },
-  },
-
   computed: {
     hasData(): boolean {
       return this.categoriesData && this.categoriesData.length > 0
     },
-    total() {
-      return this.categoriesData.reduce(
-        (sum: number, category: SpendingCategories) => sum + category.value,
-        0
-      )
+    totalRaw(): number {
+      return this.categoriesData.reduce((sum, cat) => sum + cat.value, 0)
     },
-    computedText() {
-      return this.donutChartText + this.total
+    total(): string {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(this.totalRaw)
     },
     chartData() {
-      void this.themeKey
-      const root = document.documentElement
-      const rootStyles = getComputedStyle(root)
-      const borderColor = rootStyles.getPropertyValue('--background-color').trim()
-
-      // Colors are already resolved by getCategoryColorByIndex (theme-dependent)
-      const backgroundColors = this.categoriesData.map(
-        (item: SpendingCategories) => item.color || '#999'
-      )
-      const hoverColors = [...backgroundColors]
-
       return {
-        labels: this.categoriesData.map((item: SpendingCategories) => item.name),
-        datasets: [
-          {
-            data: this.categoriesData.map((item: SpendingCategories) => item.value),
-            backgroundColor: backgroundColors,
-            hoverBackgroundColor: hoverColors,
-            borderColor,
-            borderWidth: 1,
-            hoverOffset: 8,
-          },
-        ],
+        labels: this.categoriesData.map(item => item.name),
+        datasets: [{
+          data: this.categoriesData.map(item => item.value),
+          backgroundColor: this.categoriesData.map(item => item.color),
+          borderWidth: 0,
+          hoverOffset: 10,
+          cutout: '80%',
+          borderRadius: 4
+        }]
       }
     },
     chartOptions() {
-      void this.themeKey
-      const root = document.documentElement
-      const rootStyles = getComputedStyle(root)
-
       return {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '40%',
-        animation: {
-          animateScale: true,
-          animateRotate: true,
-        },
         plugins: {
-          legend: {
-            display: false,
-          },
+          legend: { display: false },
           tooltip: {
-            backgroundColor: rootStyles.getPropertyValue('--background-color-soft').trim(),
-            titleColor: rootStyles.getPropertyValue('--header-text-color').trim(),
-            bodyColor: rootStyles.getPropertyValue('--normal-text-color').trim(),
-            borderColor: rootStyles.getPropertyValue('--border-color').trim(),
-            borderWidth: 1,
+            enabled: true,
             callbacks: {
-              label: function (context: TooltipItem<'doughnut'>) {
-                let label = context.label || ''
-                if (label) {
-                  label += ': $'
-                }
-                if (context.parsed !== null) {
-                  label += context.formattedValue
-                }
-                return label
-              },
-            },
-          },
-        },
-        onHover: (event: ChartEvent, elements: Array<{ index: number }>) => {
-          const canvas = event.native?.target as HTMLCanvasElement | null
-          if (canvas) {
-            canvas.style.cursor = elements && elements.length > 0 ? 'pointer' : 'default'
+              label: (context: any) => {
+                const label = context.label || ''
+                const val = context.parsed || 0
+                return ` ${label}: ${this.formatCurrency(val)}`
+              }
+            }
           }
-        },
-        onClick: (event: ChartEvent) => {
-          this.handleChartClick(event)
-        },
+        }
       }
-    },
+    }
   },
-
   methods: {
+    calculatePercentage(value: number): string {
+      if (this.totalRaw === 0) return '0%'
+      return ((value / this.totalRaw) * 100).toFixed(0) + '%'
+    },
+    formatCurrency(value: number): string {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(value)
+    },
     processCategoriesData() {
-      if (this.categories === null || this.categories === undefined) {
+      if (!this.categories) {
         this.categoriesData = []
         return
       }
-      // Use category names from API as-is; assign theme-based colors by index (no hardcoded keys)
       this.categoriesData = Object.entries(this.categories).map(
         ([key, value]: [string, number], index): SpendingCategories => ({
-          // Strip technical suffixes like " #1" from keys so the user
-          // only sees the raw category name on the chart/legend.
           name: key.replace(/\s+#\d+$/, ''),
           value,
           label: key.replace(/\s+#\d+$/, ''),
           color: getCategoryColorByIndex(index),
         })
       )
-      this.categoriesData.sort((a: SpendingCategories, b: SpendingCategories) => b.value - a.value)
+      this.categoriesData.sort((a, b) => b.value - a.value)
     },
-
-    handleChartClick(event: ChartEvent) {
-      const chartEvent = event as ChartEvent & {
-        chart: {
-          getElementsAtEventForMode: (
-            native: unknown,
-            mode: string,
-            options: unknown,
-            intersect: boolean
-          ) => Array<{ index: number }>
-        }
-      }
-      if (!chartEvent.chart || !chartEvent.chart.getElementsAtEventForMode || !chartEvent.native)
-        return
-
-      const elements = chartEvent.chart.getElementsAtEventForMode(
-        chartEvent.native,
-        'nearest',
-        { intersect: true },
-        false
-      )
-
-      if (elements.length > 0) {
-        const index = elements[0].index
-        this.handleSegmentClick(index)
-      }
-    },
-
-    handleSegmentClick(index: number) {
-      const segment = this.categoriesData[index]
-
-      if (this.clickedSegment && this.clickedSegment.name === segment.name) {
-        // Reset to original state if the same segment is clicked again
-        this.isDataOpen = false
-        this.clickedSegment = null
-      } else {
-        // Set the new clicked segment
-        this.clickedSegment = segment
-        this.isDataOpen = true
-      }
-    },
+    handleChartClick() { /* logic if needed */ },
+    hoverSegment(index: number | null) { /* hover logic */ }
   },
-
   mounted() {
     this.processCategoriesData()
     this.themeObserver = new MutationObserver(() => {
@@ -249,155 +192,197 @@ export default {
       attributeFilter: ['data-theme'],
     })
   },
-
   beforeUnmount() {
-    if (this.themeObserver) {
-      this.themeObserver.disconnect()
-    }
+    if (this.themeObserver) this.themeObserver.disconnect()
   },
-
   watch: {
-    categories: {
-      handler: 'processCategoriesData',
-      immediate: true,
-    },
-    selectedLanguage: {
-      handler: 'processCategoriesData',
-      immediate: true,
-    },
+    categories: { handler: 'processCategoriesData', immediate: true },
     themeKey: 'processCategoriesData',
   },
 }
 </script>
 
-<style lang="scss" scoped>
-.chart-container {
+<style scoped lang="scss">
+
+.donut-chart-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
   height: 100%;
   width: 100%;
-  max-width: 100%;
-  padding: 0.5rem;
+  padding: 1.25rem;
   box-sizing: border-box;
 
+  .title-skeleton {
+    width: 160px;
+    height: 1.1rem;
+  }
+
+  .card-header {
+    margin-bottom: 1.25rem;
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--header-text-color);
+      margin: 0;
+    }
+  }
+
+  /* Skeleton Styles */
+  .donut-skeleton {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+  }
+
+  .dot-skeleton {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  .name-skeleton {
+    width: 80px;
+    height: 0.85rem;
+  }
+
+  .pct-skeleton {
+    width: 30px;
+    height: 0.75rem;
+  }
+
+  .val-skeleton {
+    width: 50px;
+    height: 0.85rem;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--normal-text-color);
+    font-style: italic;
+  }
+
   .chart-content {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 100%;
     min-height: 0;
   }
 
-  .chart-title {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: var(--normal-text-color);
-    text-align: center;
-    margin-bottom: 0.35rem;
-    line-height: 1.25;
-  }
-
-  .donut-chart-wrapper {
+  .chart-main-visual {
     position: relative;
     width: 100%;
-    max-width: min(100%, 260px);
-    aspect-ratio: 1;
-    min-height: 140px;
-    max-height: 240px;
-    margin: 0 auto;
-    flex-shrink: 0;
+    height: 180px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
   }
 
-  .donut-chart {
+  .donut-wrapper {
+    position: relative;
+    width: 180px;
+    height: 180px;
+  }
+
+  .donut-center {
     position: absolute;
     inset: 0;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    width: 100%;
-    height: 100%;
-  }
-
-  .no-data-message {
-    display: flex;
     justify-content: center;
-    align-items: center;
-    min-height: 160px;
-    padding: 1rem;
-    color: var(--normal-text-color);
-    font-style: italic;
-    text-align: center;
-    font-size: 0.8125rem;
+    pointer-events: none;
+
+    .total-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--normal-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .total-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--header-text-color);
+      line-height: 1.1;
+      margin-top: 2px;
+    }
   }
 
-  .segment-data {
-    font-size: 0.875rem;
-    margin: 0.35rem 0;
-    padding: 0 0.5rem;
-    font-weight: 600;
-    color: var(--header-text-color);
-    text-align: center;
-    word-break: break-word;
-    line-height: 1.25;
-  }
-
-  .legend {
+  .custom-legend {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.2rem 0.5rem;
-    margin-top: 0.35rem;
-    padding: 0 0.25rem;
-    max-width: 100%;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--background-color-soft);
 
-    &-item {
+    .legend-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.2rem 0;
+      transition: opacity 0.2s ease;
+
+      &:not(.skeleton-item):hover {
+        opacity: 0.8;
+      }
+    }
+
+    .legend-info {
       display: flex;
       align-items: center;
+      gap: 0.6rem;
+      min-width: 0;
+
+      .color-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .category-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--header-text-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .legend-stats {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
       flex-shrink: 0;
+
+      .category-pct {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--normal-text-color);
+        width: 35px;
+        text-align: right;
+      }
+      .category-val {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--header-text-color);
+        min-width: 60px;
+        text-align: right;
+      }
     }
 
-    &-color {
-      width: 8px;
-      height: 8px;
-      min-width: 8px;
-      min-height: 8px;
-      border-radius: 2px;
-      margin-right: 0.25rem;
-    }
-
-    &-label {
+    .legend-more {
       font-size: 0.75rem;
-      font-weight: 500;
       color: var(--normal-text-color);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 110px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    padding: 0.35rem;
-
-    .donut-chart-wrapper {
-      min-height: 120px;
-      max-height: 200px;
-    }
-
-    .legend-label {
-      max-width: 90px;
-    }
-  }
-
-  @media (min-width: 769px) {
-    .donut-chart-wrapper {
-      max-width: min(100%, 240px);
-      max-height: 220px;
+      text-align: center;
+      padding-top: 0.25rem;
+      font-weight: 500;
     }
   }
 }
 </style>
+

@@ -1,10 +1,12 @@
 <template>
   <div class="data-chart-c">
     <div class="top-section">
-      <div class="chart-title">{{ title }}</div>
+      <div v-if="loading" class="skeleton-box title-skeleton"></div>
+      <div v-else class="chart-title">{{ title }}</div>
+      
       <div
         class="data-information"
-        v-if="tooltipVisible"
+        v-if="!loading && tooltipVisible"
         :class="{ 'fade-in': showTooltip, 'fade-out': !showTooltip }"
         :style="{ backgroundColor: statusBarColor }"
       >
@@ -12,7 +14,8 @@
       </div>
     </div>
     <div class="chart-area">
-      <canvas ref="chartCanvas" :width="canvasWidth" :height="canvasHeight"></canvas>
+      <div v-if="loading" class="skeleton-box chart-area-skeleton"></div>
+      <canvas v-else ref="chartCanvas" :width="canvasWidth" :height="canvasHeight"></canvas>
     </div>
   </div>
 </template>
@@ -44,6 +47,10 @@ export default {
     }
   },
   props: {
+    loading: {
+      type: Boolean,
+      default: false,
+    },
     data: {
       type: Object as () => Record<number, number>,
     },
@@ -110,6 +117,7 @@ export default {
   },
   methods: {
     drawChart() {
+      if (this.loading) return
       const canvas = this.$refs.chartCanvas as HTMLCanvasElement
       if (!canvas) return
 
@@ -247,6 +255,7 @@ export default {
     },
 
     onCanvasClick(event: MouseEvent) {
+      if (this.loading) return
       const canvas = this.$refs.chartCanvas as HTMLCanvasElement
       if (!canvas || this.chartData.length === 0) return
 
@@ -373,6 +382,13 @@ export default {
       },
       deep: true,
     },
+    loading: {
+      handler(val) {
+        if (!val) {
+          this.$nextTick(() => this.drawChart())
+        }
+      }
+    }
   },
   mounted() {
     // Set initial screen size
@@ -430,6 +446,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
 .data-chart-c {
   display: flex;
   flex-direction: column;
@@ -466,6 +483,11 @@ export default {
     flex-wrap: wrap;
     gap: 0.5rem;
 
+    .title-skeleton {
+      width: 120px;
+      height: 1.2rem;
+    }
+
     .chart-title {
       font-weight: 500;
       font-size: 1.2rem;
@@ -491,6 +513,11 @@ export default {
     position: relative;
     width: 100%;
     height: auto;
+
+    .chart-area-skeleton {
+      width: 100%;
+      height: 200px;
+    }
 
     canvas {
       display: block;
@@ -530,3 +557,4 @@ export default {
   }
 }
 </style>
+

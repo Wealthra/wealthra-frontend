@@ -1,24 +1,37 @@
 <template>
-  <div class="kpi-card">
+  <div class="kpi-card" :class="{ 'kpi-card--loading': loading }">
     <div class="kpi-card__main">
-      <div class="kpi-card__label">{{ title }}</div>
-      <div class="kpi-card__value">{{ valuePrefix }}{{ currentAmount.toLocaleString() }}</div>
-      <div
-        v-if="showTrend"
-        class="kpi-card__trend-badge"
-        :class="{ 'kpi-card__trend-badge--negative': isNegative }"
-      >
-        <font-awesome-icon
-          :icon="isNegative ? trendIcons.negative : trendIcons.positive"
-          class="kpi-card__trend-icon"
-          aria-hidden="true"
-        />
-        <span class="kpi-card__trend-value">{{ animatedPercentage }}%</span>
+      <template v-if="loading">
+        <div class="skeleton-box kpi-card__label-skeleton"></div>
+        <div class="skeleton-box kpi-card__value-skeleton"></div>
+        <div v-if="showTrend" class="skeleton-box kpi-card__trend-skeleton"></div>
+      </template>
+      <template v-else>
+        <div class="kpi-card__label">{{ title }}</div>
+        <div class="kpi-card__value">{{ valuePrefix }}{{ currentAmount.toLocaleString() }}</div>
+        <div
+          v-if="showTrend"
+          class="kpi-card__trend-badge"
+          :class="{ 'kpi-card__trend-badge--negative': isNegative }"
+        >
+          <font-awesome-icon
+            :icon="isNegative ? trendIcons.negative : trendIcons.positive"
+            class="kpi-card__trend-icon"
+            aria-hidden="true"
+          />
+          <span class="kpi-card__trend-value">{{ animatedPercentage }}%</span>
+        </div>
+      </template>
+    </div>
+
+    <template v-if="loading">
+      <div class="skeleton-box kpi-card__icon-skeleton"></div>
+    </template>
+    <template v-else-if="resolvedKpiIcon">
+      <div class="kpi-card__icon-wrap" :style="{ color: resolvedIconColor }">
+        <font-awesome-icon :icon="resolvedKpiIcon" class="kpi-card__icon" aria-hidden="true" />
       </div>
-    </div>
-    <div v-if="resolvedKpiIcon" class="kpi-card__icon-wrap" :style="{ color: resolvedIconColor }">
-      <font-awesome-icon :icon="resolvedKpiIcon" class="kpi-card__icon" aria-hidden="true" />
-    </div>
+    </template>
   </div>
 </template>
 
@@ -71,6 +84,10 @@ export default defineComponent({
       type: String,
       default: '$',
     },
+    loading: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -121,6 +138,7 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+
 .kpi-card {
   --kpi-trend-up: var(--primary-green-color);
   --kpi-trend-down: var(--primary-red-color);
@@ -150,6 +168,32 @@ export default defineComponent({
     min-width: 0;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Skeleton Loading Styles */
+  .kpi-card__label-skeleton {
+    width: 60%;
+    height: 0.8125rem;
+    margin-bottom: 0.625rem;
+  }
+
+  .kpi-card__value-skeleton {
+    width: 80%;
+    height: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .kpi-card__trend-skeleton {
+    width: 35%;
+    height: 1.375rem;
+    border-radius: 9999px;
+  }
+
+  .kpi-card__icon-skeleton {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 10px;
+    flex-shrink: 0;
   }
 
   .kpi-card__icon-wrap {
@@ -217,7 +261,8 @@ export default defineComponent({
     padding: 0.875rem 1rem;
     gap: 0.75rem;
 
-    .kpi-card__icon-wrap {
+    .kpi-card__icon-wrap,
+    .kpi-card__icon-skeleton {
       width: 2.25rem;
       height: 2.25rem;
     }
@@ -241,3 +286,4 @@ export default defineComponent({
   }
 }
 </style>
+

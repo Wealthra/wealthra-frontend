@@ -1,6 +1,7 @@
 <template>
   <div class="line-chart-container" ref="containerRef">
-    <div v-if="!hasData" class="line-chart-no-data">
+    <div v-if="loading" class="skeleton-box chart-skeleton"></div>
+    <div v-else-if="!hasData" class="line-chart-no-data">
       {{ noDataText }}
     </div>
     <div
@@ -57,6 +58,10 @@ export default {
     }
   },
   props: {
+    loading: {
+      type: Boolean,
+      default: false,
+    },
     labels: {
       type: Array as () => string[],
       default: () => [],
@@ -210,6 +215,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
 .line-chart-container {
   width: 100%;
   max-width: 100%;
@@ -220,6 +226,13 @@ export default {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  .chart-skeleton {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+    border-radius: var(--border-radius);
+  }
 
   .line-chart-no-data {
     display: flex;
@@ -253,3 +266,4 @@ export default {
   }
 }
 </style>
+

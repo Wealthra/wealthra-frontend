@@ -3,25 +3,32 @@
     <div class="goals-overview-component">
       <div class="goals-overview-component-title-row">
         <div class="goals-overview-component-title">
-          {{ goalsOverviewText }}
+          <div v-if="loading" class="skeleton-box title-skeleton"></div>
+          <template v-else>{{ goalsOverviewText }}</template>
         </div>
-        <div v-if="totalGoals != null && totalGoals > 0" class="goals-overview-stats">
+        <div v-if="loading" class="skeleton-box stats-skeleton"></div>
+        <div v-else-if="totalGoals != null && totalGoals > 0" class="goals-overview-stats">
           {{ t('totalGoals') }}: {{ totalGoals }} · {{ t('achievedGoals') }}: {{ achievedGoals }}
         </div>
       </div>
       <div class="goals-overview-component-content">
-        <div v-if="!isMobile" class="goals-overview-component-amount">
+        <div v-if="loading" class="skeleton-box amount-skeleton"></div>
+        <div v-else-if="!isMobile" class="goals-overview-component-amount">
           {{ goalAmount }}
         </div>
+
+        <div v-if="loading" class="skeleton-box progress-skeleton"></div>
         <!-- Desktop: progress bar -->
-        <div v-if="!isMobile" class="goals-overview-component-progress-bar">
+        <div v-else-if="!isMobile" class="goals-overview-component-progress-bar">
           <div
             class="goals-overview-component-progress-bar-fill"
             :style="{ width: progressBarWidthPercentage + '%' }"
           ></div>
         </div>
+
+        <div v-if="loading" class="skeleton-box doughnut-skeleton"></div>
         <!-- Mobile only: doughnut chart + center text -->
-        <div v-if="isMobile" class="goals-overview-doughnut-wrap">
+        <div v-else-if="isMobile" class="goals-overview-doughnut-wrap">
           <Doughnut
             ref="doughnutRef"
             :data="doughnutData"
@@ -32,7 +39,9 @@
             {{ centerText }}
           </div>
         </div>
-        <div v-if="!isMobile" class="goals-overview-component-percentage">{{ displayPercentage }}</div>
+        
+        <div v-if="loading" class="skeleton-box percent-skeleton"></div>
+        <div v-else-if="!isMobile" class="goals-overview-component-percentage">{{ displayPercentage }}</div>
       </div>
     </div>
   </div>
@@ -80,6 +89,10 @@ export default {
     achievedGoals: {
       type: Number,
       default: 0,
+    },
+    loading: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -236,6 +249,43 @@ export default {
       margin: 0;
       color: var(--header-text-color);
       flex-shrink: 0;
+      min-width: 150px;
+    }
+
+    .title-skeleton {
+      width: 150px;
+      height: 1.25rem;
+      border-radius: 4px;
+    }
+
+    .stats-skeleton {
+      width: 200px;
+      height: 1rem;
+      border-radius: 4px;
+    }
+
+    .amount-skeleton {
+      width: 180px;
+      height: 1.5rem;
+      border-radius: 4px;
+    }
+
+    .progress-skeleton {
+      flex: 1;
+      height: 18px;
+      border-radius: 999px;
+    }
+
+    .percent-skeleton {
+      width: 60px;
+      height: 1.5rem;
+      border-radius: 4px;
+    }
+
+    .doughnut-skeleton {
+      width: 100%;
+      height: 150px;
+      border-radius: 8px;
     }
 
     .goals-overview-component-content {
@@ -252,10 +302,11 @@ export default {
         align-items: center;
         height: 100%;
         width: auto;
-        font-weight: 600;
-        font-size: 1.125rem;
-        color: var(--normal-text-color);
+        font-weight: 700;
+        font-size: 1.35rem;
+        color: var(--header-text-color);
         flex-shrink: 0;
+        letter-spacing: -0.02em;
       }
 
       .goals-overview-component-progress-bar {
@@ -264,17 +315,18 @@ export default {
         align-items: center;
         flex-grow: 1;
         min-width: 0;
-        height: 22px;
-        border-radius: var(--border-radius);
-        overflow: hidden;
+        height: 18px;
+        border-radius: 999px;
         background-color: var(--background-color-soft);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
       }
 
       .goals-overview-component-progress-bar-fill {
         height: 100%;
-        background-color: var(--primary-yellow-color);
-        border-radius: var(--border-radius);
-        transition: width 0.3s ease-in-out;
+        background: linear-gradient(90deg, var(--primary-yellow-color), var(--primary-green-color));
+        border-radius: 999px;
+        transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 0 10px rgba(92, 184, 92, 0.3);
       }
 
       .goals-overview-component-percentage {
@@ -283,9 +335,9 @@ export default {
         align-items: center;
         height: 100%;
         width: auto;
-        font-weight: 600;
-        font-size: 1.125rem;
-        color: var(--normal-text-color);
+        font-weight: 700;
+        font-size: 1.35rem;
+        color: var(--primary-green-color);
         flex-shrink: 0;
       }
     }

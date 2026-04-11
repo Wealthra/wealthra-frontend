@@ -1,49 +1,79 @@
 <template>
   <div class="budget-categories-component-c">
     <div class="budget-categories-header">
-      <div class="budget-categories-title">
+      <div v-if="loading" class="skeleton-box title-skeleton"></div>
+      <div v-else class="budget-categories-title">
         {{ budgetCategoriesTitle }}
       </div>
       <div class="budget-categories-create-button">
-        <button class="create-button" @click="isModalOpen = true">
+        <button class="create-button" :disabled="loading" @click="isModalOpen = true">
           {{ selectedLanguage === 'English' ? 'Create New Category' : 'Yeni Kategori Oluştur' }}
         </button>
       </div>
     </div>
-    <div class="budget-categories-content" v-if="isAvailableData">
-      <div class="budget-categories-list">
-        <div class="category-item" v-for="category in budgetCategoriesData" :key="category.id">
-          <div class="category-item-top">
-            <div class="category-name">{{ formatCategoryName(category.categoryName) }}</div>
-            <div class="category-percentage">
-              {{ categoryPercentage(category.currentAmount, category.limitAmount) }}
+
+    <div class="budget-categories-content">
+      <template v-if="loading">
+        <div class="budget-categories-list">
+          <div v-for="i in 4" :key="i" class="category-item skeleton-category">
+            <div class="category-item-top">
+              <div class="skeleton-box name-skeleton"></div>
+              <div class="skeleton-box percentage-skeleton"></div>
             </div>
-          </div>
-          <div class="category-item-middle">
-            <div class="category-item-fraction">
-              {{ categoryFraction(category.currentAmount, category.limitAmount) }}
+            <div class="category-item-middle">
+              <div class="skeleton-box fraction-skeleton"></div>
             </div>
-          </div>
-          <div class="category-item-bottom">
-            <div class="category-item-progress-bar">
-              <div
-                class="progress-bar"
-                :style="{
-                  width: categoryPercentage(category.currentAmount, category.limitAmount),
-                  backgroundColor: categoryColor(
-                    (category.currentAmount / category.limitAmount) * 100
-                  ),
-                }"
-              ></div>
-            </div>
-            <div class="category-item-delete-icon" @click="deleteBudgetCategoryItem(category.id)">
-              <font-awesome-icon :icon="actionIcons.delete" />
+            <div class="category-item-bottom">
+              <div class="category-item-progress-bar">
+                <div class="skeleton-box bar-skeleton"></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
+
+      <template v-else-if="isAvailableData">
+        <div class="budget-categories-list">
+          <div class="category-item" v-for="category in budgetCategoriesData" :key="category.id">
+            <div class="category-item-top">
+              <div class="category-name">{{ formatCategoryName(category.categoryName) }}</div>
+              <div class="category-percentage">
+                {{ categoryPercentage(category.currentAmount, category.limitAmount) }}
+              </div>
+            </div>
+            <div class="category-item-middle">
+              <div class="category-item-fraction">
+                {{ categoryFraction(category.currentAmount, category.limitAmount) }}
+              </div>
+            </div>
+            <div class="category-item-bottom">
+              <div class="category-item-progress-bar">
+                <div
+                  class="progress-bar"
+                  :style="{
+                    width: categoryPercentage(category.currentAmount, category.limitAmount),
+                    backgroundColor: categoryColor(
+                      (category.currentAmount / category.limitAmount) * 100
+                    ),
+                  }"
+                ></div>
+              </div>
+              <div class="category-item-delete-icon" @click="deleteBudgetCategoryItem(category.id)">
+                <font-awesome-icon :icon="actionIcons.delete" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="budget-categories-no-data">
+          <p>{{ selectedLanguage === 'English' ? 'No data available' : 'Veri yok' }}</p>
+        </div>
+      </template>
     </div>
-    <div class="budget-categories-pagination" v-if="totalPagesBudget > 0">
+
+    <div class="budget-categories-pagination" v-if="!loading && totalPagesBudget > 0">
       <button
         :disabled="pageNumberBudget === 1"
         @click="changePage(pageNumberBudget - 1)"
@@ -79,6 +109,7 @@
         <font-awesome-icon :icon="arrowIcons.right" class="arrow-right" />
       </button>
     </div>
+
     <div class="budget-categories-add-modal" v-if="isModalOpen">
       <div class="modal-content">
         <div class="modal-content-top">
@@ -91,30 +122,14 @@
         </div>
 
         <select id="category" v-model="newBudgetCategory.categoryId" required class="budget-select">
-          <option value="1">
-            {{ (selectedLanguage || 'English') === 'English' ? 'Food' : 'Yiyecek' }}
-          </option>
-          <option value="2">
-            {{ (selectedLanguage || 'English') === 'English' ? 'Entertainment' : 'Eğlence' }}
-          </option>
-          <option value="3">
-            {{ (selectedLanguage || 'English') === 'English' ? 'Education' : 'Eğitim' }}
-          </option>
-          <option value="4">
-            {{ (selectedLanguage || 'English') === 'English' ? 'Shopping' : 'Alışveriş' }}
-          </option>
-          <option value="5">
-            {{ (selectedLanguage || 'English') === 'English' ? 'Housing' : 'Konut' }}
-          </option>
-          <option value="6">
-            {{ (selectedLanguage || 'English') === 'English' ? 'Transport' : 'Ulaşım' }}
-          </option>
-          <option value="7">
-            {{ (selectedLanguage || 'English') === 'English' ? 'Health' : 'Sağlık' }}
-          </option>
-          <option value="8">
-            {{ (selectedLanguage || 'English') === 'English' ? 'Other' : 'Diğer' }}
-          </option>
+          <option value="1">{{ selectedLanguage === 'English' ? 'Food' : 'Yiyecek' }}</option>
+          <option value="2">{{ selectedLanguage === 'English' ? 'Entertainment' : 'Eğlence' }}</option>
+          <option value="3">{{ selectedLanguage === 'English' ? 'Education' : 'Eğitim' }}</option>
+          <option value="4">{{ selectedLanguage === 'English' ? 'Shopping' : 'Alışveriş' }}</option>
+          <option value="5">{{ selectedLanguage === 'English' ? 'Housing' : 'Konut' }}</option>
+          <option value="6">{{ selectedLanguage === 'English' ? 'Transport' : 'Ulaşım' }}</option>
+          <option value="7">{{ selectedLanguage === 'English' ? 'Health' : 'Sağlık' }}</option>
+          <option value="8">{{ selectedLanguage === 'English' ? 'Other' : 'Diğer' }}</option>
         </select>
 
         <input
@@ -134,9 +149,6 @@
           </button>
         </div>
       </div>
-    </div>
-    <div class="budget-categories-no-data" v-if="!isAvailableData">
-      <p>{{ selectedLanguage === 'English' ? 'No data available' : 'Veri yok' }}</p>
     </div>
   </div>
 </template>
@@ -171,6 +183,10 @@ export default {
     }
   },
   props: {
+    loading: {
+      type: Boolean,
+      default: false,
+    },
     selectedLanguage: {
       type: String,
       required: true,
@@ -216,23 +232,17 @@ export default {
       return this.selectedLanguage === 'English' ? 'Budget Categories' : 'Bütçe Kategorileri'
     },
     displayedPages() {
-      // Display up to 5 page numbers around the current page
       const maxVisiblePages = 5
       const halfVisible = Math.floor(maxVisiblePages / 2)
-
       let startPage = Math.max(1, this.pageNumberBudget - halfVisible)
       const endPage = Math.min(startPage + maxVisiblePages - 1, this.totalPagesBudget)
-
-      // Adjust start page if we're near the end
       if (this.totalPagesBudget - endPage < halfVisible) {
         startPage = Math.max(1, endPage - maxVisiblePages + 1)
       }
-
       const pages = []
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i)
       }
-
       return pages
     },
     showEllipsis() {
@@ -294,7 +304,6 @@ export default {
       this.$emit('handleDeleteBudgetCategoryItem', categoryId)
     },
   },
-
   mounted() {
     if (this.budgetCategoriesData.length === 0) {
       this.isAvailableData = false
@@ -313,6 +322,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
 .budget-categories-component-c {
   display: flex;
   flex-direction: column;
@@ -332,6 +342,11 @@ export default {
     margin-bottom: 0.75rem;
     color: var(--header-text-color);
 
+    .title-skeleton {
+      width: 180px;
+      height: 1.5rem;
+    }
+
     .budget-categories-title {
       font-size: 1.5rem;
       font-weight: bold;
@@ -350,7 +365,12 @@ export default {
         border-radius: 5px;
         cursor: pointer;
 
-        &:hover {
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        &:not(:disabled):hover {
           background-color: var(--background-color-reverse);
           color: var(--reverse-header-text-color);
         }
@@ -370,6 +390,7 @@ export default {
       width: 100%;
       gap: 0.5rem;
       height: fit-content;
+
       .category-item {
         display: flex;
         flex-direction: column;
@@ -380,6 +401,13 @@ export default {
         border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
         width: 100%;
+
+        &.skeleton-category {
+          .name-skeleton { width: 100px; height: 1.2rem; }
+          .percentage-skeleton { width: 40px; height: 1rem; }
+          .fraction-skeleton { width: 80px; height: 0.8rem; margin-top: 0.25rem; }
+          .bar-skeleton { width: 100%; height: 100%; }
+        }
 
         .category-item-top {
           display: flex;
@@ -441,15 +469,7 @@ export default {
             align-items: center;
             width: 20px;
             cursor: pointer;
-            img {
-              width: 100%;
-              height: 100%;
-
-              &:hover {
-                scale: 1.1;
-                transition: scale 0.2s ease-in-out;
-              }
-            }
+            color: var(--normal-text-color);
           }
         }
       }
@@ -479,16 +499,8 @@ export default {
         cursor: default;
       }
 
-      .arrow-left {
-        transform: rotate(180deg);
-        width: 16px;
-        height: 16px;
-      }
-
-      .arrow-right {
-        width: 16px;
-        height: 16px;
-      }
+      .arrow-left { transform: rotate(180deg); width: 16px; height: 16px; }
+      .arrow-right { width: 16px; height: 16px; }
     }
 
     .page-number {
@@ -510,10 +522,6 @@ export default {
       &:hover:not(.active) {
         background-color: var(--background-color-soft);
       }
-    }
-
-    .ellipsis {
-      padding: 0 8px;
     }
   }
 
@@ -556,13 +564,12 @@ export default {
           cursor: pointer;
           font-size: 1.5rem;
           text-align: center;
-
           color: var(--header-text-color);
           margin-left: auto;
         }
       }
 
-      input {
+      input, .budget-select {
         padding: 0.5rem;
         border-radius: 6px;
         border: 1px solid var(--border-color);
@@ -570,26 +577,6 @@ export default {
         color: var(--normal-text-color);
         width: 100%;
         margin-bottom: 1rem;
-
-        &:focus {
-          outline: none;
-          border-color: var(--border-color-reverse);
-        }
-      }
-
-      .budget-select {
-        padding: 0.5rem;
-        border-radius: 6px;
-        border: 1px solid var(--border-color);
-        width: 100%;
-        margin-bottom: 1rem;
-        border: 1px solid var(--border-color);
-        background-color: var(--background-color);
-        color: var(--normal-text-color);
-        &:focus {
-          outline: none;
-          border-color: var(--border-color-reverse);
-        }
       }
 
       .add-new-category-button-wrapper {
@@ -615,6 +602,7 @@ export default {
       }
     }
   }
+
   .budget-categories-no-data {
     display: flex;
     justify-content: center;
@@ -626,6 +614,7 @@ export default {
     font-weight: bold;
   }
 }
+
 @media (max-width: 768px) {
   .budget-categories-component-c {
     padding: 1rem;
@@ -638,14 +627,6 @@ export default {
         display: flex;
         justify-content: center;
         align-items: center;
-      }
-    }
-    .budget-categories-content {
-      .budget-categories-list {
-        gap: 0.5rem;
-        .category-item {
-          width: 100%;
-        }
       }
     }
   }

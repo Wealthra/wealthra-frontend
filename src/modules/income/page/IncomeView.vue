@@ -2,6 +2,7 @@
   <div class="income-content">
       <div class="information-wrapper">
         <UIInformationBox
+          :loading="isLoading"
           :currentAmount="financialData.weeklyTotalIncome"
           :lastAmount="0"
           color="green"
@@ -12,6 +13,7 @@
           :showTrend="false"
         />
         <UIInformationBox
+          :loading="isLoading"
           :currentAmount="financialData.monthlyTotalIncome"
           :lastAmount="0"
           color="green"
@@ -22,6 +24,7 @@
           :showTrend="false"
         />
         <UIInformationBox
+          :loading="isLoading"
           :currentAmount="financialData.averageMonthlyIncome"
           :lastAmount="0"
           color="green"
@@ -32,6 +35,7 @@
           :showTrend="false"
         />
         <UIInformationBox
+          :loading="isLoading"
           :currentAmount="financialData.yearlyTotalIncome"
           :lastAmount="0"
           color="green"
@@ -48,6 +52,7 @@
           :incomeSources="financialData.incomeSources"
           :hasMoreItems="financialData.incomeHasMoreItems ?? false"
           :selectedLanguage="selectedLanguage"
+          :loading="isLoading"
           :pageNumber="financialData.pageNumberIncome ?? page"
           :pageSize="financialData.pageSizeIncome ?? pageSizeIncome"
           :totalCount="financialData.totalCountIncome ?? 0"
@@ -244,6 +249,8 @@ export default {
         this.financialData.averageMonthlyIncome = data.averageMonthlyIncome
       } catch (error) {
         console.error('Error fetching financial data:', error)
+      } finally {
+        // isLoading handled in loadAppropriateData
       }
     },
 
@@ -265,9 +272,16 @@ export default {
       this.loadAppropriateData()
     },
 
-    loadAppropriateData() {
-      this.fetchFinancialData()
-      this.fetchIncomeSources()
+    async loadAppropriateData() {
+      this.isLoading = true
+      try {
+        await Promise.all([
+          this.fetchFinancialData(),
+          this.fetchIncomeSources()
+        ])
+      } finally {
+        this.isLoading = false
+      }
     },
   },
   mounted() {

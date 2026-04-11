@@ -1,41 +1,57 @@
 <template>
   <div class="goals-table-container">
     <header class="header">
-      <h1 class="header__title">{{ t('goalsHistory') }}</h1>
+      <div v-if="loading" class="skeleton-box header__title-skeleton"></div>
+      <h1 v-else class="header__title">{{ t('goalsHistory') }}</h1>
       <div class="header__toolbar">
         <div class="toolbar-actions">
-          <button type="button" class="btn btn--primary" @click="showCreateModalOpen">
+          <div v-if="loading" class="skeleton-box btn-skeleton"></div>
+          <button v-else type="button" class="btn btn--primary" @click="showCreateModalOpen">
             {{ t('createGoal') }}
           </button>
         </div>
         <div class="toolbar-filters">
-          <div class="filter-group">
-            <input
-              v-model="searchQuery"
-              type="text"
-              class="filter-input"
-              :placeholder="t('searchByName')"
-              :aria-label="t('searchByName')"
-            />
-          </div>
-          <div class="filter-group">
-            <select
-              v-model="statusFilter"
-              class="filter-select"
-              :aria-label="t('status')"
-            >
-              <option value="">{{ t('allStatuses') }}</option>
-              <option value="completed">{{ t('completed') }}</option>
-              <option value="inProgress">{{ t('inProgress') }}</option>
-            </select>
-          </div>
+          <template v-if="loading">
+            <div class="skeleton-box filter-skeleton search-skeleton"></div>
+            <div class="skeleton-box filter-skeleton"></div>
+          </template>
+          <template v-else>
+            <div class="filter-group">
+              <input
+                v-model="searchQuery"
+                type="text"
+                class="filter-input"
+                :placeholder="t('searchByName')"
+                :aria-label="t('searchByName')"
+              />
+            </div>
+            <div class="filter-group">
+              <select
+                v-model="statusFilter"
+                class="filter-select"
+                :aria-label="t('status')"
+              >
+                <option value="">{{ t('allStatuses') }}</option>
+                <option value="completed">{{ t('completed') }}</option>
+                <option value="inProgress">{{ t('inProgress') }}</option>
+              </select>
+            </div>
+          </template>
         </div>
       </div>
     </header>
 
     <div class="table-wrap" :class="{ 'table-wrap--empty': isTableEmpty }">
       <div v-if="filteredGoals.length > 0" class="table" role="table">
-        <div class="table-header" role="row">
+        <div v-if="loading" class="table-header" role="row">
+          <div class="col col-name" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-target" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-current" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-percent" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-status" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-actions" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+        </div>
+        <div v-else class="table-header" role="row">
           <div class="col col-name" role="columnheader">{{ t('name') }}</div>
           <div class="col col-target" role="columnheader">{{ t('targetAmount') }}</div>
           <div class="col col-current" role="columnheader">{{ t('currentAmount') }}</div>
@@ -43,51 +59,63 @@
           <div class="col col-status" role="columnheader">{{ t('status') }}</div>
           <div class="col col-actions" role="columnheader">{{ t('actions') }}</div>
         </div>
-        <div
-          v-for="(goal, index) in filteredGoals"
-          :key="goal.id ?? index"
-          class="table-row goal-card"
-          role="row"
-        >
-          <div class="col col-name">
-            <span class="col-mobile-label">{{ t('name') }}</span>
-            <span class="goal-name">{{ goal.name }}</span>
+        <template v-if="loading">
+          <div v-for="i in 5" :key="i" class="table-row skeleton-row" role="row">
+            <div class="col col-name"><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-target"><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-current"><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-percent"><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-status"><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-actions"><div class="skeleton-box row-skeleton"></div></div>
           </div>
-          <div class="col col-target">
-            <span class="col-mobile-label">{{ t('targetAmount') }}</span>
-            <span class="col-value">${{ formatAmount(goal.targetAmount) }}</span>
+        </template>
+        <template v-else>
+          <div
+            v-for="(goal, index) in filteredGoals"
+            :key="goal.id ?? index"
+            class="table-row goal-card"
+            role="row"
+          >
+            <div class="col col-name">
+              <span class="col-mobile-label">{{ t('name') }}</span>
+              <span class="goal-name">{{ goal.name }}</span>
+            </div>
+            <div class="col col-target">
+              <span class="col-mobile-label">{{ t('targetAmount') }}</span>
+              <span class="col-value">${{ formatAmount(goal.targetAmount) }}</span>
+            </div>
+            <div class="col col-current">
+              <span class="col-mobile-label">{{ t('currentAmount') }}</span>
+              <span class="col-value">${{ formatAmount(displayCurrentAmount(goal)) }}</span>
+            </div>
+            <div class="col col-percent">
+              <span class="col-mobile-label">{{ t('progress') }}</span>
+              <span class="col-value">{{ formatPercent(displayProgress(goal)) }}</span>
+            </div>
+            <div class="col col-status">
+              <span class="col-mobile-label">{{ t('status') }}</span>
+              <span class="status-badge" :class="statusClass(goal)">{{ statusLabel(goal) }}</span>
+            </div>
+            <div class="col col-actions">
+              <button
+                type="button"
+                class="row-action-btn"
+                :aria-label="t('editGoal')"
+                @click="openEditModal(goal)"
+              >
+                <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
+              </button>
+              <button
+                type="button"
+                class="row-action-btn"
+                :aria-label="t('deleteGoal')"
+                @click="confirmDelete(goal)"
+              >
+                <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
+              </button>
+            </div>
           </div>
-          <div class="col col-current">
-            <span class="col-mobile-label">{{ t('currentAmount') }}</span>
-            <span class="col-value">${{ formatAmount(displayCurrentAmount(goal)) }}</span>
-          </div>
-          <div class="col col-percent">
-            <span class="col-mobile-label">{{ t('progress') }}</span>
-            <span class="col-value">{{ formatPercent(displayProgress(goal)) }}</span>
-          </div>
-          <div class="col col-status">
-            <span class="col-mobile-label">{{ t('status') }}</span>
-            <span class="status-badge" :class="statusClass(goal)">{{ statusLabel(goal) }}</span>
-          </div>
-          <div class="col col-actions">
-            <button
-              type="button"
-              class="row-action-btn"
-              :aria-label="t('editGoal')"
-              @click="openEditModal(goal)"
-            >
-              <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
-            </button>
-            <button
-              type="button"
-              class="row-action-btn"
-              :aria-label="t('deleteGoal')"
-              @click="confirmDelete(goal)"
-            >
-              <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
-            </button>
-          </div>
-        </div>
+        </template>
       </div>
 
       <div v-if="isTableEmpty" class="empty-state">
@@ -262,6 +290,10 @@ export default {
     selectedLanguage: {
       type: String as () => 'English' | 'Turkish',
       default: 'English',
+    },
+    loading: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -491,6 +523,12 @@ export default {
     gap: 0.75rem;
   }
 
+  .header__title-skeleton {
+    width: 200px;
+    height: 1.5rem;
+    border-radius: 4px;
+  }
+
   .toolbar-actions {
     display: flex;
     align-items: center;
@@ -548,6 +586,25 @@ export default {
     cursor: pointer;
   }
 
+  .btn-skeleton {
+    width: 100px;
+    height: 2.25rem;
+    border-radius: var(--border-radius);
+  }
+
+  .filter-skeleton {
+    width: 10rem;
+    height: 2.25rem;
+    border-radius: var(--border-radius);
+    &.search-skeleton { width: 12rem; }
+  }
+
+  .row-skeleton {
+    width: 80%;
+    height: 1rem;
+    border-radius: 4px;
+  }
+
   .table-wrap {
     flex: 1;
     min-height: 0;
@@ -574,6 +631,14 @@ export default {
     font-weight: 600;
     font-size: 0.75rem;
     color: var(--normal-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    .header-skeleton {
+      width: 80%;
+      height: 0.75rem;
+      border-radius: 4px;
+    }
   }
 
   .table-row {

@@ -1,18 +1,61 @@
 <template>
-  <div class="top-spendings-c">
-    <div class="title">{{ title }}</div>
-    <div class="spendings" v-for="spending in spendingsData" :key="spending.categoryName">
-      <div class="name-and-price">
-        <div class="name">
-          <span class="name__dot" :style="{ backgroundColor: spending.color }"></span>
-          <span class="name__label">
-            {{ spending.categoryName }}
-          </span>
-          <span v-if="spending.transactionCount" class="name__count">
-            ({{ spending.transactionCount }})
-          </span>
+  <div class="top-spendings-box">
+    <div class="card-header">
+      <div v-if="loading" class="skeleton-box title-skeleton"></div>
+      <h3 v-else class="card-title">{{ title }}</h3>
+    </div>
+
+    <div v-if="loading" class="spendings-list">
+      <div v-for="i in 5" :key="i" class="spending-row skeleton-item">
+        <div class="row-main">
+          <div class="skeleton-box category-icon-skeleton"></div>
+          <div class="spending-info">
+            <div class="info-top">
+              <div class="skeleton-box category-name-skeleton"></div>
+              <div class="skeleton-box transaction-count-skeleton"></div>
+            </div>
+            <div class="skeleton-box progress-track-skeleton"></div>
+          </div>
         </div>
-        <div class="amount">{{ '-$' + spending.totalAmount }}</div>
+        <div class="skeleton-box amount-skeleton"></div>
+      </div>
+    </div>
+
+    <div v-else-if="spendingsData.length === 0" class="empty-state">
+      <font-awesome-icon icon="fas fa-wallet" class="empty-icon" />
+      <p>{{ selectedLanguage === 'English' ? 'No spendings data' : 'Harcama verisi yok' }}</p>
+    </div>
+
+    <div v-else class="spendings-list">
+      <div 
+        v-for="spending in spendingsData" 
+        :key="spending.categoryName" 
+        class="spending-row"
+      >
+        <div class="row-main">
+          <div class="category-icon-wrap" :style="{ backgroundColor: spending.color + '15', color: spending.color }">
+            <font-awesome-icon :icon="getIcon(spending.categoryName)" />
+          </div>
+
+          <div class="spending-info">
+            <div class="info-top">
+              <span class="category-name">{{ spending.categoryName }}</span>
+              <span class="transaction-count">
+                {{ spending.transactionCount }} {{ selectedLanguage === 'English' ? 'transactions' : 'işlem' }}
+              </span>
+            </div>
+            <div class="progress-track">
+              <div 
+                class="progress-fill" 
+                :style="{ width: getRelativeWidth(spending.totalAmount) + '%', backgroundColor: spending.color }"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="amount-wrap">
+          <span class="amount-value">{{ formatCurrency(spending.totalAmount) }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -21,15 +64,10 @@
 <script lang="ts">
 import type { Spendings } from '@/interfaces/Spendings'
 import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
+import { transactionCategoryIconMap } from '@/icons/fontawesome-icons'
 
 export default {
-  name: 'TopSpendingsBox',
-  data() {
-    return {
-      spendingsData: [] as Array<Spendings>,
-    }
-  },
-
+  name: 'UITopSpendingsBox',
   props: {
     spendings: {
       type: Array as () => Array<Spendings>,
@@ -39,26 +77,55 @@ export default {
       type: String,
       default: 'Top Spendings',
     },
+    loading: {
+      type: Boolean,
+      default: false,
+    },
     selectedLanguage: {
       type: String,
       default: 'English',
     },
   },
-
+  data() {
+    return {
+      spendingsData: [] as Array<Spendings>,
+    }
+  },
+  computed: {
+    maxAmount(): number {
+      if (this.spendingsData.length === 0) return 1
+      return Math.max(...this.spendingsData.map(s => s.totalAmount))
+    }
+  },
   methods: {
     processSpendingsData() {
       if (!this.spendings || !Array.isArray(this.spendings)) {
         this.spendingsData = []
         return
       }
-      // Use category names from API as-is; colors from parent or by index (no hardcoded keys)
       this.spendingsData = this.spendings.map((s, index) => ({
         ...s,
         color: s.color || getCategoryColorByIndex(index),
       }))
     },
+    getIcon(categoryName: string) {
+      const cat = categoryName.toLowerCase()
+      for (const [key, icon] of Object.entries(transactionCategoryIconMap)) {
+        if (cat.includes(key)) return icon
+      }
+      return transactionCategoryIconMap.default
+    },
+    formatCurrency(amount: number) {
+      return new Intl.NumberFormat('en-US', { 
+        style: 'currency', 
+        currency: 'USD',
+        maximumFractionDigits: 0 
+      }).format(amount)
+    },
+    getRelativeWidth(amount: number) {
+      return (amount / this.maxAmount) * 100
+    }
   },
-
   watch: {
     spendings: {
       handler: 'processSpendingsData',
@@ -69,105 +136,170 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.top-spendings-c {
+
+.top-spendings-box {
   display: flex;
   flex-direction: column;
-  width: 100%;
   height: 100%;
-  padding: 1.2rem;
-  border-radius: var(--border-radius);
-  font-family: var(--main-font);
-  background: var(--background-color);
+  width: 100%;
+  padding: 1.25rem;
+  box-sizing: border-box;
 
-  .title {
-    height: fit-content;
-    width: fit-content;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--header-text-color);
-    line-height: 1.2;
-    margin-bottom: 0.4rem;
+  .title-skeleton {
+    width: 140px;
+    height: 1.1rem;
   }
 
-  .spendings {
+  .card-header {
+    margin-bottom: 1.5rem;
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--header-text-color);
+      margin: 0;
+    }
+  }
+
+  .spendings-list {
+    flex: 1;
     display: flex;
-    justify-content: flex-start;
+    flex-direction: column;
+    gap: 1.25rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+  }
+
+  /* Skeleton Styles */
+  .category-icon-skeleton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .category-name-skeleton {
+    width: 100px;
+    height: 0.9rem;
+  }
+
+  .transaction-count-skeleton {
+    width: 60px;
+    height: 0.7rem;
+  }
+
+  .progress-track-skeleton {
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+  }
+
+  .amount-skeleton {
+    width: 60px;
+    height: 0.95rem;
+  }
+
+  .spending-row {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-top: 0.6rem;
+    gap: 1.5rem;
+  }
 
-    .name-and-price {
+  .row-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .category-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .spending-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+
+    .info-top {
       display: flex;
-      width: 100%;
       justify-content: space-between;
-      align-items: center;
-      gap: 1.5rem;
+      align-items: flex-end;
+      gap: 0.5rem;
+    }
 
-      .name {
-        display: inline-flex;
-        justify-content: flex-start;
-        align-items: center;
-        gap: 0.45rem;
-        font-size: 0.8rem;
-        color: var(--header-text-color);
-        padding: 0.45rem 0.75rem;
-        border-radius: 999px;
-        font-weight: 500;
-        min-width: 0;
-        max-width: 160px;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02);
-      }
+    .category-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--header-text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-      .name__dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        flex-shrink: 0;
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
-      }
+    .transaction-count {
+      font-size: 0.7rem;
+      color: var(--normal-text-color);
+      font-weight: 500;
+    }
 
-      .name__label {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background-color: var(--background-color-soft);
+      border-radius: 999px;
+      overflow: hidden;
+    }
 
-      .name__count {
-        font-size: 0.75rem;
-        color: var(--normal-text-color);
-        opacity: 0.8;
-        flex-shrink: 0;
-      }
-
-      .amount {
-        font-size: 1rem;
-        color: var(--reverse-primary-red-color);
-        font-weight: 500;
-      }
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
     }
   }
 
-  @media (max-width: 768px) {
-    width: 100%;
-    padding: 0.8rem;
+  .amount-wrap {
+    text-align: right;
+    flex-shrink: 0;
 
-    .title {
-      font-size: 0.8rem;
+    .amount-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--header-text-color);
     }
+  }
 
-    .spendings {
-      margin-top: 0.4rem;
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: var(--normal-text-color);
+    
+    .empty-icon { font-size: 2.5rem; opacity: 0.3; }
+    p { font-size: 0.9rem; font-weight: 500; }
+  }
+}
 
-      .name-and-price {
-        .name {
-          font-size: 11px;
-        }
-
-        .amount {
-          font-size: 11px;
-        }
-      }
-    }
+@media (max-width: 768px) {
+  .top-spendings-box {
+    padding: 1rem;
+    .spending-row { gap: 1rem; }
   }
 }
 </style>
+

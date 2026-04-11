@@ -1,32 +1,35 @@
 <template>
   <div class="budget-content">
-      <BudgetOverviewComponent
-        :selectedLanguage="selectedLanguage"
-        :currentAmount="overviewTotalSpent"
-        :limitAmount="overviewTotalLimit"
-      />
+    <BudgetOverviewComponent
+      :selectedLanguage="selectedLanguage"
+      :loading="isLoading"
+      :currentAmount="overviewTotalSpent"
+      :limitAmount="overviewTotalLimit"
+    />
 
-      <div class="budget-categories-notifications">
-        <div class="budget-table-wrap">
-          <UIBudgetTableComponent
-            :budgets="budgets"
-            :categories="categories"
-            :selectedLanguage="selectedLanguage"
-            @createBudget="handleCreateBudget"
-            @updateBudget="handleUpdateBudget"
-            @deleteBudget="handleDeleteBudget"
-            @categoriesUpdated="fetchCategories"
-          />
-        </div>
-        <div class="budget-notifications-wrap">
-          <NotificationsComponent
-            :selectedLanguage="selectedLanguage"
-            :notifications="financialData.budgetNotifications"
-            @deleteNotifications="handleDeleteNotifications"
-          />
-        </div>
+    <div class="budget-categories-notifications">
+      <div class="budget-table-wrap">
+        <UIBudgetTableComponent
+          :loading="isLoading"
+          :budgets="budgets"
+          :categories="categories"
+          :selectedLanguage="selectedLanguage"
+          @createBudget="handleCreateBudget"
+          @updateBudget="handleUpdateBudget"
+          @deleteBudget="handleDeleteBudget"
+          @categoriesUpdated="fetchCategories"
+        />
+      </div>
+      <div class="budget-notifications-wrap">
+        <NotificationsComponent
+          :loading="isLoading"
+          :selectedLanguage="selectedLanguage"
+          :notifications="financialData.budgetNotifications"
+          @deleteNotifications="handleDeleteNotifications"
+        />
       </div>
     </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -95,7 +98,10 @@ export default {
     async fetchCategories() {
       try {
         const data = await categoryService.apiGetCategories()
-        this.categories = data ?? []
+        this.categories = (data ?? []).map(c => ({
+          id: c.id,
+          name: c.categoryName,
+        }))
       } catch {
         console.error('Error fetching categories')
       }
@@ -104,7 +110,7 @@ export default {
     async fetchNotifications() {
       try {
         const data = await notificationService.apiGetNotifications(false)
-        this.financialData.budgetNotifications = data.map((n) => ({
+        this.financialData.budgetNotifications = data.map(n => ({
           id: n.id,
           message: n.message,
           type: n.type,
@@ -159,11 +165,18 @@ export default {
       this.deleteNotifications()
     },
 
-    loadAppropriateData() {
-      this.fetchOverview()
-      this.fetchBudgets()
-      this.fetchCategories()
-      this.fetchNotifications()
+    async loadAppropriateData() {
+      this.isLoading = true
+      try {
+        await Promise.all([
+          this.fetchOverview(),
+          this.fetchBudgets(),
+          this.fetchCategories(),
+          this.fetchNotifications(),
+        ])
+      } finally {
+        this.isLoading = false
+      }
     },
   },
   mounted() {
