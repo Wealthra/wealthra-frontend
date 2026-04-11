@@ -966,6 +966,7 @@ export default defineComponent({
       chatInputRef,
       sendTextMessage,
       parseMarkdown,
+      formatCurrency,
       currencySymbol,
     }
   },
