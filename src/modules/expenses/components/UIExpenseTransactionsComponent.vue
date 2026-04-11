@@ -27,7 +27,7 @@
         <div v-for="(transaction, index) in transactions" :key="index" class="transaction-item">
           <div class="transaction-date">{{ formatDate(transaction.created) }}</div>
           <div class="transaction-description">{{ transaction.paymentMethod }}</div>
-          <div class="transaction-amount">${{ transaction.amount }}</div>
+          <div class="transaction-amount">{{ formatCurrency(transaction.amount) }}</div>
         </div>
         <div v-if="!transactions || transactions.length === 0" class="no-transactions">
           {{
@@ -42,8 +42,14 @@
 </template>
 
 <script lang="ts">
+import { useCurrency } from '@/composables/useCurrency'
+
 export default {
   name: 'UIExpenseTransactionsComponent',
+  setup() {
+    const { formatCurrency } = useCurrency()
+    return { formatCurrency }
+  },
   props: {
     recentTransactions: {
       type: Array as () => {

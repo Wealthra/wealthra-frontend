@@ -54,17 +54,20 @@ export const incomeService = {
     })
   },
 
-  async getIncomeSummary(period: string = 'Monthly'): Promise<IncomeSummaryResponse> {
+  async getIncomeSummary(period: string = 'Monthly', currency?: string): Promise<IncomeSummaryResponse> {
+    const params = new URLSearchParams({ period })
+    if (currency) params.append('currency', currency)
     return apiRequest<IncomeSummaryResponse>(
-      `Incomes/summary?period=${encodeURIComponent(period)}`,
+      `Incomes/summary?${params.toString()}`,
       {
         method: 'GET',
       }
     )
   },
 
-  async getIncomeGeneralInfo(): Promise<IncomesGeneralInfoResponse> {
-    return apiRequest<IncomesGeneralInfoResponse>('Incomes/generalinfo', {
+  async getIncomeGeneralInfo(currency?: string): Promise<IncomesGeneralInfoResponse> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<IncomesGeneralInfoResponse>(`Incomes/generalinfo${query}`, {
       method: 'GET',
     })
   },

@@ -60,7 +60,8 @@ export const goalService = {
   },
 
   /** GET /api/Goals/total */
-  async getGoalsTotal(): Promise<GoalsTotalResponse> {
-    return apiRequest<GoalsTotalResponse>('Goals/total', { method: 'GET' })
+  async getGoalsTotal(currency?: string): Promise<GoalsTotalResponse> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<GoalsTotalResponse>(`Goals/total${query}`, { method: 'GET' })
   },
 }

@@ -25,10 +25,10 @@
               {{ goalCategory.name }}
             </td>
             <td class="goals-categories-data-item-target-amount">
-              {{ formatAmount(goalCategory.targetAmount) }}
+              {{ formatCurrency(goalCategory.targetAmount) }}
             </td>
             <td class="goals-categories-data-item-initial-amount">
-              {{ formatAmount(goalCategory.initialAmount) }}
+              {{ formatCurrency(goalCategory.initialAmount) }}
             </td>
 
             <td class="goals-categories-data-item-deadline">
@@ -72,13 +72,19 @@
           </div>
           <div class="form-group">
             <label>{{ selectedLanguage === 'English' ? 'Target Amount' : 'Hedef Miktar' }}</label>
-            <input type="number" v-model.number="editModalData.targetAmount" />
+            <div class="input-with-prefix">
+              <span class="input-prefix">{{ currencySymbol }}</span>
+              <input type="number" v-model.number="editModalData.targetAmount" />
+            </div>
           </div>
           <div class="form-group">
             <label>{{
               selectedLanguage === 'English' ? 'Initial Amount' : 'Başlangıç Miktar'
             }}</label>
-            <input type="number" v-model.number="editModalData.initialAmount" />
+            <div class="input-with-prefix">
+              <span class="input-prefix">{{ currencySymbol }}</span>
+              <input type="number" v-model.number="editModalData.initialAmount" />
+            </div>
           </div>
           <div class="form-group">
             <label>{{ selectedLanguage === 'English' ? 'Deadline' : 'Son Tarih' }}</label>
@@ -108,9 +114,14 @@
 <script lang="ts">
 import Datepicker from 'vue-datepicker-next'
 import { actionIcons } from '@/icons/fontawesome-icons'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default {
   name: 'GoalsCategoriesComponent',
+  setup() {
+    const { formatCurrency, currencySymbol } = useCurrency()
+    return { formatCurrency, currencySymbol }
+  },
   data() {
     return {
       isEditModalOpen: false,
@@ -150,10 +161,8 @@ export default {
     },
 
     formatAmount(amount: number) {
-      return amount.toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      })
+      const { formatCurrency: fmt } = useCurrency()
+      return fmt(amount)
     },
 
     disablePastDates(date: Date) {

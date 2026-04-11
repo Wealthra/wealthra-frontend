@@ -69,7 +69,7 @@
             </div>
             <div class="col col-amount">
               <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Amount' : 'Miktar' }}</span>
-              <span class="col-value">${{ source.amount }}</span>
+              <span class="col-value">{{ formatCurrency(source.amount) }}</span>
             </div>
             <div class="col col-actions">
               <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Actions' : 'İşlemler' }}</span>
@@ -223,7 +223,7 @@
               selectedLanguage == 'English' ? 'Amount' : 'Miktar'
             }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+              <span class="input-prefix">{{ currencySymbol }}</span>
               <input
                 id="income-source-amount"
                 type="number"
@@ -323,6 +323,7 @@ import {
   emptyStateIcons,
   paginationIcons,
 } from '@/icons/fontawesome-icons'
+import { useCurrency } from '@/composables/useCurrency'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 
@@ -330,6 +331,10 @@ export default {
   name: 'UIIncomeSourcesComponent',
   components: {
     Datepicker,
+  },
+  setup() {
+    const { formatCurrency, currencySymbol } = useCurrency()
+    return { formatCurrency, currencySymbol }
   },
   data() {
     return {
@@ -1011,6 +1016,15 @@ export default {
   }
 
   .pagination-bar {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 1rem 0 0;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+
     &--skeleton {
       justify-content: center;
       padding: 1rem 0;
@@ -1022,16 +1036,6 @@ export default {
       height: 2.25rem;
       border-radius: var(--border-radius);
     }
-
-    flex-shrink: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    padding: 1rem 0 0;
-    margin-top: 0.5rem;
-    border-top: 1px solid var(--border-color);
   }
 
   .pagination-results {

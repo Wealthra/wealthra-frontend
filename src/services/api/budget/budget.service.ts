@@ -102,8 +102,9 @@ export const budgetService = {
     })
   },
 
-  async apiGetBudgetsOverview(): Promise<BudgetsOverviewResponse> {
-    return apiRequest<BudgetsOverviewResponse>('Budgets/overview', {
+  async apiGetBudgetsOverview(currency?: string): Promise<BudgetsOverviewResponse> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<BudgetsOverviewResponse>(`Budgets/overview${query}`, {
       method: 'GET',
     })
   },

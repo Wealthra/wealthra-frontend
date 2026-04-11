@@ -220,6 +220,7 @@ import type {
 import { summaryService } from '@/services/api/summary/summary.service'
 import { dashboardTexts } from '@/data/dashboardTexts'
 import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default {
   name: 'DashboardView',
@@ -262,6 +263,7 @@ export default {
       dashboardTexts: dashboardTexts,
       emptySavingsIcon: emptyStateIcons.incomeSources,
       emptyRecommendationsIcon: emptyStateIcons.transactions,
+      currencyHelper: useCurrency(),
     }
   },
   computed: {
@@ -327,6 +329,11 @@ export default {
       return (this.lists && this.lists.budgetAlerts) || this.dashboardSummary?.budgetAlerts || []
     },
   },
+  watch: {
+    'currencyHelper.currency'() {
+      this.fetchFinancialData()
+    },
+  },
   methods: {
     sortMonthKeys(byMonth: Record<string, number>): Record<string, number> {
       const keys = Object.keys(byMonth)
@@ -347,7 +354,7 @@ export default {
       this.hasError = false
 
       try {
-        const data = await summaryService.getDashboardSummary()
+        const data = await summaryService.getDashboardSummary({ currency: this.currencyHelper.currency.value })
 
         this.dashboardSummary = data
         this.summaryHeader = data.summary ?? {

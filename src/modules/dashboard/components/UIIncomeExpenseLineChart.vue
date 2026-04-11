@@ -34,6 +34,8 @@ import {
   Filler,
 } from 'chart.js'
 
+import { useCurrency } from '@/composables/useCurrency'
+
 ChartJS.register(
   Title,
   Tooltip,
@@ -48,6 +50,10 @@ ChartJS.register(
 export default {
   name: 'UIIncomeExpenseLineChart',
   components: { Line },
+  setup() {
+    const { formatCurrency, isPrivacyMode } = useCurrency()
+    return { formatCurrency, isPrivacyMode }
+  },
   data() {
     return {
       wrapperReady: false,
@@ -130,6 +136,7 @@ export default {
     },
     chartOptions() {
       void this.themeKey
+      void this.isPrivacyMode // Trigger reactivity on privacy mode change
       const root = document.documentElement
       const styles = getComputedStyle(root)
       return {
@@ -141,7 +148,10 @@ export default {
           y: {
             beginAtZero: true,
             grid: { color: styles.getPropertyValue('--border-color').trim() },
-            ticks: { color: styles.getPropertyValue('--normal-text-color').trim() },
+            ticks: { 
+              color: styles.getPropertyValue('--normal-text-color').trim(),
+              callback: (value: any) => this.formatCurrency(Number(value))
+            },
           },
           x: {
             grid: { color: styles.getPropertyValue('--border-color').trim() },
@@ -172,6 +182,13 @@ export default {
             bodyColor: styles.getPropertyValue('--normal-text-color').trim(),
             borderColor: styles.getPropertyValue('--border-color').trim(),
             borderWidth: 1,
+            callbacks: {
+              label: (context: any) => {
+                const label = context.dataset.label || ''
+                const value = context.parsed.y
+                return ` ${label}: ${this.formatCurrency(value)}`
+              }
+            }
           },
         },
       }

@@ -113,6 +113,17 @@
                   </span>
                 </div>
 
+                <div class="form-group" style="margin-top: 1rem;">
+                  <label for="preferredCurrency">
+                    {{ selectedLanguage === 'English' ? 'Preferred Currency' : 'Tercih Edilen Para Birimi' }}
+                  </label>
+                  <select id="preferredCurrency" v-model="profileForm.preferredCurrency" class="settings-select">
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="TRY">TRY (₺)</option>
+                  </select>
+                </div>
+
                 <div class="actions-row">
                   <button
                     type="button"
@@ -237,6 +248,38 @@
             </div>
           </section>
 
+          <section class="settings-card">
+            <h2>{{ selectedLanguage === 'English' ? 'Quotas and Usage' : 'Kotalar ve Kullanım' }}</h2>
+            <div v-if="isLoadingUsage" class="skeleton-box" style="height: 100px;"></div>
+            <div v-else-if="usageData" class="usage-layout">
+              <div class="usage-item">
+                <span class="usage-label">{{ selectedLanguage === 'English' ? 'Current Tier' : 'Mevcut Seviye' }}</span>
+                <span class="usage-value tier-badge">{{ usageData.tier || 'Free' }}</span>
+              </div>
+              <div class="usage-item">
+                <span class="usage-label">AI Chat</span>
+                <div class="usage-progress-wrap">
+                  <div class="usage-progress-bar">
+                    <div class="usage-progress-fill" :style="{ width: ((usageData.aiChatUsage || 0) / (Math.max(usageData.aiChatLimit || 1, 1))) * 100 + '%' }"></div>
+                  </div>
+                  <span class="usage-count">{{ usageData.aiChatUsage || 0 }} / {{ usageData.aiChatLimit || 0 }}</span>
+                </div>
+              </div>
+              <div class="usage-item">
+                <span class="usage-label">Receipt Scans</span>
+                <div class="usage-progress-wrap">
+                  <div class="usage-progress-bar">
+                    <div class="usage-progress-fill" :style="{ width: ((usageData.receiptScanUsage || 0) / (Math.max(usageData.receiptScanLimit || 1, 1))) * 100 + '%' }"></div>
+                  </div>
+                  <span class="usage-count">{{ usageData.receiptScanUsage || 0 }} / {{ usageData.receiptScanLimit || 0 }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="error-text">
+              {{ selectedLanguage === 'English' ? 'Usage data unavailable.' : 'Kullanım verisi yüklenemedi.' }}
+            </div>
+          </section>
+
           <section class="settings-card danger-zone">
             <h2>{{ dangerZoneTitle }}</h2>
             <p class="danger-zone-description">{{ dangerZoneDescription }}</p>
@@ -296,6 +339,8 @@ import { accountService } from '@/services/api/account/account.service'
 import type { AccountProfileResponse } from '@/services/api/account/account.models'
 import { uploadAvatar } from '@/services/external/imageHost.service'
 import { clearAuth } from '@/utils/auth'
+import { useCurrency } from '@/composables/useCurrency'
+import type { CurrencyCode } from '@/composables/useCurrency'
 
 export default defineComponent({
   name: 'SettingsView',
@@ -311,6 +356,7 @@ export default defineComponent({
   setup(props) {
     const router = useRouter()
     const selectedLanguage = toRef(props, 'selectedLanguage')
+    const { setCurrency } = useCurrency()
 
     const me = ref<AccountProfileResponse | null>(null)
 
@@ -318,7 +364,11 @@ export default defineComponent({
       firstName: '',
       lastName: '',
       avatarUrl: '',
+      preferredCurrency: 'USD',
     })
+
+    const usageData = ref<any>(null)
+    const isLoadingUsage = ref(false)
 
     const passwordForm = ref({
       currentPassword: '',
@@ -487,6 +537,19 @@ export default defineComponent({
         profileForm.value.firstName = data.firstName
         profileForm.value.lastName = data.lastName
         profileForm.value.avatarUrl = data.avatarUrl || ''
+        // If the backend doesn't return preferredCurrency on getMe yet, default it or handle it
+        const backendCurrency = (data as any).preferredCurrency || 'USD'
+        profileForm.value.preferredCurrency = backendCurrency
+        setCurrency(backendCurrency as CurrencyCode)
+
+        isLoadingUsage.value = true
+        accountService.getMeUsage().then((u) => {
+          usageData.value = u
+        }).catch(err => {
+          console.error('Failed to load usage', err)
+        }).finally(() => {
+          isLoadingUsage.value = false
+        })
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('Failed to load /Account/me', err)
@@ -525,6 +588,14 @@ export default defineComponent({
           lastName: profileForm.value.lastName.trim(),
           avatarUrl: profileForm.value.avatarUrl,
         })
+
+        if (profileForm.value.preferredCurrency) {
+          await accountService.changePreferredCurrency({
+            currency: profileForm.value.preferredCurrency
+          })
+          setCurrency(profileForm.value.preferredCurrency as CurrencyCode)
+          window.dispatchEvent(new CustomEvent('app:refetch'))
+        }
 
         profileSuccess.value = true
         await loadMe()
@@ -680,6 +751,8 @@ export default defineComponent({
       isUploadingAvatar,
       avatarFile,
       avatarError,
+      usageData,
+      isLoadingUsage,
 
       isSavingPassword,
       passwordError,
@@ -1072,5 +1145,82 @@ export default defineComponent({
   .two-column {
     flex-direction: column;
   }
+}
+
+/* ============================
+   Quotas and Custom Select
+   ============================ */
+
+.settings-select {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--background-color);
+  color: var(--header-text-color);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.settings-select:focus {
+  border-color: var(--primary-green-color);
+}
+
+.usage-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.usage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.usage-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--header-text-color);
+}
+
+.tier-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(92, 184, 92, 0.15);
+  color: var(--primary-green-color);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  max-width: fit-content;
+}
+
+.usage-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.usage-progress-bar {
+  flex: 1;
+  height: 8px;
+  background-color: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.usage-progress-fill {
+  height: 100%;
+  background-color: var(--primary-green-color);
+  transition: width 0.3s ease;
+}
+
+.usage-count {
+  font-size: 0.8rem;
+  color: var(--normal-text-color);
+  font-weight: 500;
+  min-width: 45px;
+  text-align: right;
 }
 </style>

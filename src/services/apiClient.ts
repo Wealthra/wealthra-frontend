@@ -81,9 +81,25 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
       errorData = { message: response.statusText || 'An error occurred', status: response.status }
     }
 
-    // Handle 401 Unauthorized - for now, do not auto-refresh to avoid
-    // spamming the refresh-token endpoint while backend cookies are unstable.
+    // Handle 401 Unauthorized - attempt to transparently refresh the access token
     if (response.status === 401 && requiresAuth) {
+      try {
+        const { accountService } = await import('./api/account/account.service')
+        const authData = await accountService.refreshToken()
+
+        if (authData && authData.token) {
+          const authUtils = await import('../utils/auth')
+          // Map backend response (id, token) to internal setAuth (token, userId, roles)
+          authUtils.setAuth(authData.token, authData.id, [])
+
+          // Retry the original request with the new token
+          return await apiRequest<T>(endpoint, options)
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError)
+      }
+
+      // If refresh fails or returns no token, clear auth and redirect to login
       const authUtils = await import('../utils/auth')
       authUtils.clearAuth()
       if (window.location.pathname !== '/login') {

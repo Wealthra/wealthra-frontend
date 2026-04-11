@@ -31,6 +31,7 @@ export interface DashboardSummaryRequest {
     goalsOverview?: boolean
     recommendations?: boolean
   }
+  currency?: string
 }
 
 export const summaryService = {
@@ -42,8 +43,9 @@ export const summaryService = {
    * enhancements (e.g. mapping to query params or POST body)
    * without breaking the call sites.
    */
-  async getDashboardSummary(_request?: DashboardSummaryRequest): Promise<DashboardSummaryResponse> {
-    return apiRequest<DashboardSummaryResponse>('Summary/dashboard-web', {
+  async getDashboardSummary(request?: DashboardSummaryRequest): Promise<DashboardSummaryResponse> {
+    const query = request?.currency ? `?currency=${encodeURIComponent(request.currency)}` : ''
+    return apiRequest<DashboardSummaryResponse>(`Summary/dashboard-web${query}`, {
       method: 'GET',
     })
   },

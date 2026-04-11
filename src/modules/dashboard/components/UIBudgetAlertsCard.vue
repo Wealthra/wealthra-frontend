@@ -71,9 +71,14 @@
 <script lang="ts">
 import type { SummaryBudgetAlert } from '@/services/api/summary/summary.models'
 import { transactionCategoryIconMap } from '@/icons/fontawesome-icons'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default {
   name: 'UIBudgetAlertsCard',
+  setup() {
+    const { formatCurrency } = useCurrency()
+    return { formatCurrency }
+  },
   props: {
     alerts: {
       type: Array as () => SummaryBudgetAlert[],
@@ -115,11 +120,7 @@ export default {
       return transactionCategoryIconMap.default
     },
     formatCurrency(amount: number) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-      }).format(amount)
+      return this.formatCurrency(amount)
     },
     calculatePercentage(alert: SummaryBudgetAlert) {
       if (!alert.limitAmount || alert.limitAmount === 0) return 100

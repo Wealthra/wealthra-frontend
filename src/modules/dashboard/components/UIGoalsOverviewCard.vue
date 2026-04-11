@@ -32,12 +32,12 @@
         <div class="amount-row">
           <div class="amount-item current">
             <span class="label">{{ t('currentAmount') }}</span>
-            <span class="value">{{ formattedCurrent }}</span>
+            <span class="value">{{ formatCurrency(currentAmount) }}</span>
           </div>
           <div class="amount-divider"></div>
           <div class="amount-item target">
             <span class="label">{{ t('targetAmount') }}</span>
-            <span class="value">{{ formattedTarget }}</span>
+            <span class="value">{{ formatCurrency(limitAmount) }}</span>
           </div>
         </div>
 
@@ -54,6 +54,7 @@
 import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, Tooltip } from 'chart.js'
 import { goalsTexts } from '@/data/goalsTexts'
+import { useCurrency } from '@/composables/useCurrency'
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, Tooltip)
 
@@ -61,6 +62,10 @@ export default {
   name: 'UIGoalsOverviewCard',
   components: {
     Doughnut,
+  },
+  setup() {
+    const { formatCurrency, currencySymbol } = useCurrency()
+    return { formatCurrency, currencySymbol }
   },
   props: {
     loading: {
@@ -103,18 +108,10 @@ export default {
       return this.percentageValue.toFixed(0) + '%'
     },
     formattedCurrent(): string {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-      }).format(this.currentAmount)
+      return this.formatCurrency(this.currentAmount)
     },
     formattedTarget(): string {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-      }).format(this.limitAmount)
+      return this.formatCurrency(this.limitAmount)
     },
     motivationalQuote(): string {
       const pct = this.percentageValue

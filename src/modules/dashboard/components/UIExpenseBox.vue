@@ -6,14 +6,20 @@
     </template>
     <template v-else>
       <div class="title">{{ title }}</div>
-      <div class="amount">${{ amount.toLocaleString() }}</div>
+      <div class="amount">{{ formatCurrency(amount) }}</div>
     </template>
   </div>
 </template>
 
 <script lang="ts">
+import { useCurrency } from '@/composables/useCurrency'
+
 export default {
   name: 'ExpenseBox',
+  setup() {
+    const { formatCurrency } = useCurrency()
+    return { formatCurrency }
+  },
   props: {
     title: {
       type: String,

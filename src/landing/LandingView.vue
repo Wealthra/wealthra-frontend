@@ -37,6 +37,11 @@
       </div>
     </div>
 
+    <!-- Pricing Section -->
+    <div class="pricing-section animate-reveal">
+      <UILandingPricing :selectedLanguage="selectedLanguage" />
+    </div>
+
     <div class="ending-text-wrapper animate-reveal">
       <div class="ending-text-header-wrapper">
         {{ endingText[selectedLanguage].header }}
@@ -62,6 +67,7 @@
 import UIThemeButton from '../components/UIThemeButton.vue'
 import UILanguageBUtton from '../components/UILanguageButton.vue'
 import UILandingViewContentSection from '../components/LandingViewComponents/UILandingViewSection.vue'
+import UILandingPricing from '../components/LandingViewComponents/UILandingPricing.vue'
 import {
   buttonTexts,
   footerText,
@@ -77,6 +83,7 @@ export default {
     UIThemeButton,
     UILanguageBUtton,
     UILandingViewContentSection,
+    UILandingPricing,
   },
 
   data() {

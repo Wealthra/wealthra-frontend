@@ -83,6 +83,7 @@ import type { FinancialData } from '@/interfaces/FinancialData'
 import type { Category } from '@/services/api/category/category.models'
 import { categoryService } from '@/services/api/category/category.service'
 import { expenseService } from '@/services/api/expense/expense.service'
+import { useCurrency } from '@/composables/useCurrency'
 
 function toYmd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -120,7 +121,13 @@ export default {
       endDateExpense: end as string | null,
       categoryIdFilter: null as number | null,
       categories: [] as Category[],
+      currencyHelper: useCurrency(),
     }
+  },
+  watch: {
+    'currencyHelper.currency'() {
+      this.loadAppropriateData()
+    },
   },
   methods: {
     getExpenseById(id: number) {
@@ -231,7 +238,7 @@ export default {
 
     async fetchExpenseGeneralInfo() {
       try {
-        const data = await expenseService.getExpenseGeneralInfo()
+        const data = await expenseService.getExpenseGeneralInfo(this.currencyHelper.currency.value)
         return data
       } catch (error) {
         console.error('Error fetching expense general info:', error)

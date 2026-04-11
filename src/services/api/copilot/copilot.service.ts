@@ -1,5 +1,5 @@
 import { apiRequest } from '../../apiClient'
-import type { ExtractedExpenseItem, BulkExpenseRequest } from './copilot.models'
+import type { ExtractedExpenseItem, BulkExpenseRequest, CopilotChatRequest, CopilotChatResponse } from './copilot.models'
 
 export const copilotService = {
   /**
@@ -41,6 +41,17 @@ export const copilotService = {
     return apiRequest<number[]>('Expenses/bulk', {
       method: 'POST',
       body: items,
+    })
+  },
+
+  /**
+   * Send a text message to Copilot.
+   * POST /api/Copilot/chat  (application/json)
+   */
+  async chat(request: CopilotChatRequest): Promise<CopilotChatResponse> {
+    return apiRequest<CopilotChatResponse>('Copilot/chat', {
+      method: 'POST',
+      body: request,
     })
   },
 }

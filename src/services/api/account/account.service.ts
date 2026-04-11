@@ -9,6 +9,9 @@ import type {
   AccountUpdatePasswordRequest,
   AccountForgotPasswordRequest,
   AccountResetPasswordRequest,
+  AccountChangePreferredCurrencyRequest,
+  AccountUpdateUserTierRequest,
+  AccountUserUsageResponse
 } from './account.models'
 
 export const accountService = {
@@ -62,10 +65,20 @@ export const accountService = {
   },
 
   async refreshToken(): Promise<AccountAuthResponse> {
-    // Refresh relies on the backend-managed refresh-token cookie, not the access token.
-    // We explicitly disable requiresAuth so that 401 handling does not recurse on this call.
+    // Refresh relies on the backend-managed refresh-token cookie, but the backend
+    // might also require the expired access token to pair them.
+    // We explicitly disable requiresAuth so that 401 handling does not recurse on this call,
+    // but we manually pass the current access token in the headers.
+    const headers: Record<string, string> = {}
+    const { getAuthToken } = await import('../../../utils/auth')
+    const currentToken = getAuthToken()
+    if (currentToken) {
+      headers['Authorization'] = `Bearer ${currentToken}`
+    }
+
     return apiRequest<AccountAuthResponse>('Account/refresh-token', {
       method: 'POST',
+      headers,
       requiresAuth: false,
     })
   },
@@ -99,6 +112,37 @@ export const accountService = {
   async deleteMe(): Promise<void> {
     return apiRequest<void>('Account/me', {
       method: 'DELETE',
+    })
+  },
+
+  async changePreferredCurrency(data: AccountChangePreferredCurrencyRequest): Promise<void> {
+    return apiRequest<void>('Account/preferred-currency', {
+      method: 'PUT',
+      body: data,
+    })
+  },
+
+  async updateTier(data: AccountUpdateUserTierRequest): Promise<void> {
+    return apiRequest<void>('Account/admin/update-tier', {
+      method: 'PUT',
+      body: data,
+    })
+  },
+
+  async getMeUsage(): Promise<AccountUserUsageResponse> {
+    return apiRequest<AccountUserUsageResponse>('Account/me/usage', {
+      method: 'GET',
+    })
+  },
+
+  async getAdminUsages(email?: string, name?: string): Promise<AccountUserUsageResponse[]> {
+    const params = new URLSearchParams()
+    if (email) params.append('email', email)
+    if (name) params.append('name', name)
+    const q = params.toString() ? `?${params.toString()}` : ''
+    
+    return apiRequest<AccountUserUsageResponse[]>(`Account/admin/usages${q}`, {
+      method: 'GET',
     })
   },
 }

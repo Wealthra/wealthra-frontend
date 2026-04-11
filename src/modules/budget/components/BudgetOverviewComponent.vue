@@ -53,6 +53,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import { budgetTexts } from '@/data/budgetTexts'
+import { useCurrency } from '@/composables/useCurrency'
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, Tooltip)
 
@@ -84,6 +85,11 @@ export default {
     },
   },
 
+  setup() {
+    const { formatCurrency } = useCurrency()
+    return { formatCurrency }
+  },
+
   data() {
     return {
       isMobile: false,
@@ -113,18 +119,16 @@ export default {
     },
 
     budgetAmount() {
-      const formatNumber = (num: number) => num.toLocaleString('en-US')
-      return `$${formatNumber(this.currentAmount)} / $${formatNumber(this.limitAmount)}`
+      return `${this.formatCurrency(this.currentAmount)} / ${this.formatCurrency(this.limitAmount)}`
     },
 
     centerText(): string {
-      const fmt = (n: number) => n.toLocaleString('en-US')
       if (this.activeSegmentIndex === 0) {
-        return `${fmt(this.currentAmount)} / ${fmt(this.limitAmount)}`
+        return `${this.formatCurrency(this.currentAmount)} / ${this.formatCurrency(this.limitAmount)}`
       }
       if (this.activeSegmentIndex === 1) {
         const remaining = Math.max(0, this.limitAmount - this.currentAmount)
-        return `${fmt(remaining)} / ${fmt(this.limitAmount)}`
+        return `${this.formatCurrency(remaining)} / ${this.formatCurrency(this.limitAmount)}`
       }
       return this.displayPercentage
     },
@@ -172,11 +176,11 @@ export default {
           tooltip: {
             enabled: true,
             callbacks: {
-              label: (context: { dataIndex: number; parsed: number }) => {
+              label: (context: { dataIndex: number }) => {
                 if (context.dataIndex === 0) {
-                  return `Used: $${fmt(used)} / $${fmt(limit)} (${pctUsed.toFixed(1)}%)`
+                  return `Used: ${this.formatCurrency(used)} / ${this.formatCurrency(limit)} (${pctUsed.toFixed(1)}%)`
                 }
-                return `Remaining: $${fmt(remaining)} (${pctRemaining.toFixed(1)}%)`
+                return `Remaining: ${this.formatCurrency(remaining)} (${pctRemaining.toFixed(1)}%)`
               },
             },
           },

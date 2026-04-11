@@ -82,11 +82,11 @@
             </div>
             <div class="col col-target">
               <span class="col-mobile-label">{{ t('targetAmount') }}</span>
-              <span class="col-value">${{ formatAmount(goal.targetAmount) }}</span>
+              <span class="col-value">{{ formatCurrency(goal.targetAmount) }}</span>
             </div>
             <div class="col col-current">
               <span class="col-mobile-label">{{ t('currentAmount') }}</span>
-              <span class="col-value">${{ formatAmount(displayCurrentAmount(goal)) }}</span>
+              <span class="col-value">{{ formatCurrency(displayCurrentAmount(goal)) }}</span>
             </div>
             <div class="col col-percent">
               <span class="col-mobile-label">{{ t('progress') }}</span>
@@ -152,7 +152,7 @@
           <div class="form-group">
             <label for="create-goal-target">{{ t('targetAmount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+              <span class="input-prefix">{{ currencySymbol }}</span>
               <input
                 id="create-goal-target"
                 v-model.number="newGoal.targetAmount"
@@ -167,7 +167,7 @@
           <div class="form-group">
             <label for="create-goal-current">{{ t('currentAmount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+              <span class="input-prefix">{{ currencySymbol }}</span>
               <input
                 id="create-goal-current"
                 v-model.number="newGoal.currentAmount"
@@ -219,7 +219,7 @@
           <div class="form-group">
             <label for="edit-goal-target">{{ t('targetAmount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+              <span class="input-prefix">{{ currencySymbol }}</span>
               <input
                 id="edit-goal-target"
                 v-model.number="editForm.targetAmount"
@@ -234,7 +234,7 @@
           <div class="form-group">
             <label for="edit-goal-current">{{ t('currentAmount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+              <span class="input-prefix">{{ currencySymbol }}</span>
               <input
                 id="edit-goal-current"
                 v-model.number="editForm.currentAmount"
@@ -272,6 +272,7 @@ import { goalsTexts } from '@/data/goalsTexts'
 import { actionIcons } from '@/icons/fontawesome-icons'
 import { faBullseye } from '@fortawesome/free-solid-svg-icons'
 import type { Goal } from '@/services/api/goal/goal.models'
+import { useCurrency } from '@/composables/useCurrency'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 
@@ -297,6 +298,10 @@ export default {
     },
   },
 
+  setup() {
+    const { formatCurrency, currencySymbol } = useCurrency()
+    return { formatCurrency, currencySymbol }
+  },
   data() {
     return {
       actionIcons,

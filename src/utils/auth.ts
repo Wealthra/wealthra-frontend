@@ -1,7 +1,7 @@
-// In-memory authentication state. Tokens and identity are not persisted in storage.
-let currentAccessToken: string | null = null
-let currentRoles: string[] = []
-let currentUserId: string | null = null
+// In-memory authentication state fallback, but mainly backed by localStorage now.
+let currentAccessToken: string | null = localStorage.getItem('access_token') || null
+let currentRoles: string[] = JSON.parse(localStorage.getItem('user_roles') || '[]')
+let currentUserId: string | null = localStorage.getItem('user_id') || null
 
 export function isAuthenticated(): boolean {
   return !!currentAccessToken
@@ -23,12 +23,22 @@ export function setAuth(token: string, userId: string, roles: Array<string> = []
   currentAccessToken = token
   currentRoles = roles
   currentUserId = userId || null
+
+  localStorage.setItem('access_token', token)
+  localStorage.setItem('user_roles', JSON.stringify(roles))
+  if (userId) {
+    localStorage.setItem('user_id', userId)
+  }
 }
 
 export function clearAuth(): void {
   currentAccessToken = null
   currentRoles = []
   currentUserId = null
+
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('user_roles')
+  localStorage.removeItem('user_id')
 }
 
 export function getAuthenticatedURL(route: string = '/dashboard'): string {
@@ -43,9 +53,17 @@ export function getUserRoles(): Array<string> {
   return currentRoles
 }
 
-// NOTE: bootstrapAuth is intentionally a no-op for now to avoid
-// hitting the refresh-token endpoint automatically before the
-// backend cookie setup is finalized.
+// bootstrapAuth attempts to retrieve a fresh access token using the
+// backend-managed refresh-token cookie on application startup.
 export async function bootstrapAuth(): Promise<void> {
-  return
+  try {
+    const { accountService } = await import('../services/api/account/account.service')
+    const authData = await accountService.refreshToken()
+    if (authData && authData.token) {
+      setAuth(authData.token, authData.id, [])
+    }
+  } catch (err) {
+    // Failure simply means the user needs to log in manually.
+    console.warn('Auth bootstrap failed (no valid refresh cookie found).')
+  }
 }

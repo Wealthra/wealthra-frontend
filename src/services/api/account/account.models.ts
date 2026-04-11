@@ -71,3 +71,23 @@ export interface AccountResetPasswordRequest {
   token: string
   password: string
 }
+
+export interface AccountChangePreferredCurrencyRequest {
+  currency: string
+}
+
+export interface AccountUpdateUserTierRequest {
+  email: string
+  tier: string | number
+}
+
+export interface AccountUserUsageResponse {
+  email?: string
+  name?: string
+  tier?: string
+  aiChatUsage?: number
+  aiChatLimit?: number
+  receiptScanUsage?: number
+  receiptScanLimit?: number
+  [key: string]: any
+}

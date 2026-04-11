@@ -60,9 +60,14 @@
 import type { SummaryRecentTransaction } from '@/services/api/summary/summary.models'
 import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
 import { transactionCategoryIconMap } from '@/icons/fontawesome-icons'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default {
   name: 'UIRecentTransactionsCard',
+  setup() {
+    const { formatCurrency } = useCurrency()
+    return { formatCurrency }
+  },
   props: {
     transactions: {
       type: Array as () => SummaryRecentTransaction[],
@@ -135,7 +140,7 @@ export default {
       return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
     },
     formatCurrency(amount: number) {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+      return this.formatCurrency(amount)
     },
     getCategoryColor(categoryName: string): string {
       let hash = 0

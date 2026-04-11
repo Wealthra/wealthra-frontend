@@ -78,6 +78,7 @@ import UIIncomeSourcesComponent from '@/modules/income/components/UIIncomeSource
 import { incomeTexts } from '@/data/incomeTexts'
 import type { FinancialData } from '@/interfaces/FinancialData'
 import { incomeService } from '@/services/api/income/income.service'
+import { useCurrency } from '@/composables/useCurrency'
 
 function toYmd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -113,6 +114,7 @@ export default {
       pageSizeIncome: 10,
       startDateIncome: start as string | null,
       endDateIncome: end as string | null,
+      currencyHelper: useCurrency(),
     }
   },
   methods: {
@@ -241,7 +243,7 @@ export default {
       this.hasError = false
 
       try {
-        const data = await incomeService.getIncomeGeneralInfo()
+        const data = await incomeService.getIncomeGeneralInfo(this.currencyHelper.currency.value)
 
         this.financialData.weeklyTotalIncome = data.weeklyTotal
         this.financialData.monthlyTotalIncome = data.monthlyTotal

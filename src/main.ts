@@ -40,6 +40,9 @@ import {
   faCommentDots,
   faXmark,
   faRotateRight,
+  faImage,
+  faMicrophone,
+  faPaperPlane,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -80,7 +83,10 @@ library.add(
   faRobot,
   faCommentDots,
   faXmark,
-  faRotateRight
+  faRotateRight,
+  faImage,
+  faMicrophone,
+  faPaperPlane
 )
 
 async function initApp() {
@@ -88,6 +94,10 @@ async function initApp() {
   app.component('font-awesome-icon', FontAwesomeIcon)
   app.use(createPinia())
   app.use(router)
+
+  // Wait for bootstrap auth to attempt token recovery
+  const { bootstrapAuth } = await import('./utils/auth')
+  await bootstrapAuth()
 
   // Determine initial route based on current in-memory auth state
   const isUserAuthenticated = isAuthenticated()
@@ -99,7 +109,9 @@ async function initApp() {
 
   app.mount('#app')
 
-  if (router.currentRoute.value.fullPath !== initialRoute) {
+  // If a specific path was requested (e.g. via deep link), let the router handle it
+  // otherwise navigate to the determined initial route.
+  if (window.location.pathname === '/' || window.location.pathname === '/login') {
     await router.push(initialRoute)
   }
 }

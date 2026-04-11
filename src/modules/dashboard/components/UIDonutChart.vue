@@ -83,6 +83,7 @@ import {
 
 import type { SpendingCategories } from '@/interfaces/SpendingCategories'
 import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
+import { useCurrency } from '@/composables/useCurrency'
 
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale)
 
@@ -97,6 +98,10 @@ export default {
     categories: { type: Object as () => Record<string, number>, required: true },
     donutChartText: { type: String, default: 'Total' },
     selectedLanguage: { type: String, default: 'English' },
+  },
+  setup() {
+    const { formatCurrency, isPrivacyMode } = useCurrency()
+    return { formatCurrency, isPrivacyMode }
   },
   data() {
     return {
@@ -113,11 +118,7 @@ export default {
       return this.categoriesData.reduce((sum, cat) => sum + cat.value, 0)
     },
     total(): string {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0
-      }).format(this.totalRaw)
+      return this.formatCurrency(this.totalRaw, 0)
     },
     chartData() {
       return {
@@ -133,6 +134,7 @@ export default {
       }
     },
     chartOptions() {
+      void this.isPrivacyMode // Trigger reactivity
       return {
         responsive: true,
         maintainAspectRatio: false,
@@ -158,11 +160,8 @@ export default {
       return ((value / this.totalRaw) * 100).toFixed(0) + '%'
     },
     formatCurrency(value: number): string {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0
-      }).format(value)
+      const { formatCurrency: fmt } = useCurrency()
+      return fmt(value, 0)
     },
     processCategoriesData() {
       if (!this.categories) {

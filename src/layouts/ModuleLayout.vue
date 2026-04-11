@@ -106,7 +106,6 @@
         </div>
 
         <div class="top-bar-right">
-          <!-- Refetch button -->
           <button 
             v-if="['Dashboard', 'Kontrol Paneli', 'Income', 'Gelir', 'Expenses', 'Giderler', 'Budget', 'Bütçe', 'Goals', 'Hedefler'].includes(selectedPage)"
             class="refetch-btn" 
@@ -114,6 +113,15 @@
             :title="texts.refetch"
           >
             <font-awesome-icon icon="rotate-right" />
+          </button>
+
+          <!-- Privacy Mode Toggle -->
+          <button
+            class="refetch-btn"
+            @click="togglePrivacyMode"
+            :title="texts.privacy"
+          >
+            <font-awesome-icon :icon="isPrivacyMode ? 'eye-slash' : 'eye'" />
           </button>
 
           <UILanguageButton @updateLanguage="emitUpdateLanguage" />
@@ -178,6 +186,7 @@ import CopilotChat from '@/components/CopilotChat.vue'
 import { clearAuth, getUserId } from '@/utils/auth'
 import { arrowIcons, leftSidebarIconMap, profileIcon } from '@/icons/fontawesome-icons'
 import { accountService } from '@/services/api/account/account.service'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default defineComponent({
   name: 'ModuleLayout',
@@ -206,6 +215,8 @@ export default defineComponent({
     const isSettingsPanelOpen = ref(false)
     const showLogoutTooltip = ref(false)
     const profileWrapperRef = ref<HTMLElement | null>(null)
+
+    const { isPrivacyMode, togglePrivacyMode } = useCurrency()
 
     const userFirstName = ref<string>('')
     const userLastName = ref<string>('')
@@ -328,6 +339,7 @@ export default defineComponent({
       yes: normalizedLanguage.value === 'English' ? 'Yes, Logout' : 'Evet, Çıkış Yap',
       no: normalizedLanguage.value === 'English' ? 'Cancel' : 'İptal',
       refetch: normalizedLanguage.value === 'English' ? 'Refresh Data' : 'Verileri Yenile',
+      privacy: normalizedLanguage.value === 'English' ? 'Privacy Mode' : 'Gizlilik Modu',
     }))
 
     const userInitials = computed(() => {
@@ -367,6 +379,8 @@ export default defineComponent({
       isDashboard,
       greetingTitle,
       greetingSubtitle,
+      isPrivacyMode,
+      togglePrivacyMode,
       emitUpdateLanguage,
       toggleSidebar,
       routeToPage,

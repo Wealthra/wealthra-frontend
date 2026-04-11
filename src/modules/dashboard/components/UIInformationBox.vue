@@ -8,7 +8,19 @@
       </template>
       <template v-else>
         <div class="kpi-card__label">{{ title }}</div>
-        <div class="kpi-card__value">{{ valuePrefix }}{{ currentAmount.toLocaleString() }}</div>
+        <div class="kpi-card__value">
+          <template v-if="valuePrefix === '$'">
+            {{ formatCurrency(currentAmount) }}
+          </template>
+          <template v-else>
+            <template v-if="isPrivacyMode">
+              {{ resolvedValuePrefix }}••••
+            </template>
+            <template v-else>
+              {{ resolvedValuePrefix }}{{ currentAmount.toLocaleString() }}
+            </template>
+          </template>
+        </div>
         <div
           v-if="showTrend"
           class="kpi-card__trend-badge"
@@ -39,6 +51,7 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { defineComponent } from 'vue'
 import { kpiIconMap, trendIcons } from '@/icons/fontawesome-icons'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default defineComponent({
   name: 'InformationBoxCard',
@@ -89,6 +102,10 @@ export default defineComponent({
       default: false,
     },
   },
+  setup() {
+    const { currencySymbol, formatCurrency, isPrivacyMode } = useCurrency()
+    return { currencySymbol, formatCurrency, isPrivacyMode }
+  },
   data() {
     return {
       isNegative: false,
@@ -96,6 +113,11 @@ export default defineComponent({
     }
   },
   computed: {
+    resolvedValuePrefix(): string {
+      if (this.valuePrefix === '') return ''
+      if (this.valuePrefix !== '$') return this.valuePrefix
+      return this.currencySymbol
+    },
     accentColor(): string {
       return `var(--primary-${this.color}-color)`
     },

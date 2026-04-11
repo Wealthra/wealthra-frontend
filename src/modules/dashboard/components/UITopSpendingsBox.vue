@@ -65,6 +65,7 @@
 import type { Spendings } from '@/interfaces/Spendings'
 import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
 import { transactionCategoryIconMap } from '@/icons/fontawesome-icons'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default {
   name: 'UITopSpendingsBox',
@@ -85,6 +86,10 @@ export default {
       type: String,
       default: 'English',
     },
+  },
+  setup() {
+    const { formatCurrency } = useCurrency()
+    return { formatCurrency }
   },
   data() {
     return {
@@ -116,11 +121,7 @@ export default {
       return transactionCategoryIconMap.default
     },
     formatCurrency(amount: number) {
-      return new Intl.NumberFormat('en-US', { 
-        style: 'currency', 
-        currency: 'USD',
-        maximumFractionDigits: 0 
-      }).format(amount)
+      return this.formatCurrency(amount, 0)
     },
     getRelativeWidth(amount: number) {
       return (amount / this.maxAmount) * 100

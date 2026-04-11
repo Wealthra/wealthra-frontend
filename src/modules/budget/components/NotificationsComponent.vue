@@ -315,17 +315,17 @@ export default {
     }
 
     &-info {
-      background-color: var(--notification-info-color-soft);
-      border-color: var(--notification-info-color-soft);
+      background-color: rgba(92, 184, 92, 0.08);
+      border-color: rgba(92, 184, 92, 0.15);
       .notification-item-indicator {
-        background-color: var(--notification-info-color);
+        background-color: var(--primary-green-color);
       }
       .notification-item-header {
-        color: var(--notification-info-color-header);
+        color: var(--primary-green-color);
       }
       .notification-item-message,
       .notification-item-timestamp {
-        color: var(--notification-info-color-text);
+        color: var(--normal-text-color);
       }
     }
 

@@ -95,11 +95,11 @@
           </div>
           <div class="col col-limit">
             <span class="col-mobile-label">{{ t('limitAmount') }}</span>
-            <span class="col-value">${{ formatAmount(budget.limitAmount) }}</span>
+            <span class="col-value">{{ formatCurrency(budget.limitAmount) }}</span>
           </div>
           <div class="col col-current">
             <span class="col-mobile-label">{{ t('currentAmount') }}</span>
-            <span class="col-value">${{ formatAmount(budget.currentAmount) }}</span>
+            <span class="col-value">{{ formatCurrency(budget.currentAmount) }}</span>
           </div>
           <div class="col col-percent">
             <span class="col-mobile-label">{{ t('percentageUsed') }}</span>
@@ -162,7 +162,7 @@
           <div class="form-group">
             <label for="create-budget-limit">{{ t('enterLimitAmount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+              <span class="input-prefix">{{ currencySymbol }}</span>
               <input id="create-budget-limit" v-model.number="newBudget.limitAmount" type="number" class="modal-input" min="0" step="0.01" />
             </div>
           </div>
@@ -186,7 +186,7 @@
           <div class="form-group">
             <label for="edit-budget-limit">{{ t('enterLimitAmount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+              <span class="input-prefix">{{ currencySymbol }}</span>
               <input id="edit-budget-limit" v-model.number="editLimitAmount" type="number" class="modal-input" min="0" step="0.01" />
             </div>
           </div>
@@ -204,6 +204,7 @@ import { actionIcons } from '@/icons/fontawesome-icons'
 import { faChartLine } from '@fortawesome/free-solid-svg-icons'
 import type { BudgetApiModel } from '@/services/api/budget/budget.models'
 import type { Category } from '@/services/api/category/category.models'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default {
   name: 'UIBudgetTableComponent',
@@ -212,6 +213,10 @@ export default {
     budgets: { type: Array as () => BudgetApiModel[], default: () => [] },
     categories: { type: Array as () => Category[], default: () => [] },
     selectedLanguage: { type: String, default: 'English' },
+  },
+  setup() {
+    const { formatCurrency, currencySymbol } = useCurrency()
+    return { formatCurrency, currencySymbol }
   },
   data() {
     return {

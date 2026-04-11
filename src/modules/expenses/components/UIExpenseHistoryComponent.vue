@@ -90,7 +90,7 @@
           </div>
           <div class="col col-amount">
             <span class="col-mobile-label">{{ t('amount') }}</span>
-            <span class="col-value">${{ expense.amount.toFixed(2) }}</span>
+            <span class="col-value">{{ formatCurrency(expense.amount) }}</span>
           </div>
           <div class="col col-category">
             <span class="col-mobile-label">{{ t('category') }}</span>
@@ -219,7 +219,7 @@
           <div class="form-group">
             <label for="expense-amount">{{ t('amount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+              <span class="input-prefix">{{ currencySymbol }}</span>
               <input
                 id="expense-amount"
                 type="number"
@@ -299,6 +299,7 @@ import {
   paginationIcons,
 } from '@/icons/fontawesome-icons'
 import type { Category } from '@/services/api/category/category.models'
+import { useCurrency } from '@/composables/useCurrency'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 
@@ -331,6 +332,10 @@ export default {
     categoryId: { type: Number, default: null },
     categories: { type: Array as () => Category[], default: () => [] },
     getExpenseById: { type: Function, required: true },
+  },
+  setup() {
+    const { formatCurrency, currencySymbol } = useCurrency()
+    return { formatCurrency, currencySymbol }
   },
   data() {
     return {
@@ -689,6 +694,15 @@ export default {
   }
 
   .pagination-bar {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 1rem 0 0;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+
     &--skeleton {
       justify-content: center;
       padding: 1rem 0;
@@ -700,9 +714,6 @@ export default {
       height: 2.25rem;
       border-radius: var(--border-radius);
     }
-
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 1rem 0 0; margin-top: 0.5rem; border-top: 1px solid var(--border-color);
     .pagination-results { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--normal-text-color); }
     .pagination-results-icon { color: var(--header-text-color); font-size: 0.875rem; }
     .page-size-select { padding: 0.35rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background-color); color: var(--header-text-color); font-size: 0.75rem; cursor: pointer; }

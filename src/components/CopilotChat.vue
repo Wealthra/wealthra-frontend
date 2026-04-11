@@ -83,9 +83,8 @@
                 v-if="msg.type === 'text'"
                 class="copilot-bubble"
                 :class="msg.sender === 'bot' ? 'copilot-bubble--bot' : 'copilot-bubble--user'"
-              >
-                {{ msg.content }}
-              </div>
+                v-html="parseMarkdown(msg.content)"
+              ></div>
 
               <!-- Audio Message -->
               <div v-else-if="msg.type === 'audio'" class="copilot-bubble copilot-bubble--audio">
@@ -151,7 +150,7 @@
                           <div class="copilot-item__meta">
                             <span class="copilot-item__category">{{ item.categoryName }}</span>
                             <span class="copilot-item__amount"
-                              >${{ parseFloat(String(item.amount)).toFixed(2) }}</span
+                              >{{ formatCurrency(item.amount) }}</span
                             >
                           </div>
                         </div>
@@ -195,7 +194,7 @@
                               </option>
                             </select>
                             <div class="copilot-item__price-wrap">
-                              <span class="copilot-item__currency">$</span>
+                              <span class="copilot-item__currency">{{ currencySymbol }}</span>
                               <input
                                 v-model.number="editForm.amount"
                                 type="number"
@@ -329,55 +328,40 @@
             </button>
           </div>
 
-          <!-- Default State: Voice + Image Buttons -->
-          <div v-else class="copilot-actions">
+          <!-- Default State: Chat Input Wrapper -->
+          <div v-else class="copilot-chat-input-wrapper">
             <button
-              class="copilot-action-btn copilot-action-btn--voice"
-              @click="startRecording"
-              :title="t.voice"
-            >
-              <div class="copilot-action-btn__circle">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                  <line x1="12" y1="19" x2="12" y2="23"></line>
-                  <line x1="8" y1="23" x2="16" y2="23"></line>
-                </svg>
-              </div>
-              <span class="copilot-action-btn__label">{{ t.voice }}</span>
-            </button>
-
-            <button
-              class="copilot-action-btn copilot-action-btn--image"
+              class="copilot-action-btn copilot-action-btn--small"
               @click="triggerImageUpload"
               :title="t.image"
             >
-              <div class="copilot-action-btn__circle">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-              </div>
-              <span class="copilot-action-btn__label">{{ t.image }}</span>
+              <font-awesome-icon icon="image" />
+            </button>
+            
+            <textarea
+              ref="chatInputRef"
+              v-model="chatMessage"
+              class="copilot-chat-input"
+              :placeholder="t.typeMessagePlaceholder"
+              @keydown.enter.exact.prevent="sendTextMessage"
+              rows="1"
+            ></textarea>
+
+            <button
+              v-if="chatMessage.trim().length > 0"
+              class="copilot-action-btn copilot-action-btn--send"
+              @click="sendTextMessage"
+              :title="t.send"
+            >
+              <font-awesome-icon icon="paper-plane" />
+            </button>
+            <button
+              v-else
+              class="copilot-action-btn copilot-action-btn--small"
+              @click="startRecording"
+              :title="t.voice"
+            >
+              <font-awesome-icon icon="microphone" />
             </button>
           </div>
 
@@ -435,6 +419,8 @@ interface ChatMessage {
   saved?: boolean
 }
 
+import { useCurrency } from '@/composables/useCurrency'
+
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
 export default defineComponent({
@@ -446,6 +432,7 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const { currencySymbol, formatCurrency } = useCurrency()
     // ── State ──
     const isOpen = ref(false)
     const messages = ref<ChatMessage[]>([])
@@ -454,6 +441,20 @@ export default defineComponent({
     const recordingTime = ref(0)
     const categories = ref<ApiCategory[]>([])
     const viewedImage = ref<string | null>(null)
+    const chatMessage = ref('')
+
+    const parseMarkdown = (text: string) => {
+      if (!text) return ''
+      
+      const div = document.createElement('div')
+      div.innerText = text
+      let escaped = div.innerHTML
+
+      return escaped
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br/>')
+    }
 
     // Editing
     const editingItemKey = ref<string | null>(null)
@@ -468,6 +469,7 @@ export default defineComponent({
     const messagesEndRef = ref<HTMLElement | null>(null)
     const messagesContainerRef = ref<HTMLElement | null>(null)
     const fileInputRef = ref<HTMLInputElement | null>(null)
+    const chatInputRef = ref<HTMLTextAreaElement | null>(null)
 
     // Audio recording
     let mediaRecorder: MediaRecorder | null = null
@@ -498,6 +500,8 @@ export default defineComponent({
         saved: isTr ? 'Kaydedildi' : 'Saved',
         description: isTr ? 'Açıklama' : 'Description',
         amount: isTr ? 'Tutar' : 'Amount',
+        typeMessagePlaceholder: isTr ? 'Mesaj yazın...' : 'Type a message...',
+        send: isTr ? 'Gönder' : 'Send',
         itemsExtracted: isTr ? 'Öğe Çıkarıldı' : 'Items Extracted',
         extractedMsg: isTr
           ? 'Girdinizden birden fazla öğe çıkardım. Aşağıda inceleyip düzenleyebilirsiniz:'
@@ -771,6 +775,54 @@ export default defineComponent({
       }
     }
 
+    // ── Text Messaging ──
+    const sendTextMessage = async () => {
+      const msgText = chatMessage.value.trim()
+      if (!msgText || isTyping.value) return
+
+      chatMessage.value = ''
+      
+      // Auto-resize reset
+      if (chatInputRef.value) {
+        chatInputRef.value.style.height = 'auto'
+      }
+
+      addMessage({
+        sender: 'user',
+        type: 'text',
+        content: msgText,
+      })
+
+      isTyping.value = true
+
+      try {
+        const result = await copilotService.chat({ message: msgText })
+        isTyping.value = false
+
+        if (result) {
+          // The new backend agent architecture returns { type, message, ... }
+          const replyText = typeof result === 'string' ? result : (result as any).message || (result as any).response || String(result);
+          addMessage({ sender: 'bot', type: 'text', content: replyText })
+        } else {
+          const errorMsg = (t.value as any).errorChat || t.value.errorExtract
+          addMessage({ sender: 'bot', type: 'text', content: errorMsg })
+        }
+      } catch {
+        isTyping.value = false
+        const errorMsg = (t.value as any).errorChat || t.value.errorExtract
+        addMessage({ sender: 'bot', type: 'text', content: errorMsg })
+      }
+    }
+
+    watch(chatMessage, () => {
+      nextTick(() => {
+        if (chatInputRef.value) {
+          chatInputRef.value.style.height = 'auto'
+          chatInputRef.value.style.height = `${Math.min(chatInputRef.value.scrollHeight, 120)}px`
+        }
+      })
+    })
+
     // ── Audio Playback ──
     const toggleAudioPlayback = (msg: ChatMessage) => {
       if (!msg.audioUrl) return
@@ -910,6 +962,11 @@ export default defineComponent({
       openImageViewer,
       closeImageViewer,
       viewedImage,
+      chatMessage,
+      chatInputRef,
+      sendTextMessage,
+      parseMarkdown,
+      currencySymbol,
     }
   },
 })
@@ -1813,4 +1870,75 @@ export default defineComponent({
 .fade-leave-to {
   opacity: 0;
 }
+
+/* ============================
+   Text Chat Input Overrides
+   ============================ */
+.copilot-chat-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--background-color-soft);
+  padding: 8px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.copilot-chat-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--normal-text-color);
+  border-radius: 12px;
+  outline: none;
+  max-height: 120px;
+  overflow-y: auto;
+  line-height: 1.4;
+  scrollbar-width: none; /* Firefox */
+}
+
+.copilot-chat-input::placeholder {
+  color: var(--normal-text-color);
+  opacity: 0.5;
+}
+
+/* Hide scrollbar entirely to avoid native Linux arrows on WebKit */
+.copilot-chat-input::-webkit-scrollbar {
+  display: none;
+}
+
+.copilot-action-btn--small,
+.copilot-action-btn--send {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+  background: var(--background-color);
+  color: var(--normal-text-color);
+}
+
+.copilot-action-btn--small:hover {
+  background: var(--border-color);
+}
+
+.copilot-action-btn--send {
+  background: var(--primary-green-color);
+  color: #fff;
+}
+
+.copilot-action-btn--send:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(92, 184, 92, 0.3);
+}
+
 </style>

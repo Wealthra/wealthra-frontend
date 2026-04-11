@@ -15,7 +15,7 @@
           <td>{{ user.firstName }} {{ user.lastName }}</td>
           <td>{{ user.email }}</td>
           <td>{{ formatDate(user.createdAt) }}</td>
-          <td>${{ formatNumber(user.totalNetWorth) }}</td>
+          <td>{{ formatCurrency(user.totalNetWorth) }}</td>
           <td>
             <button class="delete-btn" @click="deleteUser(user.id)">
               <font-awesome-icon :icon="actionIcons.delete" />
@@ -67,6 +67,7 @@
 
 <script lang="ts">
 import { arrowIcons, actionIcons } from '@/icons/fontawesome-icons'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default {
   name: 'AdminUserManagementTable',
@@ -106,6 +107,10 @@ export default {
       type: String,
       required: true,
     },
+  },
+  setup() {
+    const { formatCurrency } = useCurrency()
+    return { formatCurrency }
   },
   data() {
     return {

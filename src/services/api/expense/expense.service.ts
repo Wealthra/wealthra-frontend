@@ -61,8 +61,9 @@ export const expenseService = {
     )
   },
 
-  async getExpenseGeneralInfo(): Promise<ExpenseGeneralInfoApiResponse> {
-    return apiRequest<ExpenseGeneralInfoApiResponse>(`Expenses/generalinfo`, {
+  async getExpenseGeneralInfo(currency?: string): Promise<ExpenseGeneralInfoApiResponse> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<ExpenseGeneralInfoApiResponse>(`Expenses/generalinfo${query}`, {
       method: 'GET',
     })
   },
@@ -130,8 +131,10 @@ export const expenseService = {
     })
   },
 
-  async apiGetExpenseSummary(period: string = 'Monthly'): Promise<ExpenseSummaryResponse> {
-    return apiRequest<ExpenseSummaryResponse>(`Expenses/summary?period=${encodeURIComponent(period)}`, {
+  async apiGetExpenseSummary(period: string = 'Monthly', currency?: string): Promise<ExpenseSummaryResponse> {
+    const params = new URLSearchParams({ period })
+    if (currency) params.append('currency', currency)
+    return apiRequest<ExpenseSummaryResponse>(`Expenses/summary?${params.toString()}`, {
       method: 'GET',
     })
   },

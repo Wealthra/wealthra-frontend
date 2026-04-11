@@ -42,7 +42,7 @@
           >
             <div class="col col-date">{{ formatDate(transaction.created) }}</div>
             <div class="col col-method">{{ transaction.method }}</div>
-            <div class="col col-amount">${{ transaction.amount }}</div>
+            <div class="col col-amount">{{ formatCurrency(transaction.amount) }}</div>
           </div>
         </template>
       </div>
@@ -68,11 +68,16 @@
 <script lang="ts">
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { emptyStateIcons } from '@/icons/fontawesome-icons'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default {
   name: 'UIIncomeTransactionsComponent',
   components: {
     FontAwesomeIcon,
+  },
+  setup() {
+    const { formatCurrency } = useCurrency()
+    return { formatCurrency }
   },
   data() {
     return {

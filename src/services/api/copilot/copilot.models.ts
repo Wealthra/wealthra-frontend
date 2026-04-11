@@ -19,3 +19,11 @@ export interface BulkExpenseRequest {
   categoryId: number
   transactionDate: string
 }
+
+export interface CopilotChatRequest {
+  message: string
+}
+
+export interface CopilotChatResponse {
+  response: string
+}
