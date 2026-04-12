@@ -107,7 +107,7 @@
 
         <div class="top-bar-right">
           <button 
-            v-if="['Dashboard', 'Kontrol Paneli', 'Income', 'Gelir', 'Expenses', 'Giderler', 'Budget', 'Bütçe', 'Goals', 'Hedefler'].includes(selectedPage)"
+            v-if="['Dashboard', 'Kontrol Paneli', 'Income', 'Gelir', 'Expenses', 'Giderler', 'Budget', 'Bütçe', 'Goals', 'Hedefler', 'Settings', 'Ayarlar'].includes(selectedPage)"
             class="refetch-btn" 
             @click="handleRefetch" 
             :title="texts.refetch"
@@ -837,6 +837,54 @@ export default defineComponent({
 @media (max-width: 768px) {
   .top-bar-c .top-bar-right .profile-section .profile-info {
     display: none;
+  }
+
+  .top-bar-c {
+    padding: 8px 12px;
+    gap: 8px;
+
+    .top-bar-left {
+      gap: 8px;
+
+      .greeting-section {
+        .greeting-name {
+          display: none;
+        }
+        .greeting-time {
+          font-size: 16px;
+          line-height: normal;
+        }
+      }
+
+      .page-title {
+        font-size: 16px;
+        line-height: normal;
+      }
+    }
+
+    .top-bar-right {
+      gap: 6px;
+
+      .refetch-btn {
+        font-size: 16px;
+        width: 32px;
+        height: 32px;
+      }
+
+      .profile-section {
+        .profile-avatar {
+          width: 36px;
+          height: 36px;
+        }
+      }
+
+      /* Compact sub-components */
+      :deep(.language-trigger),
+      :deep(.theme-toggle) {
+        padding: 4px 10px;
+        font-size: 12px;
+      }
+    }
   }
 
   /* Optional Mobile specific handling */

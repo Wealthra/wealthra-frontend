@@ -62,11 +62,11 @@
           <div class="col col-actions" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
         </div>
         <div v-for="i in 5" :key="i" class="table-row skeleton-row" role="row">
-          <div class="col col-name"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-type"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-amount"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-category"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-actions"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
+          <div class="col col-name"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-type"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-amount"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-category"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-actions"><div class="skeleton-box row-skeleton"></div></div>
         </div>
       </div>
 
@@ -132,8 +132,13 @@
     </div>
 
     <!-- Pagination Bar -->
-    <div v-if="loading" class="pagination-bar pagination-bar--skeleton">
-      <div class="skeleton-box pagination-skeleton"></div>
+    <div v-if="loading" class="pagination-bar">
+      <div class="pagination-results">
+        <div class="skeleton-box results-skeleton"></div>
+      </div>
+      <div class="pagination-nav">
+        <div class="skeleton-box nav-skeleton"></div>
+      </div>
     </div>
     <div v-else-if="expenseHistory && expenseHistory.length > 0 && totalPages > 0" class="pagination-bar">
       <div class="pagination-results">
@@ -607,11 +612,29 @@ export default {
     border-radius: var(--border-radius);
   }
 
+  .row-skeleton {
+    width: 80%;
+    height: 1rem;
+    border-radius: 4px;
+  }
+
   .filter-skeleton {
     width: 10rem;
     height: 2.25rem;
     border-radius: var(--border-radius);
     &.date-skeleton { width: 12rem; }
+  }
+
+  .results-skeleton {
+    width: 120px;
+    height: 1.25rem;
+    border-radius: 4px;
+  }
+
+  .nav-skeleton {
+    width: 180px;
+    height: 1.75rem;
+    border-radius: var(--border-radius);
   }
 
   .date-range-wrap {
@@ -703,17 +726,6 @@ export default {
     margin-top: 0.5rem;
     border-top: 1px solid var(--border-color);
 
-    &--skeleton {
-      justify-content: center;
-      padding: 1rem 0;
-    }
-
-    .pagination-skeleton {
-      width: 100%;
-      max-width: 400px;
-      height: 2.25rem;
-      border-radius: var(--border-radius);
-    }
     .pagination-results { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--normal-text-color); }
     .pagination-results-icon { color: var(--header-text-color); font-size: 0.875rem; }
     .page-size-select { padding: 0.35rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background-color); color: var(--header-text-color); font-size: 0.75rem; cursor: pointer; }

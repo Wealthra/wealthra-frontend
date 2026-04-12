@@ -41,8 +41,8 @@
       </div>
     </header>
 
-    <div class="table-wrap" :class="{ 'table-wrap--empty': isTableEmpty }">
-      <div v-if="filteredGoals.length > 0" class="table" role="table">
+    <div class="table-wrap" :class="{ 'table-wrap--empty': !loading && isTableEmpty }">
+      <div v-if="loading || filteredGoals.length > 0" class="table" role="table">
         <div v-if="loading" class="table-header" role="row">
           <div class="col col-name" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
           <div class="col col-target" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
@@ -118,7 +118,7 @@
         </template>
       </div>
 
-      <div v-if="isTableEmpty" class="empty-state">
+      <div v-if="!loading && isTableEmpty" class="empty-state">
         <div class="empty-state__icon-wrap">
           <font-awesome-icon
             :icon="emptyStateIcon"
@@ -634,7 +634,7 @@ export default {
     padding: 0.6rem 1rem;
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--normal-text-color);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -678,7 +678,7 @@ export default {
     display: inline-block;
     padding: 0.25rem 0.5rem;
     border-radius: var(--border-radius);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     &.status-ok {
       background-color: rgba(92, 184, 92, 0.15);
       color: var(--primary-green-color);

@@ -48,8 +48,8 @@
       </div>
       <div class="statistics-wrapper">
         <UIIncomeSourcesComponent
-          v-if="financialData && Array.isArray(financialData.incomeSources)"
-          :incomeSources="financialData.incomeSources"
+          v-if="isLoading || (financialData && Array.isArray(financialData.incomeSources))"
+          :incomeSources="financialData.incomeSources || []"
           :hasMoreItems="financialData.incomeHasMoreItems ?? false"
           :selectedLanguage="selectedLanguage"
           :loading="isLoading"

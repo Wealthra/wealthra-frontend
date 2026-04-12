@@ -64,12 +64,12 @@
           <div class="col col-actions" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
         </div>
         <div v-for="i in 5" :key="i" class="table-row skeleton-row" role="row">
-          <div class="col col-category"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-limit"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-current"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-percent"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-status"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
-          <div class="col col-actions"><div class="skeleton-box" style="height: 1.25rem;"></div></div>
+          <div class="col col-category"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-limit"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-current"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-percent"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-status"><div class="skeleton-box row-skeleton"></div></div>
+          <div class="col col-actions"><div class="skeleton-box row-skeleton"></div></div>
         </div>
       </div>
 
@@ -314,6 +314,12 @@ export default {
     border-radius: var(--border-radius);
   }
 
+  .row-skeleton {
+    width: 80%;
+    height: 1rem;
+    border-radius: 4px;
+  }
+
   .toolbar-filters { display: flex; align-items: center; gap: 0.5rem; }
   
   .filter-skeleton {
@@ -323,7 +329,7 @@ export default {
     &.search-skeleton { width: 12rem; }
   }
 
-  .filter-input, .filter-select { padding: 0.5rem 0.75rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--background-color); color: var(--header-text-color); font-size: 0.8125rem; min-width: 10rem; }
+  .filter-input, .filter-select { padding: 0.5rem 0.75rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--background-color); color: var(--header-text-color); font-size: 0.75rem; min-width: 10rem; }
   .filter-input { min-width: 12rem; }
   .filter-select { appearance: auto; cursor: pointer; }
 
@@ -332,7 +338,7 @@ export default {
   .table-header {
     display: grid; grid-template-columns: minmax(0, 1fr) 6rem 6rem 5rem minmax(5rem, 1fr) 5.5rem;
     gap: 1rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border-color);
-    font-weight: 700; font-size: 0.75rem; color: var(--normal-text-color); text-transform: uppercase; letter-spacing: 0.05em;
+    font-weight: 700; font-size: 0.7rem; color: var(--normal-text-color); text-transform: uppercase; letter-spacing: 0.05em;
 
     .header-skeleton {
       width: 80%;
@@ -348,10 +354,10 @@ export default {
 
   .col { min-width: 0; }
   .col-mobile-label { display: none; }
-  .category-name { font-weight: 600; color: var(--header-text-color); font-size: 0.9375rem; }
-  .col-value { font-size: 0.875rem; color: var(--normal-text-color); }
+  .category-name { font-weight: 600; color: var(--header-text-color); font-size: 0.8125rem; }
+  .col-value { font-size: 0.8125rem; color: var(--normal-text-color); }
   .status-badge {
-    display: inline-block; padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+    display: inline-block; padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600;
     &.status-ok { background-color: rgba(92, 184, 92, 0.15); color: var(--primary-green-color); }
     &.status-warning { background-color: rgba(196, 160, 80, 0.18); color: #b8860b; }
     &.status-exceeded { background-color: rgba(217, 83, 79, 0.15); color: var(--primary-red-color); }

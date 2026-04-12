@@ -8,10 +8,12 @@
 
       <div class="budget-overview-component-content">
         <template v-if="loading">
-          <div v-if="!isMobile" class="skeleton-box amount-skeleton"></div>
-          <div v-if="!isMobile" class="skeleton-box progress-bar-skeleton"></div>
+          <div v-if="!isMobile" class="budget-overview-skeleton-row">
+            <div class="skeleton-box amount-skeleton"></div>
+            <div class="skeleton-box progress-bar-skeleton"></div>
+            <div class="skeleton-box percentage-skeleton"></div>
+          </div>
           <div v-if="isMobile" class="skeleton-box doughnut-skeleton"></div>
-          <div v-if="!isMobile" class="skeleton-box percentage-skeleton"></div>
         </template>
         <template v-else>
           <div v-if="!isMobile" class="budget-overview-component-amount">
@@ -246,6 +248,14 @@ export default {
       width: 50px;
       height: 1.25rem;
       flex-shrink: 0;
+      border-radius: 4px;
+    }
+
+    .budget-overview-skeleton-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 1.5rem;
     }
 
     .budget-overview-component-title {

@@ -10,7 +10,7 @@
         :class="{ 'notifications-component-list--empty': !loading && processedNotifications.length === 0 }"
       >
         <template v-if="loading">
-          <div v-for="i in 3" :key="i" class="notification-item skeleton-notification">
+          <div class="notification-item skeleton-notification">
             <div class="notification-item-content">
               <div class="notification-item-header">
                 <div class="skeleton-box indicator-skeleton"></div>
@@ -284,12 +284,12 @@ export default {
         border-radius: 50%;
       }
       .type-skeleton {
-        width: 40px;
-        height: 0.8125rem;
+        width: 60px;
+        height: 0.75rem;
       }
       .message-skeleton {
         width: 100%;
-        height: 0.8125rem;
+        height: 0.75rem;
         margin-top: 0.25rem;
       }
       .timestamp-skeleton {

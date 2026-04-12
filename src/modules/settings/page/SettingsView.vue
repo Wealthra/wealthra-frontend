@@ -1,296 +1,396 @@
 <template>
-  <UILoading
-      v-if="isInitialLoading"
-      :isLoading="isInitialLoading"
-      :hasError="!!initialError"
-      :loadingText="loadingText"
-      :errorMessage="initialError || errorMessage"
-      :retryText="selectedLanguage === 'English' ? 'Retry' : 'Tekrar Dene'"
-      @retry="loadMe"
-    />
+  <div class="settings-root">
+    <div class="settings-columns">
+      <!-- Profile Card Skeleton / Content -->
+      <section class="settings-card">
+        <div v-if="isInitialLoading" class="skeleton-box title-skeleton"></div>
+        <h2 v-else>{{ profileTitle }}</h2>
 
-    <template v-else>
-      <div class="settings-root">
-        <div class="settings-columns">
-          <section class="settings-card">
-            <h2>{{ profileTitle }}</h2>
-
-            <div class="profile-layout">
-              <div class="avatar-column">
-                <div class="avatar-wrapper">
-                  <img v-if="profileForm.avatarUrl" :src="profileForm.avatarUrl" alt="Avatar" />
-                  <div v-else class="avatar-placeholder">
-                    <span v-if="initials">{{ initials }}</span>
-                    <font-awesome-icon v-else icon="user" />
-                  </div>
-                </div>
-
-                <div class="avatar-actions">
-                  <button type="button" class="secondary-btn" @click="onPickAvatar">
-                    {{ avatarButtonLabel }}
-                  </button>
-
-                  <input
-                    ref="avatarInput"
-                    type="file"
-                    accept="image/*"
-                    class="hidden-input"
-                    @change="onAvatarSelected"
-                  />
-
-                  <button
-                    type="button"
-                    class="primary-outline-btn"
-                    :disabled="!avatarFile || isUploadingAvatar"
-                    @click="onUploadAvatar"
-                  >
-                    <span v-if="isUploadingAvatar">
-                      {{ selectedLanguage === 'English' ? 'Uploading...' : 'Yükleniyor...' }}
-                    </span>
-                    <span v-else>
-                      {{ selectedLanguage === 'English' ? 'Upload avatar' : 'Avatarı yükle' }}
-                    </span>
-                  </button>
-                </div>
-
-                <p class="helper-text">
-                  {{
-                    selectedLanguage === 'English'
-                      ? 'We upload your photo to a free image host and only store the URL.'
-                      : 'Fotoğrafınızı ücretsiz bir görsel servisine yüklüyoruz, sadece linkini saklıyoruz.'
-                  }}
-                </p>
-
-                <p v-if="avatarError" class="error-text">
-                  {{ avatarError }}
-                </p>
-              </div>
-
-              <div class="profile-column">
-                <div class="two-column">
-                  <div class="form-group">
-                    <label for="firstName">
-                      {{ selectedLanguage === 'English' ? 'First name' : 'Ad' }}
-                    </label>
-                    <input
-                      id="firstName"
-                      v-model="profileForm.firstName"
-                      type="text"
-                      autocomplete="given-name"
-                    />
-                    <p v-if="profileErrors.firstName" class="error-text">
-                      {{ profileErrors.firstName }}
-                    </p>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="lastName">
-                      {{ selectedLanguage === 'English' ? 'Last name' : 'Soyad' }}
-                    </label>
-                    <input
-                      id="lastName"
-                      v-model="profileForm.lastName"
-                      type="text"
-                      autocomplete="family-name"
-                    />
-                    <p v-if="profileErrors.lastName" class="error-text">
-                      {{ profileErrors.lastName }}
-                    </p>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="email">Email</label>
-                  <input id="email" :value="me?.email" type="email" disabled />
-                </div>
-
-                <div class="meta-row">
-                  <span class="meta-label">
-                    {{ selectedLanguage === 'English' ? 'Member since' : 'Kayıt tarihi' }}
-                  </span>
-                  <span class="meta-value">
-                    {{ createdAtLabel }}
-                  </span>
-                </div>
-
-                <div class="form-group" style="margin-top: 1rem;">
-                  <label for="preferredCurrency">
-                    {{ selectedLanguage === 'English' ? 'Preferred Currency' : 'Tercih Edilen Para Birimi' }}
-                  </label>
-                  <select id="preferredCurrency" v-model="profileForm.preferredCurrency" class="settings-select">
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="TRY">TRY (₺)</option>
-                  </select>
-                </div>
-
-                <div class="actions-row">
-                  <button
-                    type="button"
-                    class="primary-btn"
-                    :disabled="isSavingProfile"
-                    @click="onSaveProfile"
-                  >
-                    <span v-if="isSavingProfile">
-                      {{ selectedLanguage === 'English' ? 'Saving...' : 'Kaydediliyor...' }}
-                    </span>
-                    <span v-else>
-                      {{ selectedLanguage === 'English' ? 'Save profile' : 'Profili kaydet' }}
-                    </span>
-                  </button>
-
-                  <p v-if="profileSuccess" class="success-text">
-                    {{
-                      selectedLanguage === 'English'
-                        ? 'Profile updated successfully.'
-                        : 'Profil başarıyla güncellendi.'
-                    }}
-                  </p>
-
-                  <p v-if="profileError" class="error-text">
-                    {{ profileError }}
-                  </p>
-                </div>
-              </div>
+        <div v-if="isInitialLoading" class="profile-layout">
+          <div class="avatar-column">
+            <div class="avatar-wrapper">
+              <div class="skeleton-box" style="height: 100%;"></div>
             </div>
-          </section>
-
-          <section class="settings-card">
-            <h2>{{ securityTitle }}</h2>
-
-            <div class="password-layout">
+            <div class="avatar-actions">
+              <div class="skeleton-box btn-skeleton"></div>
+              <div class="skeleton-box btn-skeleton"></div>
+            </div>
+            <div class="helper-text"><div class="skeleton-box text-skeleton" style="width: 80%;"></div></div>
+          </div>
+          <div class="profile-column">
+            <div class="two-column">
               <div class="form-group">
-                <label for="currentPassword">
-                  {{ selectedLanguage === 'English' ? 'Current password' : 'Mevcut şifre' }}
-                </label>
-                <input
-                  id="currentPassword"
-                  v-model="passwordForm.currentPassword"
-                  :type="showCurrentPassword ? 'text' : 'password'"
-                  autocomplete="current-password"
-                />
+                <div class="skeleton-box text-skeleton" style="width: 40px; margin-bottom: 4px;"></div>
+                <div class="skeleton-box input-skeleton"></div>
               </div>
-
-              <div class="two-column">
-                <div class="form-group">
-                  <label for="newPassword">
-                    {{ selectedLanguage === 'English' ? 'New password' : 'Yeni şifre' }}
-                  </label>
-                  <input
-                    id="newPassword"
-                    v-model="passwordForm.newPassword"
-                    :type="showNewPassword ? 'text' : 'password'"
-                    autocomplete="new-password"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="confirmPassword">
-                    {{
-                      selectedLanguage === 'English' ? 'Confirm new password' : 'Yeni şifre tekrar'
-                    }}
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    v-model="passwordForm.confirmPassword"
-                    :type="showConfirmPassword ? 'text' : 'password'"
-                    autocomplete="new-password"
-                  />
-                </div>
-              </div>
-
-              <ul class="helper-list">
-                <li>
-                  {{
-                    selectedLanguage === 'English' ? 'At least 8 characters.' : 'En az 8 karakter.'
-                  }}
-                </li>
-                <li>
-                  {{
-                    selectedLanguage === 'English'
-                      ? 'Use letters, numbers and symbols if possible.'
-                      : 'Mümkünse harf, rakam ve sembol kullan.'
-                  }}
-                </li>
-              </ul>
-
-              <div class="actions-row">
-                <button
-                  type="button"
-                  class="primary-btn"
-                  :disabled="isSavingPassword"
-                  @click="onChangePassword"
-                >
-                  <span v-if="isSavingPassword">
-                    {{
-                      selectedLanguage === 'English'
-                        ? 'Updating password...'
-                        : 'Şifre güncelleniyor...'
-                    }}
-                  </span>
-                  <span v-else>
-                    {{ selectedLanguage === 'English' ? 'Update password' : 'Şifreyi güncelle' }}
-                  </span>
-                </button>
-
-                <p v-if="passwordSuccess" class="success-text">
-                  {{
-                    selectedLanguage === 'English'
-                      ? 'Password updated successfully.'
-                      : 'Şifre başarıyla güncellendi.'
-                  }}
-                </p>
-
-                <p v-if="passwordError" class="error-text">
-                  {{ passwordError }}
-                </p>
+              <div class="form-group">
+                <div class="skeleton-box text-skeleton" style="width: 50px; margin-bottom: 4px;"></div>
+                <div class="skeleton-box input-skeleton"></div>
               </div>
             </div>
-          </section>
-
-          <section class="settings-card">
-            <h2>{{ selectedLanguage === 'English' ? 'Quotas and Usage' : 'Kotalar ve Kullanım' }}</h2>
-            <div v-if="isLoadingUsage" class="skeleton-box" style="height: 100px;"></div>
-            <div v-else-if="usageData" class="usage-layout">
-              <div class="usage-item">
-                <span class="usage-label">{{ selectedLanguage === 'English' ? 'Current Tier' : 'Mevcut Seviye' }}</span>
-                <span class="usage-value tier-badge">{{ usageData.tier || 'Free' }}</span>
-              </div>
-              <div class="usage-item">
-                <span class="usage-label">AI Chat</span>
-                <div class="usage-progress-wrap">
-                  <div class="usage-progress-bar">
-                    <div class="usage-progress-fill" :style="{ width: ((usageData.aiChatUsage || 0) / (Math.max(usageData.aiChatLimit || 1, 1))) * 100 + '%' }"></div>
-                  </div>
-                  <span class="usage-count">{{ usageData.aiChatUsage || 0 }} / {{ usageData.aiChatLimit || 0 }}</span>
-                </div>
-              </div>
-              <div class="usage-item">
-                <span class="usage-label">Receipt Scans</span>
-                <div class="usage-progress-wrap">
-                  <div class="usage-progress-bar">
-                    <div class="usage-progress-fill" :style="{ width: ((usageData.receiptScanUsage || 0) / (Math.max(usageData.receiptScanLimit || 1, 1))) * 100 + '%' }"></div>
-                  </div>
-                  <span class="usage-count">{{ usageData.receiptScanUsage || 0 }} / {{ usageData.receiptScanLimit || 0 }}</span>
-                </div>
-              </div>
+            <div class="form-group">
+              <div class="skeleton-box text-skeleton" style="width: 40px; margin-bottom: 4px;"></div>
+              <div class="skeleton-box input-skeleton"></div>
             </div>
-            <div v-else class="error-text">
-              {{ selectedLanguage === 'English' ? 'Usage data unavailable.' : 'Kullanım verisi yüklenemedi.' }}
+            <div class="meta-row">
+              <div class="skeleton-box text-skeleton" style="width: 150px;"></div>
             </div>
-          </section>
-
-          <section class="settings-card danger-zone">
-            <h2>{{ dangerZoneTitle }}</h2>
-            <p class="danger-zone-description">{{ dangerZoneDescription }}</p>
+            <div class="form-group" style="margin-top: 1rem;">
+              <div class="skeleton-box text-skeleton" style="width: 120px; margin-bottom: 4px;"></div>
+              <div class="skeleton-box input-skeleton"></div>
+            </div>
             <div class="actions-row">
-              <button type="button" class="danger-btn" @click="openDeleteAccountModal">
-                {{ deleteAccountButtonLabel }}
+              <div class="skeleton-box btn-skeleton" style="width: 120px;"></div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="profile-layout">
+          <div class="avatar-column">
+            <div class="avatar-wrapper">
+              <img v-if="profileForm.avatarUrl" :src="profileForm.avatarUrl" alt="Avatar" />
+              <div v-else class="avatar-placeholder">
+                <span v-if="initials">{{ initials }}</span>
+                <font-awesome-icon v-else icon="user" />
+              </div>
+            </div>
+
+            <div class="avatar-actions">
+              <button type="button" class="secondary-btn" @click="onPickAvatar">
+                {{ avatarButtonLabel }}
+              </button>
+
+              <input
+                ref="avatarInput"
+                type="file"
+                accept="image/*"
+                class="hidden-input"
+                @change="onAvatarSelected"
+              />
+
+              <button
+                type="button"
+                class="primary-outline-btn"
+                :disabled="!avatarFile || isUploadingAvatar"
+                @click="onUploadAvatar"
+              >
+                <span v-if="isUploadingAvatar">
+                  {{ selectedLanguage === 'English' ? 'Uploading...' : 'Yükleniyor...' }}
+                </span>
+                <span v-else>
+                  {{ selectedLanguage === 'English' ? 'Upload avatar' : 'Avatarı yükle' }}
+                </span>
               </button>
             </div>
-          </section>
+
+            <p class="helper-text">
+              {{
+                selectedLanguage === 'English'
+                  ? 'We upload your photo to a free image host and only store the URL.'
+                  : 'Fotoğrafınızı ücretsiz bir görsel servisine yüklüyoruz, sadece linkini saklıyoruz.'
+              }}
+            </p>
+
+            <p v-if="avatarError" class="error-text">
+              {{ avatarError }}
+            </p>
+          </div>
+
+          <div class="profile-column">
+            <div class="two-column">
+              <div class="form-group">
+                <label for="firstName">
+                  {{ selectedLanguage === 'English' ? 'First name' : 'Ad' }}
+                </label>
+                <input
+                  id="firstName"
+                  v-model="profileForm.firstName"
+                  type="text"
+                  autocomplete="given-name"
+                />
+                <p v-if="profileErrors.firstName" class="error-text">
+                  {{ profileErrors.firstName }}
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label for="lastName">
+                  {{ selectedLanguage === 'English' ? 'Last name' : 'Soyad' }}
+                </label>
+                <input
+                  id="lastName"
+                  v-model="profileForm.lastName"
+                  type="text"
+                  autocomplete="family-name"
+                />
+                <p v-if="profileErrors.lastName" class="error-text">
+                  {{ profileErrors.lastName }}
+                </p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input id="email" :value="me?.email" type="email" disabled />
+            </div>
+
+            <div class="meta-row">
+              <span class="meta-label">
+                {{ selectedLanguage === 'English' ? 'Member since' : 'Kayıt tarihi' }}
+              </span>
+              <span class="meta-value">
+                {{ createdAtLabel }}
+              </span>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+              <label for="preferredCurrency">
+                {{ selectedLanguage === 'English' ? 'Preferred Currency' : 'Tercih Edilen Para Birimi' }}
+              </label>
+              <select id="preferredCurrency" v-model="profileForm.preferredCurrency" class="settings-select">
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="TRY">TRY (₺)</option>
+              </select>
+            </div>
+
+            <div class="actions-row">
+              <button
+                type="button"
+                class="primary-btn"
+                :disabled="isSavingProfile"
+                @click="onSaveProfile"
+              >
+                <span v-if="isSavingProfile">
+                  {{ selectedLanguage === 'English' ? 'Saving...' : 'Kaydediliyor...' }}
+                </span>
+                <span v-else>
+                  {{ selectedLanguage === 'English' ? 'Save profile' : 'Profili kaydet' }}
+                </span>
+              </button>
+
+              <p v-if="profileSuccess" class="success-text">
+                {{
+                  selectedLanguage === 'English'
+                    ? 'Profile updated successfully.'
+                    : 'Profil başarıyla güncellendi.'
+                }}
+              </p>
+
+              <p v-if="profileError" class="error-text">
+                {{ profileError }}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <!-- Security Card Skeleton / Content -->
+      <section class="settings-card">
+        <div v-if="isInitialLoading" class="skeleton-box title-skeleton"></div>
+        <h2 v-else>{{ securityTitle }}</h2>
+
+        <div v-if="isInitialLoading" class="password-layout">
+          <div class="form-group">
+            <div class="skeleton-box text-skeleton" style="width: 100px; margin-bottom: 4px;"></div>
+            <div class="skeleton-box input-skeleton"></div>
+          </div>
+          <div class="two-column">
+            <div class="form-group">
+              <div class="skeleton-box text-skeleton" style="width: 80px; margin-bottom: 4px;"></div>
+              <div class="skeleton-box input-skeleton"></div>
+            </div>
+            <div class="form-group">
+              <div class="skeleton-box text-skeleton" style="width: 120px; margin-bottom: 4px;"></div>
+              <div class="skeleton-box input-skeleton"></div>
+            </div>
+          </div>
+          <ul class="helper-list">
+            <li><div class="skeleton-box text-skeleton" style="width: 150px;"></div></li>
+            <li><div class="skeleton-box text-skeleton" style="width: 200px;"></div></li>
+          </ul>
+          <div class="actions-row">
+            <div class="skeleton-box btn-skeleton" style="width: 130px;"></div>
+          </div>
+        </div>
+        <div v-else class="password-layout">
+          <div class="form-group">
+            <label for="currentPassword">
+              {{ selectedLanguage === 'English' ? 'Current password' : 'Mevcut şifre' }}
+            </label>
+            <input
+              id="currentPassword"
+              v-model="passwordForm.currentPassword"
+              :type="showCurrentPassword ? 'text' : 'password'"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="two-column">
+            <div class="form-group">
+              <label for="newPassword">
+                {{ selectedLanguage === 'English' ? 'New password' : 'Yeni şifre' }}
+              </label>
+              <input
+                id="newPassword"
+                v-model="passwordForm.newPassword"
+                :type="showNewPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">
+                {{
+                  selectedLanguage === 'English' ? 'Confirm new password' : 'Yeni şifre tekrar'
+                }}
+              </label>
+              <input
+                id="confirmPassword"
+                v-model="passwordForm.confirmPassword"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+              />
+            </div>
+          </div>
+
+          <ul class="helper-list">
+            <li>
+              {{
+                selectedLanguage === 'English' ? 'At least 8 characters.' : 'En az 8 karakter.'
+              }}
+            </li>
+            <li>
+              {{
+                selectedLanguage === 'English'
+                  ? 'Use letters, numbers and symbols if possible.'
+                  : 'Mümkünse harf, rakam ve sembol kullan.'
+              }}
+            </li>
+          </ul>
+
+          <div class="actions-row">
+            <button
+              type="button"
+              class="primary-btn"
+              :disabled="isSavingPassword"
+              @click="onChangePassword"
+            >
+              <span v-if="isSavingPassword">
+                {{
+                  selectedLanguage === 'English'
+                    ? 'Updating password...'
+                    : 'Şifre güncelleniyor...'
+                }}
+              </span>
+              <span v-else>
+                {{ selectedLanguage === 'English' ? 'Update password' : 'Şifreyi güncelle' }}
+              </span>
+            </button>
+
+            <p v-if="passwordSuccess" class="success-text">
+              {{
+                selectedLanguage === 'English'
+                  ? 'Password updated successfully.'
+                  : 'Şifre başarıyla güncellendi.'
+              }}
+            </p>
+
+            <p v-if="passwordError" class="error-text">
+              {{ passwordError }}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quotas Card Skeleton / Content -->
+      <section class="settings-card">
+        <div v-if="isInitialLoading" class="skeleton-box title-skeleton"></div>
+        <h2 v-else>{{ selectedLanguage === 'English' ? 'Quotas and Usage' : 'Kotalar ve Kullanım' }}</h2>
+        
+        <div v-if="isInitialLoading || isLoadingUsage" class="usage-layout">
+          <div class="usage-item">
+            <div class="skeleton-box text-skeleton" style="width: 80px; margin-bottom: 4px;"></div>
+            <div class="skeleton-box btn-skeleton" style="width: 80px;"></div>
+          </div>
+          <div class="usage-item">
+            <div class="skeleton-box text-skeleton" style="width: 100px;"></div>
+            <div class="usage-progress-wrap">
+              <div class="usage-progress-bar">
+                <div class="skeleton-box" style="height: 100%;"></div>
+              </div>
+              <div class="skeleton-box text-skeleton" style="width: 40px;"></div>
+            </div>
+          </div>
+          <div class="usage-item">
+            <div class="skeleton-box text-skeleton" style="width: 100px;"></div>
+            <div class="usage-progress-wrap">
+              <div class="usage-progress-bar">
+                <div class="skeleton-box" style="height: 100%;"></div>
+              </div>
+              <div class="skeleton-box text-skeleton" style="width: 40px;"></div>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="usageData" class="usage-layout">
+          <div class="usage-item">
+            <span class="usage-label">{{ selectedLanguage === 'English' ? 'Current Tier' : 'Mevcut Seviye' }}</span>
+            <span class="usage-value tier-badge">{{ usageData.tier || 'Free' }}</span>
+          </div>
+          <div class="usage-item">
+            <span class="usage-label">AI Chat</span>
+            <div class="usage-progress-wrap">
+              <div class="usage-progress-bar">
+                <div class="usage-progress-fill" :style="{ width: ((usageData.aiChatUsage || 0) / (Math.max(usageData.aiChatLimit || 1, 1))) * 100 + '%' }"></div>
+              </div>
+              <span class="usage-count">{{ usageData.aiChatUsage || 0 }} / {{ usageData.aiChatLimit || 0 }}</span>
+            </div>
+          </div>
+          <div class="usage-item">
+            <span class="usage-label">Receipt Scans</span>
+            <div class="usage-progress-wrap">
+              <div class="usage-progress-bar">
+                <div class="usage-progress-fill" :style="{ width: ((usageData.receiptScanUsage || 0) / (Math.max(usageData.receiptScanLimit || 1, 1))) * 100 + '%' }"></div>
+              </div>
+              <span class="usage-count">{{ usageData.receiptScanUsage || 0 }} / {{ usageData.receiptScanLimit || 0 }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-else class="error-text">
+          {{ selectedLanguage === 'English' ? 'Usage data unavailable.' : 'Kullanım verisi yüklenemedi.' }}
+        </div>
+      </section>
+
+      <!-- Danger Zone Skeleton / Content -->
+      <section class="settings-card danger-zone">
+        <div v-if="isInitialLoading" class="skeleton-box title-skeleton"></div>
+        <h2 v-else>{{ dangerZoneTitle }}</h2>
+        
+        <div v-if="isInitialLoading">
+          <div class="danger-zone-description"><div class="skeleton-box text-skeleton" style="width: 90%;"></div></div>
+          <div class="actions-row">
+            <div class="skeleton-box btn-skeleton" style="width: 130px;"></div>
+          </div>
+        </div>
+        <template v-else>
+          <p class="danger-zone-description">{{ dangerZoneDescription }}</p>
+          <div class="actions-row">
+            <button type="button" class="danger-btn" @click="openDeleteAccountModal">
+              {{ deleteAccountButtonLabel }}
+            </button>
+          </div>
+        </template>
+      </section>
+    </div>
+
+    <!-- Final State Error for initial loading -->
+    <div v-if="!isInitialLoading && !!initialError" class="modal-overlay">
+       <div class="modal-content delete-modal" style="text-align: center;">
+          <h3>{{ selectedLanguage === 'English' ? 'Error' : 'Hata' }}</h3>
+          <p>{{ initialError }}</p>
+          <button type="button" class="primary-btn" @click="loadMe">{{ selectedLanguage === 'English' ? 'Retry' : 'Tekrar Dene' }}</button>
+       </div>
+    </div>
+  </div>
 
       <!-- Delete account confirmation modal (GitHub-style) -->
       <div v-if="showDeleteAccountModal" class="modal-overlay" @click.self="closeDeleteAccountModal">
@@ -328,11 +428,10 @@
           </div>
         </div>
       </div>
-    </template>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, toRef } from 'vue'
+import { defineComponent, ref, computed, toRef, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import UILoading from '@/components/UILoading.vue'
 import { accountService } from '@/services/api/account/account.service'
@@ -724,7 +823,15 @@ export default defineComponent({
       }
     }
 
-    loadMe()
+
+    onMounted(() => {
+      loadMe()
+      window.addEventListener('app:refetch', loadMe)
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('app:refetch', loadMe)
+    })
 
     return {
       selectedLanguage,
@@ -799,7 +906,7 @@ export default defineComponent({
   width: 100%;
   flex: 1;
   min-height: 0;
-  padding: var(--spacing-md);
+  padding: 1.5rem 1.25rem;
   box-sizing: border-box;
 }
 
@@ -821,6 +928,36 @@ export default defineComponent({
     font-weight: 600;
     margin-bottom: var(--spacing-sm);
     color: var(--header-text-color);
+  }
+
+  .title-skeleton {
+    width: 150px;
+    height: 1.25rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .avatar-skeleton {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+  }
+
+  .btn-skeleton {
+    width: 100px;
+    height: 1.75rem;
+    border-radius: 999px;
+  }
+
+  .text-skeleton {
+    height: 1rem;
+    border-radius: 4px;
+    margin: 0.25rem 0;
+  }
+
+  .input-skeleton {
+    width: 100%;
+    height: 2.25rem;
+    border-radius: 6px;
   }
 }
 

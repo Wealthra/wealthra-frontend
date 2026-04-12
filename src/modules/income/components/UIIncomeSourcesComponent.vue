@@ -27,8 +27,8 @@
       </div>
     </div>
 
-    <div class="table-wrap" :class="{ 'table-wrap--empty': isTableEmpty }">
-      <div v-if="incomeSources && incomeSources.length > 0" class="table" role="table">
+    <div class="table-wrap" :class="{ 'table-wrap--empty': !loading && isTableEmpty }">
+      <div v-if="loading || (incomeSources && incomeSources.length > 0)" class="table" role="table">
         <div v-if="loading" class="table-header" role="row">
           <div class="col col-name" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
           <div class="col col-type" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
@@ -96,7 +96,7 @@
         </template>
       </div>
 
-      <div v-if="isTableEmpty" class="empty-state">
+      <div v-if="!loading && isTableEmpty" class="empty-state">
         <div class="empty-state__icon-wrap">
           <font-awesome-icon
             :icon="emptyStateIcons.incomeSources"
@@ -118,8 +118,13 @@
     </div>
 
     <!-- Pagination bar (layout like reference: page size dropdown left, page nav right) -->
-    <div v-if="loading" class="pagination-bar pagination-bar--skeleton">
-      <div class="skeleton-box pagination-skeleton"></div>
+    <div v-if="loading" class="pagination-bar">
+      <div class="pagination-results">
+        <div class="skeleton-box results-skeleton"></div>
+      </div>
+      <div class="pagination-nav">
+        <div class="skeleton-box nav-skeleton"></div>
+      </div>
     </div>
     <div v-else-if="incomeSources && incomeSources.length > 0 && totalPages > 0" class="pagination-bar">
       <div class="pagination-results">
@@ -819,6 +824,18 @@ export default {
     border-radius: 4px;
   }
 
+  .results-skeleton {
+    width: 120px;
+    height: 1.25rem;
+    border-radius: 4px;
+  }
+
+  .nav-skeleton {
+    width: 180px;
+    height: 1.75rem;
+    border-radius: var(--border-radius);
+  }
+
   .header .date-range-picker-wrap {
     flex-shrink: 0;
     min-width: 12rem;
@@ -1025,16 +1042,10 @@ export default {
     margin-top: 0.5rem;
     border-top: 1px solid var(--border-color);
 
-    &--skeleton {
-      justify-content: center;
-      padding: 1rem 0;
-    }
-
-    .pagination-skeleton {
-      width: 100%;
-      max-width: 400px;
-      height: 2.25rem;
-      border-radius: var(--border-radius);
+    .pagination-count,
+    .pagination-total {
+      font-weight: 600;
+      color: var(--header-text-color);
     }
   }
 

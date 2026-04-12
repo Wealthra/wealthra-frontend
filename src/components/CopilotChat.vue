@@ -27,12 +27,12 @@
           </div>
           <button class="copilot-header__close">
             <svg
-              width="20"
-              height="20"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="3"
+              stroke-width="2.5"
               stroke-linecap="round"
               stroke-linejoin="round"
             >
@@ -57,8 +57,8 @@
               <img v-if="msg.sender === 'bot'" src="../icons/owl.png" alt="Bot" />
               <div v-else class="copilot-msg__avatar-user">
                 <svg
-                  width="18"
-                  height="18"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -91,14 +91,14 @@
                 <button class="copilot-audio__btn" @click="toggleAudioPlayback(msg)">
                   <svg
                     v-if="!msg.isPlaying"
-                    width="14"
-                    height="14"
+                    width="12"
+                    height="12"
                     viewBox="0 0 24 24"
                     fill="currentColor"
                   >
                     <polygon points="5 3 19 12 5 21 5 3"></polygon>
                   </svg>
-                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                     <rect x="6" y="4" width="4" height="16"></rect>
                     <rect x="14" y="4" width="4" height="16"></rect>
                   </svg>
@@ -149,9 +149,9 @@
                           <p class="copilot-item__name">{{ item.description }}</p>
                           <div class="copilot-item__meta">
                             <span class="copilot-item__category">{{ item.categoryName }}</span>
-                            <span class="copilot-item__amount"
-                              >{{ formatCurrency(item.amount) }}</span
-                            >
+                            <span class="copilot-item__amount">{{
+                              formatCurrency(item.amount)
+                            }}</span>
                           </div>
                         </div>
                         <button
@@ -160,8 +160,8 @@
                           :title="t.edit"
                         >
                           <svg
-                            width="12"
-                            height="12"
+                            width="10"
+                            height="10"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -209,34 +209,9 @@
                               class="copilot-item__save-btn"
                               @click="saveEditItem(msg.id, idx)"
                             >
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="3"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              >
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                              </svg>
                               {{ t.save }}
                             </button>
                             <button class="copilot-item__cancel-btn" @click="cancelEditItem">
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="3"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              >
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                              </svg>
                               {{ t.cancel }}
                             </button>
                           </div>
@@ -258,8 +233,8 @@
                     </template>
                     <template v-else>
                       <svg
-                        width="14"
-                        height="14"
+                        width="12"
+                        height="12"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -274,8 +249,8 @@
                   </button>
                   <div v-else class="copilot-items__saved-badge">
                     <svg
-                      width="14"
-                      height="14"
+                      width="12"
+                      height="12"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -313,31 +288,31 @@
           <div ref="messagesEndRef"></div>
         </div>
 
-        <!-- Input Area -->
+        <!-- Input Area (Redesigned) -->
         <div class="copilot-input-area">
           <!-- Recording State -->
-          <div v-if="isRecording" class="copilot-recording">
+          <div v-if="isRecording" class="copilot-recording-box">
             <div class="copilot-recording__indicator">
               <span class="copilot-recording__dot"></span>
               <span class="copilot-recording__time">{{ formatDuration(recordingTime) }}</span>
             </div>
             <button class="copilot-recording__stop" @click="stopRecording">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="4" y="4" width="16" height="16" rx="2"></rect>
               </svg>
             </button>
           </div>
 
-          <!-- Default State: Chat Input Wrapper -->
-          <div v-else class="copilot-chat-input-wrapper">
+          <!-- Default State: Pill-shaped Chat Input Wrapper -->
+          <div v-else class="copilot-input-box">
             <button
-              class="copilot-action-btn copilot-action-btn--small"
+              class="copilot-icon-btn"
               @click="triggerImageUpload"
               :title="t.image"
             >
               <font-awesome-icon icon="image" />
             </button>
-            
+
             <textarea
               ref="chatInputRef"
               v-model="chatMessage"
@@ -349,7 +324,7 @@
 
             <button
               v-if="chatMessage.trim().length > 0"
-              class="copilot-action-btn copilot-action-btn--send"
+              class="copilot-send-btn"
               @click="sendTextMessage"
               :title="t.send"
             >
@@ -357,7 +332,7 @@
             </button>
             <button
               v-else
-              class="copilot-action-btn copilot-action-btn--small"
+              class="copilot-icon-btn copilot-icon-btn--mic"
               @click="startRecording"
               :title="t.voice"
             >
@@ -445,7 +420,7 @@ export default defineComponent({
 
     const parseMarkdown = (text: string) => {
       if (!text) return ''
-      
+
       const div = document.createElement('div')
       div.innerText = text
       let escaped = div.innerHTML
@@ -781,7 +756,7 @@ export default defineComponent({
       if (!msgText || isTyping.value) return
 
       chatMessage.value = ''
-      
+
       // Auto-resize reset
       if (chatInputRef.value) {
         chatInputRef.value.style.height = 'auto'
@@ -801,7 +776,10 @@ export default defineComponent({
 
         if (result) {
           // The new backend agent architecture returns { type, message, ... }
-          const replyText = typeof result === 'string' ? result : (result as any).message || (result as any).response || String(result);
+          const replyText =
+            typeof result === 'string'
+              ? result
+              : (result as any).message || (result as any).response || String(result)
           addMessage({ sender: 'bot', type: 'text', content: replyText })
         } else {
           const errorMsg = (t.value as any).errorChat || t.value.errorExtract
@@ -990,8 +968,8 @@ export default defineComponent({
    ============================ */
 .copilot-fab {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -1015,7 +993,7 @@ export default defineComponent({
   }
 
   .copilot-fab__icon {
-    font-size: 28px;
+    font-size: 24px;
     color: #fff;
     z-index: 1;
   }
@@ -1050,12 +1028,11 @@ export default defineComponent({
   position: fixed;
   bottom: 24px;
   right: 24px;
-  width: 450px;
-  height: 700px;
+  width: 420px;
+  height: 650px;
   background: var(--background-color);
   border-radius: 16px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1081,7 +1058,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 12px 16px;
   background: var(--primary-green-color);
   cursor: pointer;
   flex-shrink: 0;
@@ -1093,8 +1070,8 @@ export default defineComponent({
   }
 
   .copilot-header__avatar {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.2);
@@ -1103,7 +1080,7 @@ export default defineComponent({
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .copilot-header__info {
@@ -1113,13 +1090,13 @@ export default defineComponent({
 
   .copilot-header__title {
     font-weight: 600;
-    font-size: 15px;
+    font-size: 14px;
     color: #fff;
     line-height: 1.2;
   }
 
   .copilot-header__status {
-    font-size: 11px;
+    font-size: 10px;
     color: rgba(255, 255, 255, 0.8);
     line-height: 1.3;
   }
@@ -1151,7 +1128,7 @@ export default defineComponent({
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   background: var(--background-color);
 }
 
@@ -1170,8 +1147,8 @@ export default defineComponent({
 
 .copilot-msg__avatar {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   overflow: hidden;
   margin-top: 2px;
@@ -1180,18 +1157,6 @@ export default defineComponent({
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-
-  .copilot-msg__avatar-bot {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: var(--primary-green-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 14px;
   }
 
   .copilot-msg__avatar-user {
@@ -1209,18 +1174,18 @@ export default defineComponent({
 .copilot-msg__body {
   display: flex;
   flex-direction: column;
-  max-width: 80%;
+  max-width: 82%;
 }
 
 .copilot-msg__sender {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--normal-text-color);
   margin-bottom: 3px;
 }
 
 .copilot-msg__time {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--normal-text-color);
   margin-top: 4px;
   padding: 0 2px;
@@ -1232,10 +1197,10 @@ export default defineComponent({
    ============================ */
 .copilot-bubble {
   padding: 10px 14px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   word-break: break-word;
 
   &.copilot-bubble--bot {
@@ -1253,12 +1218,12 @@ export default defineComponent({
   &.copilot-bubble--audio {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: var(--primary-green-color);
     color: #fff;
     border-top-right-radius: 4px;
-    min-width: 180px;
-    padding: 10px 14px;
+    min-width: 160px;
+    padding: 8px 12px;
   }
 
   &.copilot-bubble--image {
@@ -1275,7 +1240,7 @@ export default defineComponent({
 
     img {
       max-width: 100%;
-      max-height: 180px;
+      max-height: 160px;
       border-radius: 10px;
       object-fit: cover;
       display: block;
@@ -1283,7 +1248,7 @@ export default defineComponent({
   }
 
   &.copilot-bubble--interactive {
-    padding: 12px 14px;
+    padding: 12px;
     max-width: none;
     width: 100%;
   }
@@ -1293,8 +1258,8 @@ export default defineComponent({
    Audio Player (in bubble)
    ============================ */
 .copilot-audio__btn {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.2);
@@ -1313,7 +1278,7 @@ export default defineComponent({
 
 .copilot-audio__track {
   flex: 1;
-  height: 5px;
+  height: 4px;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 999px;
   overflow: hidden;
@@ -1327,7 +1292,7 @@ export default defineComponent({
 }
 
 .copilot-audio__time {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1338,17 +1303,17 @@ export default defineComponent({
 .copilot-typing {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 12px 16px;
+  gap: 4px;
+  padding: 10px 14px;
   background: var(--background-color-soft);
   border-radius: 14px;
   border-top-left-radius: 4px;
-  height: 42px;
+  height: 36px;
 }
 
 .copilot-typing__dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--normal-text-color);
   animation: copilot-bounce 1.2s ease-in-out infinite;
@@ -1361,7 +1326,7 @@ export default defineComponent({
     transform: translateY(0);
   }
   30% {
-    transform: translateY(-6px);
+    transform: translateY(-5px);
   }
 }
 
@@ -1370,14 +1335,14 @@ export default defineComponent({
    ============================ */
 .copilot-interactive__text {
   margin: 0 0 10px 0;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .copilot-items {
   background: var(--background-color);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -1388,7 +1353,7 @@ export default defineComponent({
 }
 
 .copilot-items__count {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--primary-green-color);
   text-transform: uppercase;
@@ -1423,7 +1388,7 @@ export default defineComponent({
 }
 
 .copilot-item__name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--header-text-color);
   margin: 0;
@@ -1440,12 +1405,12 @@ export default defineComponent({
 }
 
 .copilot-item__category {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--normal-text-color);
 }
 
 .copilot-item__amount {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--header-text-color);
   flex-shrink: 0;
@@ -1474,16 +1439,16 @@ export default defineComponent({
 .copilot-item__edit-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
 .copilot-item__input {
   width: 100%;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   background: var(--background-color);
   color: var(--header-text-color);
   font-family: var(--main-font);
@@ -1501,10 +1466,10 @@ export default defineComponent({
 
 .copilot-item__select {
   flex: 1;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   background: var(--background-color);
   color: var(--header-text-color);
   font-family: var(--main-font);
@@ -1520,7 +1485,7 @@ export default defineComponent({
 
 .copilot-item__row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .copilot-item__price-wrap {
@@ -1532,7 +1497,7 @@ export default defineComponent({
     left: 8px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--normal-text-color);
     pointer-events: none;
   }
@@ -1541,6 +1506,7 @@ export default defineComponent({
 .copilot-item__actions {
   display: flex;
   gap: 6px;
+  margin-top: 4px;
 }
 
 .copilot-item__save-btn,
@@ -1553,7 +1519,7 @@ export default defineComponent({
   padding: 6px 0;
   border: none;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--main-font);
@@ -1581,12 +1547,12 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 0;
+  padding: 8px 0;
   border: none;
   border-top: 1px solid var(--border-color);
   background: var(--primary-green-color);
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--main-font);
@@ -1603,8 +1569,8 @@ export default defineComponent({
 }
 
 .copilot-items__spinner {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
@@ -1622,20 +1588,21 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 0;
+  padding: 8px 0;
   border-top: 1px solid var(--border-color);
   color: var(--primary-green-color);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 }
 
+
 /* ============================
-   Input Area
+   Redesigned Input Area
    ============================ */
 .copilot-input-area {
-  padding: 16px;
-  border-top: 1px solid var(--border-color);
+  padding: 12px 16px;
   background: var(--background-color);
+  border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -1643,85 +1610,108 @@ export default defineComponent({
   display: none;
 }
 
-/* Default Actions */
-.copilot-actions {
+/* Pill-shaped Input Container */
+.copilot-input-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 6px 8px;
+  transition: all 0.2s ease;
+
+  &:focus-within {
+    border-color: var(--primary-green-color);
+    box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.12);
+  }
+}
+
+/* Icon Buttons (Inside Input) */
+.copilot-icon-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--normal-text-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 32px;
-}
-
-.copilot-action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
   cursor: pointer;
-  padding: 0;
+  transition: all 0.2s ease;
+  margin-bottom: 2px; /* Bottom align with text */
 
-  .copilot-action-btn__circle {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border-color);
+  &:hover {
     background: var(--background-color-soft);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-
-    &:hover {
-      transition: all 0.25s ease;
-      transform: scale(1.05);
-    }
+    color: var(--header-text-color);
   }
 
-  .copilot-action-btn__label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--normal-text-color);
-  }
-
-  &.copilot-action-btn--voice {
-    .copilot-action-btn__circle {
-      color: var(--primary-green-color);
-    }
-    &:hover .copilot-action-btn__circle {
-      background: var(--primary-green-color);
-      color: #fff;
-      border-color: transparent;
-      transform: scale(1.05);
-      box-shadow: 0 4px 16px rgba(92, 184, 92, 0.3);
-    }
-  }
-
-  &.copilot-action-btn--image {
-    .copilot-action-btn__circle {
-      color: var(--primary-blue-color);
-    }
-    &:hover .copilot-action-btn__circle {
-      background: var(--primary-blue-color);
-      color: #fff;
-      border-color: transparent;
-      transform: scale(1.05);
-      box-shadow: 0 4px 16px rgba(133, 193, 233, 0.3);
-    }
+  &--mic:hover {
+    color: var(--primary-green-color);
+    background: rgba(92, 184, 92, 0.1);
   }
 }
 
-/* Recording State */
-.copilot-recording {
+/* Send Button */
+.copilot-send-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary-green-color);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 2px;
+  box-shadow: 0 2px 8px rgba(92, 184, 92, 0.25);
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(92, 184, 92, 0.4);
+  }
+}
+
+/* Textarea Input */
+.copilot-chat-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  padding: 8px 4px; /* Matches 32px button padding perfectly */
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--header-text-color);
+  outline: none;
+  max-height: 100px;
+  overflow-y: auto;
+  line-height: 1.4;
+  scrollbar-width: none; /* Firefox */
+}
+
+.copilot-chat-input::placeholder {
+  color: var(--normal-text-color);
+  opacity: 0.7;
+}
+
+.copilot-chat-input::-webkit-scrollbar {
+  display: none;
+}
+
+/* Modern Recording State Pill */
+.copilot-recording-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--notification-alert-color-soft);
+  background: rgba(220, 53, 69, 0.05);
   border: 1px solid var(--notification-alert-color);
-  border-radius: 999px;
-  padding: 8px 12px 8px 16px;
+  border-radius: 24px;
+  padding: 6px 8px 6px 16px;
 }
 
 .copilot-recording__indicator {
@@ -1731,8 +1721,8 @@ export default defineComponent({
 }
 
 .copilot-recording__dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--notification-alert-color-text);
   animation: copilot-pulse-dot 1s ease-in-out infinite;
@@ -1749,7 +1739,7 @@ export default defineComponent({
 }
 
 .copilot-recording__time {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--notification-alert-color-text);
   font-variant-numeric: tabular-nums;
@@ -1757,8 +1747,8 @@ export default defineComponent({
 }
 
 .copilot-recording__stop {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
   background: var(--notification-alert-color-text);
@@ -1768,7 +1758,7 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   transition: opacity 0.15s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 
   &:hover {
     opacity: 0.85;
@@ -1776,23 +1766,8 @@ export default defineComponent({
 }
 
 /* ============================
-   Responsive
+   Image Viewer Modal
    ============================ */
-@media (max-width: 480px) {
-  .copilot-window {
-    width: calc(100vw - 16px);
-    height: calc(100vh - 80px);
-    bottom: 8px;
-    right: 8px;
-    border-radius: 12px;
-  }
-
-  .copilot-root {
-    bottom: 16px;
-    right: 16px;
-  }
-}
-/* Image Viewer Modal */
 .copilot-viewer {
   position: fixed;
   top: 0;
@@ -1873,73 +1848,20 @@ export default defineComponent({
 }
 
 /* ============================
-   Text Chat Input Overrides
+   Responsive
    ============================ */
-.copilot-chat-input-wrapper {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  background: var(--background-color-soft);
-  padding: 8px;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
+@media (max-width: 480px) {
+  .copilot-window {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 80px);
+    bottom: 8px;
+    right: 8px;
+    border-radius: 12px;
+  }
 
-.copilot-chat-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  resize: none;
-  padding: 8px 12px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  color: var(--normal-text-color);
-  border-radius: 12px;
-  outline: none;
-  max-height: 120px;
-  overflow-y: auto;
-  line-height: 1.4;
-  scrollbar-width: none; /* Firefox */
+  .copilot-root {
+    bottom: 16px;
+    right: 16px;
+  }
 }
-
-.copilot-chat-input::placeholder {
-  color: var(--normal-text-color);
-  opacity: 0.5;
-}
-
-/* Hide scrollbar entirely to avoid native Linux arrows on WebKit */
-.copilot-chat-input::-webkit-scrollbar {
-  display: none;
-}
-
-.copilot-action-btn--small,
-.copilot-action-btn--send {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
-  background: var(--background-color);
-  color: var(--normal-text-color);
-}
-
-.copilot-action-btn--small:hover {
-  background: var(--border-color);
-}
-
-.copilot-action-btn--send {
-  background: var(--primary-green-color);
-  color: #fff;
-}
-
-.copilot-action-btn--send:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(92, 184, 92, 0.3);
-}
-
 </style>

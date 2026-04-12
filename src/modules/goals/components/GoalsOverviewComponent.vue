@@ -2,46 +2,51 @@
   <div class="goals-overview-component-c">
     <div class="goals-overview-component">
       <div class="goals-overview-component-title-row">
-        <div class="goals-overview-component-title">
-          <div v-if="loading" class="skeleton-box title-skeleton"></div>
-          <template v-else>{{ goalsOverviewText }}</template>
-        </div>
-        <div v-if="loading" class="skeleton-box stats-skeleton"></div>
-        <div v-else-if="totalGoals != null && totalGoals > 0" class="goals-overview-stats">
-          {{ t('totalGoals') }}: {{ totalGoals }} · {{ t('achievedGoals') }}: {{ achievedGoals }}
-        </div>
+        <template v-if="loading">
+          <div class="skeleton-box title-skeleton"></div>
+          <div class="skeleton-box stats-skeleton"></div>
+        </template>
+        <template v-else>
+          <div class="goals-overview-component-title">{{ goalsOverviewText }}</div>
+          <div v-if="totalGoals != null && totalGoals > 0" class="goals-overview-stats">
+            {{ t('totalGoals') }}: {{ totalGoals }} · {{ t('achievedGoals') }}: {{ achievedGoals }}
+          </div>
+        </template>
       </div>
       <div class="goals-overview-component-content">
-        <div v-if="loading" class="skeleton-box amount-skeleton"></div>
-        <div v-else-if="!isMobile" class="goals-overview-component-amount">
-          {{ goalAmount }}
-        </div>
-
-        <div v-if="loading" class="skeleton-box progress-skeleton"></div>
-        <!-- Desktop: progress bar -->
-        <div v-else-if="!isMobile" class="goals-overview-component-progress-bar">
-          <div
-            class="goals-overview-component-progress-bar-fill"
-            :style="{ width: progressBarWidthPercentage + '%' }"
-          ></div>
-        </div>
-
-        <div v-if="loading" class="skeleton-box doughnut-skeleton"></div>
-        <!-- Mobile only: doughnut chart + center text -->
-        <div v-else-if="isMobile" class="goals-overview-doughnut-wrap">
-          <Doughnut
-            ref="doughnutRef"
-            :data="doughnutData"
-            :options="doughnutOptions"
-            class="goals-overview-doughnut"
-          />
-          <div class="goals-overview-doughnut-center" aria-hidden="true">
-            {{ centerText }}
+        <template v-if="loading">
+          <div v-if="!isMobile" class="goals-overview-skeleton-row">
+            <div class="skeleton-box amount-skeleton"></div>
+            <div class="skeleton-box progress-skeleton"></div>
+            <div class="skeleton-box percent-skeleton"></div>
           </div>
-        </div>
-        
-        <div v-if="loading" class="skeleton-box percent-skeleton"></div>
-        <div v-else-if="!isMobile" class="goals-overview-component-percentage">{{ displayPercentage }}</div>
+          <div v-if="isMobile" class="skeleton-box doughnut-skeleton"></div>
+        </template>
+        <template v-else>
+          <div v-if="!isMobile" class="goals-overview-component-amount">
+            {{ goalAmount }}
+          </div>
+          <!-- Desktop: progress bar -->
+          <div v-if="!isMobile" class="goals-overview-component-progress-bar">
+            <div
+              class="goals-overview-component-progress-bar-fill"
+              :style="{ width: progressBarWidthPercentage + '%' }"
+            ></div>
+          </div>
+          <!-- Mobile only: doughnut chart + center text -->
+          <div v-if="isMobile" class="goals-overview-doughnut-wrap">
+            <Doughnut
+              ref="doughnutRef"
+              :data="doughnutData"
+              :options="doughnutOptions"
+              class="goals-overview-doughnut"
+            />
+            <div class="goals-overview-doughnut-center" aria-hidden="true">
+              {{ centerText }}
+            </div>
+          </div>
+          <div v-if="!isMobile" class="goals-overview-component-percentage">{{ displayPercentage }}</div>
+        </template>
       </div>
     </div>
   </div>
@@ -284,6 +289,13 @@ export default {
       width: 60px;
       height: 1.5rem;
       border-radius: 4px;
+    }
+
+    .goals-overview-skeleton-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 1.5rem;
     }
 
     .doughnut-skeleton {
