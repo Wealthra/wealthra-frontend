@@ -24,7 +24,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: '/landing',
       name: 'landingpage',
       component: LandingView,
     },
@@ -43,55 +43,29 @@ const router = createRouter({
       name: 'signup',
       component: SignUpView,
     },
-    // Redirects from old paths to /app/* so existing links keep working
-    { path: '/dashboard', redirect: '/app/dashboard' },
-    { path: '/budget', redirect: '/app/budget' },
-    { path: '/expenses', redirect: '/app/expenses' },
-    { path: '/income', redirect: '/app/income' },
-    { path: '/goals', redirect: '/app/goals' },
-    { path: '/settings', redirect: '/app/settings' },
-    // Authenticated app shell: layout is parent, content is child
+    // Redirects from old paths to top-level paths
+    { path: '/app/dashboard', redirect: '/dashboard' },
+    { path: '/app/budget', redirect: '/budget' },
+    { path: '/app/expenses', redirect: '/expenses' },
+    { path: '/app/income', redirect: '/income' },
+    { path: '/app/goals', redirect: '/goals' },
+    { path: '/app/settings', redirect: '/settings' },
+    { path: '/app/recommendations', redirect: '/recommendations' },
+    { path: '/app', redirect: '/dashboard' },
+
+    // Authenticated app shell
     {
-      path: '/app',
+      path: '/',
       component: ModuleLayoutWrapper,
       meta: { requiresAuth: true },
       children: [
-        { path: '', redirect: { name: 'dashboard' } },
-        {
-          path: 'dashboard',
-          name: 'dashboard',
-          component: DashboardView,
-        },
-        {
-          path: 'budget',
-          name: 'budget',
-          component: BudgetView,
-        },
-        {
-          path: 'expenses',
-          name: 'expenses',
-          component: ExpensesView,
-        },
-        {
-          path: 'income',
-          name: 'income',
-          component: IncomeView,
-        },
-        {
-          path: 'goals',
-          name: 'goals',
-          component: GoalsView,
-        },
-        {
-          path: 'settings',
-          name: 'settings',
-          component: SettingsView,
-        },
-        {
-          path: 'recommendations',
-          name: 'recommendations',
-          component: RecommendationsView,
-        },
+        { path: 'dashboard', name: 'dashboard', component: DashboardView },
+        { path: 'budget', name: 'budget', component: BudgetView },
+        { path: 'expenses', name: 'expenses', component: ExpensesView },
+        { path: 'income', name: 'income', component: IncomeView },
+        { path: 'goals', name: 'goals', component: GoalsView },
+        { path: 'settings', name: 'settings', component: SettingsView },
+        { path: 'recommendations', name: 'recommendations', component: RecommendationsView },
       ],
     },
     {

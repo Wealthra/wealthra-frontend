@@ -1,3 +1,3 @@
 export const production = {
-  apiUrl: '',
+  apiUrl: 'https://api.wealthra.cloud',
 }
