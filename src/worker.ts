@@ -11,7 +11,7 @@ export default {
 
       // Proxy /api/* to your backend
       if (url.pathname.startsWith('/api/')) {
-        const backendUrl = `https://89.167.80.182.nip.io${url.pathname}${url.search}`;
+        const backendUrl = `https://api.wealthra.cloud${url.pathname}${url.search}`;
 
         // Create a new request for the backend
         const headers = new Headers(request.headers);

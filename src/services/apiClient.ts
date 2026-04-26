@@ -114,9 +114,14 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
     )
   }
 
-  // Handle blob responses (for images)
+  // Handle blob responses (for images, pdf, excel)
   const contentType = response.headers.get('content-type')
-  if (contentType && contentType.includes('image')) {
+  if (contentType && (
+    contentType.includes('image') || 
+    contentType.includes('application/pdf') || 
+    contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
+    contentType.includes('application/octet-stream')
+  )) {
     return (await response.blob()) as T
   }
 

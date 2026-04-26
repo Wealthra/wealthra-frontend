@@ -2,6 +2,7 @@ export interface IncomeApiModel {
   id?: number
   name: string
   amount: number
+  currency: string
   method: string
   isRecurring: boolean
   transactionDate: string

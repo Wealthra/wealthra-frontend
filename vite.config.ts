@@ -16,7 +16,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://89.167.80.182.nip.io',
+        target: 'https://api.wealthra.cloud',
         changeOrigin: true,
       },
     },

@@ -46,6 +46,13 @@ export const accountService = {
     })
   },
 
+  async verifyResetCode(email: string, code: string): Promise<void> {
+    return apiRequest<void>(`Account/verify-reset-code?email=${email}&code=${code}`, {
+      method: 'POST',
+      requiresAuth: false,
+    })
+  },
+
   // New API endpoints based on /api/Account spec
 
   async apiRegister(data: AccountRegisterRequest): Promise<string> {

@@ -76,7 +76,7 @@ export const budgetService = {
     })
   },
 
-  async apiCreateBudget(data: { categoryId: number; limitAmount: number }): Promise<number> {
+  async apiCreateBudget(data: { categoryId: number; limitAmount: number; currency: string }): Promise<number> {
     return apiRequest<number>('Budgets', {
       method: 'POST',
       body: data,
@@ -89,10 +89,10 @@ export const budgetService = {
     })
   },
 
-  async apiUpdateBudget(id: number, limitAmount: number): Promise<void> {
+  async apiUpdateBudget(id: number, limitAmount: number, currency: string): Promise<void> {
     return apiRequest<void>(`Budgets/${id}`, {
       method: 'PUT',
-      body: { id, limitAmount },
+      body: { id, limitAmount, currency },
     })
   },
 

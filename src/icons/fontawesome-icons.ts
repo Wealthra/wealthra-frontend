@@ -62,14 +62,29 @@ import {
   faFileInvoiceDollar,
   faPlane,
   faLightbulb,
+  faRobot,
+  faSignal,
+  faAward,
+  faRotateRight,
+  faXmark,
+  faPenToSquare,
+  faTrashCan,
+  faDownload,
+  faRightFromBracket,
+  faSpinner,
+  faPlus,
+  faCheck,
+  faCrown,
 } from '@fortawesome/free-solid-svg-icons'
 
 export const leftSidebarIconMap: Record<string, IconDefinition> = {
   Dashboard: faGauge,
+  Recommendations: faRobot,
   Income: faHandHoldingDollar,
   Expenses: faReceipt,
   Budget: faPiggyBank,
   Goals: faBullseye,
+  Admin: faCrown,
   Settings: faGear,
 }
 

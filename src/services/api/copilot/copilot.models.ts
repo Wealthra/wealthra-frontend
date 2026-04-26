@@ -25,5 +25,6 @@ export interface CopilotChatRequest {
 }
 
 export interface CopilotChatResponse {
-  response: string
+  message: string
+  response?: string
 }

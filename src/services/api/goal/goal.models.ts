@@ -1,9 +1,9 @@
-/** /api/Goals DTO: no initialAmount, uses currentAmount */
 export interface Goal {
   id: number
   name: string
   targetAmount: number
   currentAmount: number
+  currency: string
   progressPercentage?: number
   deadline: string
   isCompleted?: boolean
@@ -42,6 +42,7 @@ export interface CreateGoalRequest {
   name: string
   targetAmount: number
   currentAmount: number
+  currency: string
   deadline: string
 }
 
@@ -51,5 +52,6 @@ export interface UpdateGoalRequest {
   name: string
   targetAmount: number
   currentAmount: number
+  currency: string
   deadline: string
 }

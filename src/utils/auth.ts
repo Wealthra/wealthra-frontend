@@ -2,13 +2,14 @@
 let currentAccessToken: string | null = localStorage.getItem('access_token') || null
 let currentRoles: string[] = JSON.parse(localStorage.getItem('user_roles') || '[]')
 let currentUserId: string | null = localStorage.getItem('user_id') || null
+let currentIsAdmin: boolean = localStorage.getItem('is_admin') === 'true'
 
 export function isAuthenticated(): boolean {
   return !!currentAccessToken
 }
 
 export function isAdmin(): boolean {
-  return currentRoles.includes('Admin')
+  return currentIsAdmin || currentRoles.includes('Admin')
 }
 
 export function getAuthToken(): string | null {
@@ -31,14 +32,21 @@ export function setAuth(token: string, userId: string, roles: Array<string> = []
   }
 }
 
+export function setAdminStatus(isAdmin: boolean): void {
+  currentIsAdmin = isAdmin
+  localStorage.setItem('is_admin', isAdmin.toString())
+}
+
 export function clearAuth(): void {
   currentAccessToken = null
   currentRoles = []
   currentUserId = null
+  currentIsAdmin = false
 
   localStorage.removeItem('access_token')
   localStorage.removeItem('user_roles')
   localStorage.removeItem('user_id')
+  localStorage.removeItem('is_admin')
 }
 
 export function getAuthenticatedURL(route: string = '/dashboard'): string {

@@ -2,6 +2,7 @@ export interface Budget {
   id: number
   limitAmount: number
   currentAmount: number
+  currency: string
   // Legacy field from old API
   created: string
   categoryId: number
@@ -20,11 +21,13 @@ export interface PaginatedBudgetsResponse {
 export interface CreateBudgetRequest {
   limitAmount: number
   categoryId: number
+  currency: string
 }
 
 export interface UpdateBudgetRequest {
   limitAmount: number
   categoryId: number
+  currency: string
 }
 
 export interface MonthlyBudgetResponse {
@@ -38,6 +41,7 @@ export interface BudgetApiModel {
   id: number
   limitAmount: number
   currentAmount: number
+  currency: string
   percentageUsed: number
   status: string
   categoryId: number

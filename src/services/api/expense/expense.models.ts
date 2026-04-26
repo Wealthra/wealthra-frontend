@@ -2,6 +2,7 @@ export interface Expense {
   id: number
   description: string
   amount: number
+  currency: string
   paymentMethod: string
   isRecurring: boolean
   categoryId: number
@@ -21,6 +22,7 @@ export interface PaginatedExpensesResponse {
 export interface CreateExpenseRequest {
   description: string
   amount: number
+  currency: string
   paymentMethod: string
   isRecurring: boolean
   categoryId: number
@@ -30,6 +32,7 @@ export interface CreateExpenseRequest {
 export interface UpdateExpenseRequest {
   description: string
   amount: number
+  currency: string
   paymentMethod: string
   isRecurring: boolean
   categoryId: number

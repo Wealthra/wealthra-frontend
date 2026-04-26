@@ -1,5 +1,9 @@
 import './assets/main.css'
 import '@fortawesome/fontawesome-free/css/all.min.css'
+import { cleanupLocalStorage } from './utils/cleanup'
+
+// Clean up old storage data before starting
+cleanupLocalStorage()
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

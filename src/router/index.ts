@@ -15,8 +15,9 @@ const ExpensesView = () => import('../modules/expenses/page/ExpensesView.vue')
 const IncomeView = () => import('../modules/income/page/IncomeView.vue')
 const GoalsView = () => import('../modules/goals/page/GoalsView.vue')
 const SettingsView = () => import('../modules/settings/page/SettingsView.vue')
+const RecommendationsView = () => import('../modules/recommendations/page/RecommendationsView.vue')
 
-import { isAuthenticated } from '../utils/auth'
+import { isAuthenticated, isAdmin } from '../utils/auth'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -86,13 +87,18 @@ const router = createRouter({
           name: 'settings',
           component: SettingsView,
         },
+        {
+          path: 'recommendations',
+          name: 'recommendations',
+          component: RecommendationsView,
+        },
       ],
     },
     {
       path: '/admin',
       name: 'admin',
       component: AdminView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
   ],
 })
@@ -104,7 +110,12 @@ router.beforeEach((to, from, next) => {
     if (!isAuthenticated()) {
       next({ name: 'landingpage' })
     } else {
-      next()
+      const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
+      if (requiresAdmin && !isAdmin()) {
+        next({ name: 'dashboard' }) // Redirect non-admins to dashboard
+      } else {
+        next()
+      }
     }
   } else if (to.name === 'login' && isAuthenticated()) {
     next({ name: 'dashboard' })

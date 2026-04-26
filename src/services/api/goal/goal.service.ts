@@ -22,6 +22,7 @@ export const goalService = {
         name: data.name,
         targetAmount: data.targetAmount,
         currentAmount: data.currentAmount,
+        currency: data.currency,
         deadline: data.deadline,
       },
     })
@@ -41,6 +42,7 @@ export const goalService = {
         name: data.name,
         targetAmount: data.targetAmount,
         currentAmount: data.currentAmount,
+        currency: data.currency,
         deadline: data.deadline,
       },
     })

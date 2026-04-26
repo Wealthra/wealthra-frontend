@@ -21,15 +21,15 @@
         <div class="sidebar-middle">
           <div class="middle-wrapper">
             <div
-              v-for="(item, index) in leftBarContent[normalizedLanguage].slice(0, 6)"
+              v-for="(item, index) in sidebarItems"
               :key="'collapsed-' + index"
               class="icon-wrapper clickable"
-              :class="{ active: selectedPage === item }"
-              @click="routeToSidebarItem(item, index)"
-              :title="item"
+              :class="{ active: selectedPage === item.label }"
+              @click="routeToSidebarItem(item.englishLabel)"
+              :title="item.label"
             >
               <div class="nav-icon">
-                <font-awesome-icon :icon="leftSidebarIconMap[leftBarContentEnglish[index]]" />
+                <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
               </div>
             </div>
           </div>
@@ -59,19 +59,19 @@
         <div class="sidebar-middle">
           <div class="middle-wrapper">
             <div
-              v-for="(item, index) in leftBarContent[normalizedLanguage].slice(0, 6)"
+              v-for="(item, index) in sidebarItems"
               :key="'expanded-' + index"
               class="menu-item-container"
             >
               <div
                 class="icon-wrapper"
-                :class="{ active: selectedPage === item }"
-                @click="routeToSidebarItem(item, index)"
+                :class="{ active: selectedPage === item.label }"
+                @click="routeToSidebarItem(item.englishLabel)"
               >
                 <div class="nav-icon">
-                  <font-awesome-icon :icon="leftSidebarIconMap[leftBarContentEnglish[index]]" />
+                  <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
                 </div>
-                <span class="nav-label">{{ item }}</span>
+                <span class="nav-label">{{ item.label }}</span>
               </div>
             </div>
           </div>
@@ -107,7 +107,7 @@
 
         <div class="top-bar-right">
           <button 
-            v-if="['Dashboard', 'Kontrol Paneli', 'Income', 'Gelir', 'Expenses', 'Giderler', 'Budget', 'Bütçe', 'Goals', 'Hedefler', 'Settings', 'Ayarlar'].includes(selectedPage)"
+            v-if="['Dashboard', 'Kontrol Paneli', 'Recommendations', 'Öneriler', 'Income', 'Gelir', 'Expenses', 'Giderler', 'Budget', 'Bütçe', 'Goals', 'Hedefler', 'Settings', 'Ayarlar'].includes(selectedPage)"
             class="refetch-btn" 
             @click="handleRefetch" 
             :title="texts.refetch"
@@ -183,7 +183,7 @@ import { useRouter } from 'vue-router'
 import UILanguageButton from '@/components/UILanguageButton.vue'
 import UIThemeButton from '@/components/UIThemeButton.vue'
 import CopilotChat from '@/components/CopilotChat.vue'
-import { clearAuth, getUserId } from '@/utils/auth'
+import { clearAuth, getUserId, isAdmin, setAdminStatus } from '@/utils/auth'
 import { arrowIcons, leftSidebarIconMap, profileIcon } from '@/icons/fontawesome-icons'
 import { accountService } from '@/services/api/account/account.service'
 import { useCurrency } from '@/composables/useCurrency'
@@ -222,12 +222,14 @@ export default defineComponent({
     const userLastName = ref<string>('')
     const userAvatarUrl = ref<string | null>(null)
 
-    const leftBarContentEnglish = ['Dashboard', 'Income', 'Expenses', 'Budget', 'Goals', 'Settings'] as const
+    const leftBarContentEnglish = ['Dashboard', 'Recommendations', 'Income', 'Expenses', 'Budget', 'Goals', 'Settings', 'Admin'] as const
 
     const leftBarContent: Record<Language, readonly string[]> = {
       English: leftBarContentEnglish as readonly string[],
-      Turkish: ['Kontrol Paneli', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Ayarlar'],
+      Turkish: ['Kontrol Paneli', 'Öneriler', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Ayarlar', 'Yönetim'],
     }
+
+    const isUserAdmin = ref(isAdmin())
 
     const settingsLabelEnglish = 'Settings'
     const settingsLabelTurkish = 'Ayarlar'
@@ -269,8 +271,7 @@ export default defineComponent({
       router.push({ name: page.toLowerCase() })
     }
 
-    const routeToSidebarItem = (item: string, index: number) => {
-      const englishPage = leftBarContentEnglish[index]
+    const routeToSidebarItem = (englishPage: string) => {
       routeToPage(englishPage, props.selectedLanguage)
     }
 
@@ -285,6 +286,8 @@ export default defineComponent({
         userFirstName.value = me.firstName
         userLastName.value = me.lastName
         userAvatarUrl.value = me.avatarUrl || null
+        setAdminStatus(me.isAdmin)
+        isUserAdmin.value = me.isAdmin
       } catch {
         const id = getUserId()
         if (!userFirstName.value && id) {
@@ -317,6 +320,21 @@ export default defineComponent({
 
     const isDashboard = computed(() => {
       return props.selectedPage === 'Dashboard' || props.selectedPage === 'Kontrol Paneli'
+    })
+
+    const sidebarItems = computed(() => {
+      const admin = isUserAdmin.value
+      const lang = normalizedLanguage.value
+      
+      return leftBarContentEnglish.map((eng, idx) => {
+        return {
+          englishLabel: eng,
+          label: leftBarContent[lang][idx]
+        }
+      }).filter(item => {
+        if (item.englishLabel === 'Admin') return admin
+        return true
+      })
     })
 
     const greetingTitle = computed(() => {
@@ -377,6 +395,7 @@ export default defineComponent({
       userInitials,
       userDisplayName,
       isDashboard,
+      sidebarItems,
       greetingTitle,
       greetingSubtitle,
       isPrivacyMode,

@@ -48,6 +48,8 @@ export interface AccountProfileResponse {
   firstName: string
   lastName: string
   avatarUrl: string
+  preferredCurrency: string
+  isAdmin: boolean
   createdAt: string
 }
 
@@ -68,8 +70,8 @@ export interface AccountForgotPasswordRequest {
 
 export interface AccountResetPasswordRequest {
   email: string
-  token: string
-  password: string
+  code: string
+  newPassword: string
 }
 
 export interface AccountChangePreferredCurrencyRequest {
@@ -78,16 +80,15 @@ export interface AccountChangePreferredCurrencyRequest {
 
 export interface AccountUpdateUserTierRequest {
   email: string
-  tier: string | number
+  tier: string
 }
 
 export interface AccountUserUsageResponse {
-  email?: string
-  name?: string
-  tier?: string
-  aiChatUsage?: number
-  aiChatLimit?: number
-  receiptScanUsage?: number
-  receiptScanLimit?: number
-  [key: string]: any
+  email: string
+  name: string
+  tier: string
+  aiChatUsage: number
+  aiChatLimit: number
+  receiptScanUsage: number
+  receiptScanLimit: number
 }

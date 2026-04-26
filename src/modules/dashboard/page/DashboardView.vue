@@ -1,5 +1,17 @@
 <template>
   <div class="dashboard-page">
+    <div class="dashboard-header">
+      <div class="header-left">
+        <!-- Optional extra info could go here -->
+      </div>
+      <div class="header-right">
+        <button class="export-btn" @click="isExportModalOpen = true">
+          <font-awesome-icon icon="download" />
+          <span>{{ selectedLanguage === 'Turkish' ? 'Dışa Aktar' : 'Export' }}</span>
+        </button>
+      </div>
+    </div>
+
     <div v-if="hasError" class="error-container">
       <div class="error-message">
         {{ dashboardTexts[selectedLanguage].dataError }}
@@ -194,6 +206,12 @@
         />
       </div>
     </div>
+
+    <UIExportModal 
+      v-if="isExportModalOpen" 
+      :selectedLanguage="selectedLanguage"
+      @close="isExportModalOpen = false"
+    />
   </div>
 </template>
 
@@ -205,6 +223,7 @@ import UITopSpendingsBox from '../components/UITopSpendingsBox.vue'
 import UIRecentTransactionsCard from '../components/UIRecentTransactionsCard.vue'
 import UIBudgetAlertsCard from '../components/UIBudgetAlertsCard.vue'
 import UIGoalsOverviewCard from '../components/UIGoalsOverviewCard.vue'
+import UIExportModal from '../components/UIExportModal.vue'
 import { emptyStateIcons } from '@/icons/fontawesome-icons'
 
 import type { Spendings } from '@/interfaces/Spendings'
@@ -238,9 +257,11 @@ export default {
     UIRecentTransactionsCard,
     UIBudgetAlertsCard,
     UIGoalsOverviewCard,
+    UIExportModal,
   },
   data() {
     return {
+      isExportModalOpen: false,
       isLoading: false,
       hasError: false,
       dashboardSummary: {} as DashboardSummaryResponse,
@@ -413,10 +434,37 @@ export default {
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   width: 100%;
   height: min-content;
   padding-bottom: 2rem;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  .export-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--background-color);
+    color: var(--header-text-color);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--hover-color);
+      border-color: var(--primary-green-color);
+      color: var(--primary-green-color);
+    }
+  }
 }
 
 /* 1. LAYER: KPI GRID */
