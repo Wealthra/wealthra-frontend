@@ -10,39 +10,27 @@
 
       <div class="modal-body">
         <div class="form-grid">
-          <div class="form-group">
+          <div class="form-group full-width">
             <label>{{ t.name }}</label>
             <input v-model="form.name" type="text" />
           </div>
-          <div class="form-group">
-            <label>{{ t.price }}</label>
-            <div class="input-row">
-              <input v-model.number="form.price" type="number" />
-              <select v-model="form.currency">
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="TRY">TRY</option>
-              </select>
-            </div>
+          <div class="form-group full-width">
+            <label>{{ t.description }}</label>
+            <textarea v-model="form.description" rows="2"></textarea>
           </div>
           <div class="form-group">
-            <label>{{ t.chatLimit }}</label>
-            <input v-model.number="form.aiChatLimit" type="number" />
+            <label>{{ t.ocrLimit }}</label>
+            <input v-model.number="form.monthlyOcrLimit" type="number" />
           </div>
           <div class="form-group">
-            <label>{{ t.scanLimit }}</label>
-            <input v-model.number="form.receiptScanLimit" type="number" />
+            <label>{{ t.sttLimit }}</label>
+            <input v-model.number="form.monthlySttLimit" type="number" />
           </div>
-        </div>
-
-        <div class="form-group full-width">
-          <label>{{ t.features }} ({{ t.commaSeparated }})</label>
-          <textarea v-model="featuresText" rows="3"></textarea>
         </div>
 
         <div class="form-group checkbox-group">
-          <input type="checkbox" v-model="form.isPopular" id="isPopular" />
-          <label for="isPopular">{{ t.isPopular }}</label>
+          <input type="checkbox" v-model="form.isActive" id="isActive" />
+          <label for="isActive">{{ t.isActive }}</label>
         </div>
       </div>
 
@@ -78,16 +66,13 @@ export default defineComponent({
   setup(props, { emit }) {
     const isEdit = computed(() => !!props.plan)
     const isSubmitting = ref(false)
-    const featuresText = ref('')
 
     const form = ref({
       name: '',
-      price: 0,
-      currency: 'USD',
-      aiChatLimit: 10,
-      receiptScanLimit: 5,
-      features: [] as string[],
-      isPopular: false
+      description: '',
+      monthlyOcrLimit: 0,
+      monthlySttLimit: 0,
+      isActive: true
     })
 
     const t = computed(() => {
@@ -96,12 +81,10 @@ export default defineComponent({
         createPlan: isTr ? 'Yeni Plan Oluştur' : 'Create New Plan',
         editPlan: isTr ? 'Planı Düzenle' : 'Edit Plan',
         name: isTr ? 'İsim' : 'Name',
-        price: isTr ? 'Fiyat' : 'Price',
-        chatLimit: isTr ? 'AI Sohbet Limiti' : 'AI Chat Limit',
-        scanLimit: isTr ? 'Fiş Tarama Limiti' : 'Receipt Scan Limit',
-        features: isTr ? 'Özellikler' : 'Features',
-        commaSeparated: isTr ? 'virgülle ayırın' : 'comma separated',
-        isPopular: isTr ? 'Popüler Plan' : 'Is Popular Plan',
+        description: isTr ? 'Açıklama' : 'Description',
+        ocrLimit: isTr ? 'Aylık OCR Limiti' : 'Monthly OCR Limit',
+        sttLimit: isTr ? 'Aylık STT Limiti' : 'Monthly STT Limit',
+        isActive: isTr ? 'Aktif Plan' : 'Is Active Plan',
         cancel: isTr ? 'İptal' : 'Cancel',
         save: isTr ? 'Kaydet' : 'Save',
         saving: isTr ? 'Kaydediliyor...' : 'Saving...'
@@ -110,14 +93,18 @@ export default defineComponent({
 
     onMounted(() => {
       if (props.plan) {
-        form.value = { ...props.plan }
-        featuresText.value = props.plan.features.join(', ')
+        form.value = {
+          name: props.plan.name,
+          description: props.plan.description,
+          monthlyOcrLimit: props.plan.monthlyOcrLimit,
+          monthlySttLimit: props.plan.monthlySttLimit,
+          isActive: props.plan.isActive
+        }
       }
     })
 
     const handleSave = async () => {
       isSubmitting.value = true
-      form.value.features = featuresText.value.split(',').map(s => s.trim()).filter(s => s)
       try {
         if (isEdit.value && props.plan) {
           await adminPlansService.updatePlan(props.plan.id, { ...form.value, id: props.plan.id })
@@ -136,7 +123,6 @@ export default defineComponent({
       isEdit,
       isSubmitting,
       form,
-      featuresText,
       t,
       handleSave
     }
@@ -161,7 +147,7 @@ export default defineComponent({
 
 .modal-content {
   width: 100%;
-  max-width: 600px;
+  max-width: 500px;
   background: var(--background-color);
   padding: 0;
   overflow: hidden;
@@ -214,13 +200,6 @@ export default defineComponent({
     font-size: 14px;
 
     &:focus { border-color: var(--primary-green-color); background: var(--background-color); }
-  }
-
-  .input-row {
-    display: flex;
-    gap: 8px;
-    input { flex: 1; }
-    select { width: 100px; }
   }
 }
 

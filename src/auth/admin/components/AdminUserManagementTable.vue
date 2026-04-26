@@ -1,339 +1,376 @@
 <template>
   <div class="admin-user-management-table-c">
-    <table class="user-table">
-      <thead>
-        <tr>
-          <th>{{ selectedLanguage == 'English' ? 'User' : 'Kullanıcı' }}</th>
-          <th>Email</th>
-          <th>{{ selectedLanguage == 'English' ? 'Registration Date' : 'Kayıt Tarihi' }}</th>
-          <th>{{ selectedLanguage == 'English' ? 'Net Worth' : 'Net Servet' }}</th>
-          <th>{{ selectedLanguage == 'English' ? 'Actions' : 'Aksiyonlar' }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(user, index) in data" :key="index">
-          <td>{{ user.firstName }} {{ user.lastName }}</td>
-          <td>{{ user.email }}</td>
-          <td>{{ formatDate(user.createdAt) }}</td>
-          <td>{{ formatCurrency(user.totalNetWorth) }}</td>
-          <td>
-            <button class="delete-btn" @click="deleteUser(user.id)">
-              <font-awesome-icon :icon="actionIcons.delete" />
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-controls">
+      <div class="search-box">
+        <input 
+          v-model="searchEmail" 
+          type="text" 
+          :placeholder="t.searchByEmail" 
+          @keyup.enter="handleSearch"
+        />
+        <button @click="handleSearch">
+          <font-awesome-icon icon="magnifying-glass" />
+        </button>
+      </div>
+    </div>
 
-    <!-- Pagination -->
-    <div class="pagination">
-      <button
-        :disabled="pageNumber === 1"
-        @click="changePage(pageNumber - 1)"
-        class="pagination-btn"
-      >
-        <font-awesome-icon :icon="arrowIcons.left" class="arrow-left" />
-      </button>
+    <div class="table-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>{{ t.name }}</th>
+            <th>Email</th>
+            <th>{{ t.tier }}</th>
+            <th>{{ t.chatUsage }}</th>
+            <th>{{ t.ocrUsage }}</th>
+            <th>{{ t.actions }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-if="isLoading">
+            <tr v-for="i in 5" :key="i">
+              <td v-for="j in 6" :key="j">
+                <UISkeletonLoader height="20px" />
+              </td>
+            </tr>
+          </template>
+          <template v-else>
+            <tr v-for="user in users" :key="user.email">
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span class="tier-badge">{{ user.tier }}</span>
+              </td>
+              <td>{{ user.aiChatUsage }} / {{ user.aiChatLimit }}</td>
+              <td>{{ user.receiptScanUsage }} / {{ user.receiptScanLimit }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="tier-btn" @click="promptUpdateTier(user)" :title="t.updateTier">
+                    <font-awesome-icon icon="user-gear" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="users.length === 0">
+              <td colspan="6" class="no-data">{{ t.noUsersFound }}</td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
 
-      <span
-        v-for="page in displayedPages"
-        :key="page"
-        :class="['page-number', { active: page === pageNumber }]"
-        @click="changePage(page)"
-      >
-        {{ page }}
-      </span>
-
-      <span v-if="showEllipsis" class="ellipsis">...</span>
-
-      <span
-        v-if="showLastPage"
-        :class="['page-number', { active: totalPages === pageNumber }]"
-        @click="changePage(totalPages)"
-      >
-        {{ totalPages }}
-      </span>
-
-      <button
-        :disabled="pageNumber === totalPages || totalPages === 0"
-        @click="changePage(pageNumber + 1)"
-        class="pagination-btn"
-      >
-        <font-awesome-icon :icon="arrowIcons.right" class="arrow-right" />
-      </button>
+    <!-- Update Tier Modal -->
+    <div v-if="isTierModalOpen" class="modal-overlay" @click.self="isTierModalOpen = false">
+      <div class="modal-content glass-card">
+        <div class="modal-header">
+          <h3>{{ t.updateTierTitle }}</h3>
+          <button class="close-btn" @click="isTierModalOpen = false">
+            <font-awesome-icon icon="xmark" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p><strong>{{ selectedUser?.email }}</strong></p>
+          <div class="form-group">
+            <label>{{ t.newTierLabel }}</label>
+            <select v-model="newTier">
+              <option v-for="plan in plans" :key="plan.id" :value="plan.id.toString()">
+                {{ plan.name }} (#{{ plan.id }})
+              </option>
+              <option value="1">Free / Basic (1)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" @click="isTierModalOpen = false">{{ t.cancel }}</button>
+          <button class="save-btn" @click="handleUpdateTier" :disabled="isUpdating">
+            {{ isUpdating ? t.updating : t.update }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { arrowIcons, actionIcons } from '@/icons/fontawesome-icons'
-import { useCurrency } from '@/composables/useCurrency'
+import { defineComponent, ref, computed, onMounted } from 'vue'
+import type { PropType } from 'vue'
+import { accountService } from '@/services/api/account/account.service'
+import type { AccountUserUsageResponse } from '@/services/api/account/account.models'
+import type { AdminPlan } from '@/services/api/adminPlans/adminPlans.models'
+import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 
-export default {
+export default defineComponent({
   name: 'AdminUserManagementTable',
+  components: {
+    UISkeletonLoader
+  },
   props: {
-    pageNumber: {
-      type: Number,
-      required: true,
-    },
-    pageSize: {
-      type: Number,
-      required: true,
-    },
-    data: {
-      type: Array as () => Array<{
-        id: string
-        firstName: string
-        lastName: string
-        email: string
-        createdAt: string
-        totalNetWorth: number
-      }>,
-      required: true,
-    },
-    hasMoreItems: {
-      type: Boolean,
-      required: true,
-    },
-    totalCount: {
-      type: Number,
-      required: true,
-    },
-    totalPages: {
-      type: Number,
-      required: true,
-    },
     selectedLanguage: {
       type: String,
-      required: true,
+      default: 'English'
     },
-  },
-  setup() {
-    const { formatCurrency } = useCurrency()
-    return { formatCurrency }
-  },
-  data() {
-    return {
-      arrowIcons,
-      actionIcons,
+    plans: {
+      type: Array as PropType<AdminPlan[]>,
+      default: () => []
     }
   },
-  computed: {
-    displayedPages() {
-      // Display up to 5 page numbers around the current page
-      const maxVisiblePages = 5
-      const halfVisible = Math.floor(maxVisiblePages / 2)
+  setup(props) {
+    const users = ref<AccountUserUsageResponse[]>([])
+    const searchEmail = ref('')
+    const isTierModalOpen = ref(false)
+    const selectedUser = ref<AccountUserUsageResponse | null>(null)
+    const newTier = ref('')
+    const isUpdating = ref(false)
+    const isLoading = ref(true)
 
-      let startPage = Math.max(1, this.pageNumber - halfVisible)
-      const endPage = Math.min(startPage + maxVisiblePages - 1, this.totalPages)
-
-      // Adjust start page if we're near the end
-      if (this.totalPages - endPage < halfVisible) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    const t = computed(() => {
+      const isTr = props.selectedLanguage === 'Turkish'
+      return {
+        name: isTr ? 'İsim' : 'Name',
+        tier: isTr ? 'Seviye' : 'Tier',
+        chatUsage: isTr ? 'Chat Kullanımı' : 'Chat Usage',
+        ocrUsage: isTr ? 'OCR Kullanımı' : 'OCR Usage',
+        actions: isTr ? 'Aksiyonlar' : 'Actions',
+        searchByEmail: isTr ? 'Email ile ara...' : 'Search by email...',
+        noUsersFound: isTr ? 'Kullanıcı bulunamadı.' : 'No users found.',
+        updateTier: isTr ? 'Seviyeyi Güncelle' : 'Update Tier',
+        updateTierTitle: isTr ? 'Kullanıcı Seviyesini Güncelle' : 'Update User Tier',
+        newTierLabel: isTr ? 'Yeni Seviye (Plan)' : 'New Tier (Plan)',
+        cancel: isTr ? 'İptal' : 'Cancel',
+        update: isTr ? 'Güncelle' : 'Update',
+        updating: isTr ? 'Güncelleniyor...' : 'Updating...'
       }
+    })
 
-      const pages = []
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i)
-      }
-
-      return pages
-    },
-    showEllipsis() {
-      return (
-        this.displayedPages.length > 0 &&
-        this.displayedPages[this.displayedPages.length - 1] < this.totalPages - 1
-      )
-    },
-    showLastPage() {
-      return (
-        this.displayedPages.length > 0 &&
-        this.displayedPages[this.displayedPages.length - 1] < this.totalPages
-      )
-    },
-  },
-  methods: {
-    formatDate(dateString: string) {
+    const fetchUsers = async () => {
+      isLoading.value = true
       try {
-        const date = new Date(dateString)
-        if (this.selectedLanguage === 'Turkish') {
-          return date.toLocaleDateString('tr-TR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          })
-        }
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
+        users.value = await accountService.getAdminUsages(searchEmail.value)
+      } catch (error) {
+        console.error('Error fetching admin usages:', error)
+      } finally {
+        isLoading.value = false
+      }
+    }
+
+    const handleSearch = () => {
+      fetchUsers()
+    }
+
+    const promptUpdateTier = (user: AccountUserUsageResponse) => {
+      selectedUser.value = user
+      // If the tier is already a number-like string, use it, otherwise default to "1"
+      newTier.value = /^\d+$/.test(user.tier) ? user.tier : '1'
+      isTierModalOpen.value = true
+    }
+
+    const handleUpdateTier = async () => {
+      if (!selectedUser.value) return
+      isUpdating.value = true
+      try {
+        await accountService.updateTier({
+          email: selectedUser.value.email,
+          tier: newTier.value
         })
-      } catch {
-        return dateString
+        isTierModalOpen.value = false
+        await fetchUsers()
+      } catch (error) {
+        console.error('Error updating tier:', error)
+      } finally {
+        isUpdating.value = false
       }
-    },
-    formatNumber(value: number) {
-      return value.toLocaleString('en-US')
-    },
-    deleteUser(id: string) {
-      this.$emit('deleteUser', id)
-    },
-    changePage(pageNumber: number) {
-      if (pageNumber >= 1 && pageNumber <= this.totalPages) {
-        this.$emit('changePage', pageNumber)
-      }
-    },
-  },
-}
+    }
+
+    onMounted(() => {
+      fetchUsers()
+    })
+
+    return {
+      users,
+      searchEmail,
+      isTierModalOpen,
+      selectedUser,
+      newTier,
+      isUpdating,
+      isLoading,
+      t,
+      handleSearch,
+      promptUpdateTier,
+      handleUpdateTier
+    }
+  }
+})
 </script>
 
 <style scoped lang="scss">
 .admin-user-management-table-c {
-  width: 100%;
-  margin: 1rem 0;
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-  .user-table {
-    width: 100%;
-    border-collapse: collapse;
+.table-controls {
+  display: flex;
+  justify-content: flex-end;
+}
 
-    th,
-    td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid var(--border-color);
-      color: var(--header-text-color);
-    }
-
-    thead {
-      background-color: var(--background-color-soft);
-      color: var(--header-text-color);
-    }
+.search-box {
+  display: flex;
+  gap: 8px;
+  input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--background-color-soft);
+    color: var(--header-text-color);
+    width: 250px;
   }
-
-  .delete-btn {
-    background: none;
+  button {
+    padding: 8px 12px;
+    border-radius: 8px;
     border: none;
+    background: var(--primary-green-color);
+    color: white;
+    cursor: pointer;
+  }
+}
 
-    img {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
+.table-container {
+  overflow-x: auto;
+}
 
-      &:hover {
-        scale: 1.1;
-        transition: scale 0.2s ease-in-out;
-      }
-    }
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  th {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--normal-text-color);
+    border-bottom: 1px solid var(--border-color);
   }
 
-  .pagination {
+  td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--header-text-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 40px;
+    color: var(--normal-text-color);
+  }
+}
+
+.tier-badge {
+  background: var(--primary-green-color);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.tier-btn {
+  background: var(--background-color-soft);
+  border: 1px solid var(--border-color);
+  color: var(--header-text-color);
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--hover-color);
+    color: var(--primary-green-color);
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 400px;
+  background: var(--background-color);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  h3 { margin: 0; font-size: 18px; }
+  .close-btn { background: transparent; border: none; font-size: 18px; cursor: pointer; color: var(--normal-text-color); }
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .form-group {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 15px 0;
-    gap: 1rem;
-
-    .pagination-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      background-color: var(--background-color-soft);
+    flex-direction: column;
+    gap: 8px;
+    label { font-size: 13px; font-weight: 600; }
+    select {
+      padding: 10px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
-      cursor: pointer;
-
-      &:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-
-      .arrow-left {
-        transform: rotate(180deg);
-        width: 16px;
-        height: 16px;
-      }
-
-      .arrow-right {
-        width: 16px;
-        height: 16px;
-      }
-    }
-
-    .page-number {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 4px;
-      cursor: pointer;
-      border: 1px solid var(--border-color);
-
-      &.active {
-        background-color: var(--primary-green-color);
-        border: transparent;
-        color: white;
-      }
-
-      &:hover:not(.active) {
-        background-color: var(--background-color-soft);
-      }
-    }
-
-    .ellipsis {
-      padding: 0 8px;
+      background: var(--background-color-soft);
+      color: var(--header-text-color);
     }
   }
 }
-@media (max-width: 768px) {
-  .admin-user-management-table-c {
-    margin: 0.5rem 0;
-    border-radius: var(--border-radius);
 
-    .user-table {
-      display: block;
-      overflow-x: auto;
-      white-space: nowrap;
-      -webkit-overflow-scrolling: touch;
+.modal-footer {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: var(--background-color-soft);
 
-      th,
-      td {
-        padding: 8px 10px;
-        font-size: 0.85rem;
-      }
-    }
-
-    .pagination {
-      padding: 10px 0;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-
-      .pagination-btn {
-        width: 35px;
-        height: 35px;
-
-        .arrow-left,
-        .arrow-right {
-          width: 14px;
-          height: 14px;
-        }
-      }
-
-      .page-number {
-        width: 35px;
-        height: 35px;
-        font-size: 0.9rem;
-      }
-
-      .ellipsis {
-        padding: 0 4px;
-      }
-    }
+  button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
   }
+
+  .cancel-btn { background: transparent; border: 1px solid var(--border-color); color: var(--header-text-color); }
+  .save-btn { background: var(--primary-green-color); border: none; color: white; }
+}
+
+.glass-card {
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 </style>

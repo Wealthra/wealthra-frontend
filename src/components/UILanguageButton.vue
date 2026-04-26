@@ -67,23 +67,26 @@ export default defineComponent({
   align-items: center;
   color: var(--normal-text-color);
   font-size: 13px;
-  font-weight: 500;
-  border: 1px solid var(--border-color);
-  padding: 0.45rem 1.1rem;
-  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid rgba(119, 119, 119, 0.3);
+  background-color: rgba(119, 119, 119, 0.08);
+  padding: 0 16px;
+  height: 36px;
+  border-radius: 10px;
   text-decoration: none;
   width: max-content;
-  background-color: transparent;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background-color: var(--color-background-hover);
-    border-color: var(--border-color);
+    background-color: rgba(119, 119, 119, 0.1);
+    border-color: rgba(119, 119, 119, 0.4);
+    color: var(--header-text-color);
+    transform: translateY(-1px);
   }
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.97) translateY(0);
   }
 
   .language-icon {
@@ -91,7 +94,7 @@ export default defineComponent({
   }
 
   .language-label {
-    font-weight: 500;
+    font-weight: 600;
   }
 }
 

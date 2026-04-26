@@ -1,31 +1,25 @@
 <template>
-  <div class="admin-view">
-    <!-- Sticky Top Bar -->
-    <div class="admin-topbar" :class="{ scrolled: isScrolled }">
-      <div class="topbar-left">
-        <img src="../../../icons/logo.svg" alt="Wealthra" class="admin-logo" />
-      </div>
-      <nav class="topbar-nav">
-        <button 
-          v-for="sec in sections" 
-          :key="sec.id" 
-          :class="{ active: activeSection === sec.id }"
-          @click="scrollTo(sec.id)"
-        >
-          {{ t[sec.id] }}
-        </button>
-      </nav>
-      <div class="topbar-right">
-        <UILanguageButton @updateLanguage="handleLanguageUpdate" />
-        <UIThemeButton />
-        <button class="logout-btn" @click="handleLogout" :title="t.logout">
-          <font-awesome-icon icon="right-from-bracket" />
-        </button>
+  <div class="admin-view-content">
+    <div v-if="isLoading" class="admin-loading-skeleton">
+      <div class="skeleton-section" v-for="i in 3" :key="i">
+        <UISkeletonLoader width="250px" height="32px" style="margin-bottom: 24px" />
+        <UISkeletonLoader height="300px" border-radius="16px" />
       </div>
     </div>
+    
+    <template v-else>
+      <!-- Usage Summary Section -->
+      <section id="usage-summary" class="admin-section">
+        <div class="section-header">
+          <h2>{{ t.usageSummary }}</h2>
+        </div>
+        <AdminUsageSummary 
+          v-if="usageSummary"
+          :summary="usageSummary" 
+          :selectedLanguage="selectedLanguage"
+        />
+      </section>
 
-    <!-- Main Content -->
-    <div class="admin-content">
       <!-- Plans Section -->
       <section id="plans" class="admin-section">
         <div class="section-header">
@@ -59,19 +53,19 @@
         </div>
       </section>
 
-      <!-- Usages Section -->
-      <section id="usages" class="admin-section">
+      <!-- User Management Section -->
+      <section id="users" class="admin-section">
         <div class="section-header">
-          <h2>{{ t.usages }}</h2>
+          <h2>{{ t.userManagement }}</h2>
         </div>
         <div class="glass-card">
-          <AdminUsageSummary 
-            :usages="usages" 
+          <AdminUserManagementTable 
             :selectedLanguage="selectedLanguage"
+            :plans="plans"
           />
         </div>
       </section>
-    </div>
+    </template>
 
     <!-- Plan Modal (for Create/Edit) -->
     <UIPlanModal 
@@ -85,10 +79,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, ref, computed } from 'vue'
+import { defineComponent, onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
-import type { AdminPlan, AdminUserUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
+import type { AdminPlan, AdminUsageSummary as IUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
 import { clearAuth } from '@/utils/auth'
 
 import UILanguageButton from '@/components/UILanguageButton.vue'
@@ -97,6 +91,8 @@ import AdminPlanTable from '../components/AdminPlanTable.vue'
 import AdminUserAssignment from '../components/AdminUserAssignment.vue'
 import AdminUsageSummary from '../components/AdminUsageSummary.vue'
 import UIPlanModal from '../components/UIPlanModal.vue'
+import AdminUserManagementTable from '../components/AdminUserManagementTable.vue'
+import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 
 export default defineComponent({
   name: 'AdminView',
@@ -106,61 +102,32 @@ export default defineComponent({
     AdminPlanTable,
     AdminUserAssignment,
     AdminUsageSummary,
-    UIPlanModal
+    UIPlanModal,
+    AdminUserManagementTable,
+    UISkeletonLoader
   },
   setup() {
     const router = useRouter()
     const selectedLanguage = ref(localStorage.getItem('selectedLanguage') || 'English')
-    const isScrolled = ref(false)
-    const activeSection = ref('plans')
     
     const plans = ref<AdminPlan[]>([])
-    const usages = ref<AdminUserUsageSummary[]>([])
+    const usageSummary = ref<IUsageSummary | null>(null)
+    const isLoading = ref(true)
     
     const isPlanModalOpen = ref(false)
     const selectedPlan = ref<AdminPlan | null>(null)
-
-    const sections = [
-      { id: 'plans', label: 'Plans' },
-      { id: 'assignments', label: 'Assignments' },
-      { id: 'usages', label: 'Usages' }
-    ]
 
     const t = computed<Record<string, string>>(() => {
       const isTr = selectedLanguage.value === 'Turkish'
       return {
         plans: isTr ? 'Abonelik Planları' : 'Subscription Plans',
         assignments: isTr ? 'Plan Atamaları' : 'Plan Assignments',
-        usages: isTr ? 'Kullanıcı Kullanımları' : 'User Usages',
+        usageSummary: isTr ? 'Kullanım Özeti' : 'Usage Summary',
+        userManagement: isTr ? 'Kullanıcı Yönetimi' : 'User Management',
         addNewPlan: isTr ? 'Yeni Plan Ekle' : 'Add New Plan',
         logout: isTr ? 'Çıkış Yap' : 'Logout'
       }
     })
-
-    const handleScroll = () => {
-      isScrolled.value = window.scrollY > 20
-      // Simple section detection
-      for (const sec of sections) {
-        const el = document.getElementById(sec.id)
-        if (el) {
-          const rect = el.getBoundingClientRect()
-          if (rect.top <= 150 && rect.bottom >= 150) {
-            activeSection.value = sec.id
-            break
-          }
-        }
-      }
-    }
-
-    const scrollTo = (id: string) => {
-      const el = document.getElementById(id)
-      if (el) {
-        window.scrollTo({
-          top: el.offsetTop - 100,
-          behavior: 'smooth'
-        })
-      }
-    }
 
     const handleLanguageUpdate = (lang: string) => {
       selectedLanguage.value = lang
@@ -172,15 +139,18 @@ export default defineComponent({
     }
 
     const fetchData = async () => {
+      isLoading.value = true
       try {
-        const [plansRes, usagesRes] = await Promise.all([
-          adminPlansService.getPlans(),
-          adminPlansService.getUserUsages()
+        const [plansRes, usageRes] = await Promise.all([
+          adminPlansService.getPlans(true), // Include inactive for admin management
+          adminPlansService.getUsageSummary()
         ])
         plans.value = plansRes
-        usages.value = usagesRes
+        usageSummary.value = usageRes
       } catch (error) {
         console.error('Error fetching admin data:', error)
+      } finally {
+        isLoading.value = false
       }
     }
 
@@ -207,25 +177,17 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      window.addEventListener('scroll', handleScroll)
       fetchData()
-    })
-
-    onBeforeUnmount(() => {
-      window.removeEventListener('scroll', handleScroll)
     })
 
     return {
       selectedLanguage,
-      isScrolled,
-      activeSection,
-      sections,
       plans,
-      usages,
+      usageSummary,
+      isLoading,
       isPlanModalOpen,
       selectedPlan,
       t,
-      scrollTo,
       handleLanguageUpdate,
       handleLogout,
       openPlanModal,
@@ -251,55 +213,18 @@ export default defineComponent({
   top: 0;
   left: 0;
   right: 0;
-  height: 80px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
-  background: transparent;
-  transition: all 0.3s;
+  background: var(--background-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-
-  &.scrolled {
-    height: 64px;
-    background: var(--background-color);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  }
 
   .topbar-left {
     .admin-logo {
       height: 32px;
-    }
-  }
-
-  .topbar-nav {
-    display: flex;
-    gap: 8px;
-    background: var(--background-color-soft);
-    padding: 6px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-
-    button {
-      padding: 8px 24px;
-      border: none;
-      background: transparent;
-      color: var(--normal-text-color);
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 8px;
-      transition: all 0.2s;
-
-      &:hover {
-        color: var(--header-text-color);
-      }
-
-      &.active {
-        background: var(--background-color);
-        color: var(--primary-green-color);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      }
     }
   }
 
@@ -333,10 +258,16 @@ export default defineComponent({
 .admin-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 120px 40px 40px;
+  padding: 100px 40px 40px;
   display: flex;
   flex-direction: column;
-  gap: 64px;
+  gap: 48px;
+}
+
+.admin-loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
 }
 
 .admin-section {
@@ -383,14 +314,10 @@ export default defineComponent({
 @media (max-width: 768px) {
   .admin-topbar {
     padding: 0 20px;
-    
-    .topbar-nav {
-      display: none;
-    }
   }
 
   .admin-content {
-    padding: 100px 20px 20px;
+    padding: 80px 20px 20px;
   }
 }
 </style>

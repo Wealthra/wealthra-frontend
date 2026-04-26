@@ -43,21 +43,24 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   color: var(--normal-text-color);
-  font-size: 13px;
-  border: 1px solid var(--border-color);
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-  background-color: transparent;
+  font-size: 16px;
+  border: 1px solid rgba(119, 119, 119, 0.2);
+  background-color: rgba(119, 119, 119, 0.05);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background-color: var(--color-background-hover);
-    border-color: var(--border-color);
+    background-color: rgba(119, 119, 119, 0.1);
+    border-color: rgba(119, 119, 119, 0.4);
+    color: var(--header-text-color);
+    transform: translateY(-1px);
   }
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.97) translateY(0);
   }
 
   .theme-icon {

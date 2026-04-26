@@ -66,35 +66,49 @@ const router = createRouter({
         { path: 'goals', name: 'goals', component: GoalsView },
         { path: 'settings', name: 'settings', component: SettingsView },
         { path: 'recommendations', name: 'recommendations', component: RecommendationsView },
+        { path: 'admin', name: 'admin', component: AdminView, meta: { requiresAdmin: true } },
       ],
-    },
-    {
-      path: '/admin',
-      name: 'admin',
-      component: AdminView,
-      meta: { requiresAuth: true, requiresAdmin: true },
     },
   ],
 })
 
 router.beforeEach((to, from, next) => {
+  const isAuth = isAuthenticated()
+  const isAdm = isAdmin()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
+  const isPublicRoute = ['landingpage', 'login', 'signup', 'forgetpassword'].includes(to.name as string)
 
-  if (requiresAuth) {
-    if (!isAuthenticated()) {
+  if (!isAuth) {
+    // Not logged in: only allow public routes
+    if (requiresAuth) {
       next({ name: 'landingpage' })
     } else {
-      const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
-      if (requiresAdmin && !isAdmin()) {
-        next({ name: 'dashboard' }) // Redirect non-admins to dashboard
+      next()
+    }
+  } else {
+    // Logged in
+    if (isAdm) {
+      // Admin: ONLY allow /admin route
+      if (to.name === 'admin') {
+        next()
       } else {
+        // If they try to go anywhere else, force them back to /admin
+        next({ name: 'admin' })
+      }
+    } else {
+      // Regular User
+      if (requiresAdmin) {
+        // Cannot go to admin pages
+        next({ name: 'dashboard' })
+      } else if (isPublicRoute) {
+        // Cannot go to login/landing pages while logged in
+        next({ name: 'dashboard' })
+      } else {
+        // Regular app pages (dashboard, settings etc) are fine
         next()
       }
     }
-  } else if (to.name === 'login' && isAuthenticated()) {
-    next({ name: 'dashboard' })
-  } else {
-    next()
   }
 })
 

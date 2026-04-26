@@ -280,10 +280,11 @@ export default {
         align-items: center;
         height: 100%;
         width: auto;
-        font-weight: 600;
-        font-size: 1.125rem;
-        color: var(--normal-text-color);
+        font-weight: 700;
+        font-size: 1.35rem;
+        color: var(--header-text-color);
         flex-shrink: 0;
+        letter-spacing: -0.02em;
       }
 
       .budget-overview-component-progress-bar {
@@ -292,17 +293,18 @@ export default {
         align-items: center;
         flex-grow: 1;
         min-width: 0;
-        height: 22px;
-        border-radius: var(--border-radius);
-        overflow: hidden;
+        height: 18px;
+        border-radius: 999px;
         background-color: var(--background-color-soft);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
       }
 
       .budget-overview-component-progress-bar-fill {
         height: 100%;
-        background-color: var(--primary-yellow-color);
-        border-radius: var(--border-radius);
-        transition: width 0.3s ease-in-out;
+        background: linear-gradient(90deg, var(--primary-yellow-color), var(--primary-green-color));
+        border-radius: 999px;
+        transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 0 10px rgba(92, 184, 92, 0.3);
       }
 
       .budget-overview-component-percentage {
@@ -311,9 +313,9 @@ export default {
         align-items: center;
         height: 100%;
         width: auto;
-        font-weight: 600;
-        font-size: 1.125rem;
-        color: var(--normal-text-color);
+        font-weight: 700;
+        font-size: 1.35rem;
+        color: var(--primary-green-color);
         flex-shrink: 0;
       }
     }

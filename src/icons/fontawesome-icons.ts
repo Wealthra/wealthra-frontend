@@ -75,6 +75,8 @@ import {
   faPlus,
   faCheck,
   faCrown,
+  faBoxOpen,
+  faUsers,
 } from '@fortawesome/free-solid-svg-icons'
 
 export const leftSidebarIconMap: Record<string, IconDefinition> = {

@@ -1,5 +1,18 @@
 <template>
   <div class="app-layout-container">
+    <!-- Splash Screen for Initial Load -->
+    <transition name="fade">
+      <div v-if="isLoadingUser && isFirstLoad" class="app-splash-screen">
+        <div class="splash-content">
+          <img src="../icons/logo.svg" alt="Wealthra Logo" class="splash-logo" />
+          <div class="splash-loading-bar">
+            <div class="bar-progress"></div>
+          </div>
+          <span class="splash-text">Smarter Wealth Management</span>
+        </div>
+      </div>
+    </transition>
+
     <!-- Left Sidebar -->
     <div
       class="navbar-c"
@@ -20,18 +33,25 @@
 
         <div class="sidebar-middle">
           <div class="middle-wrapper">
-            <div
-              v-for="(item, index) in sidebarItems"
-              :key="'collapsed-' + index"
-              class="icon-wrapper clickable"
-              :class="{ active: selectedPage === item.label }"
-              @click="routeToSidebarItem(item.englishLabel)"
-              :title="item.label"
-            >
-              <div class="nav-icon">
-                <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
+            <template v-if="isLoadingUser">
+              <div v-for="i in 7" :key="'skel-coll-' + i" class="icon-wrapper">
+                <UISkeletonLoader width="24px" height="24px" border-radius="50%" />
               </div>
-            </div>
+            </template>
+            <template v-else>
+              <div
+                v-for="(item, index) in sidebarItems"
+                :key="'collapsed-' + index"
+                class="icon-wrapper clickable"
+                :class="{ active: selectedPage === item.label }"
+                @click="routeToSidebarItem(item.englishLabel)"
+                :title="item.label"
+              >
+                <div class="nav-icon">
+                  <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -58,22 +78,34 @@
 
         <div class="sidebar-middle">
           <div class="middle-wrapper">
-            <div
-              v-for="(item, index) in sidebarItems"
-              :key="'expanded-' + index"
-              class="menu-item-container"
-            >
+            <template v-if="isLoadingUser">
               <div
-                class="icon-wrapper"
-                :class="{ active: selectedPage === item.label }"
-                @click="routeToSidebarItem(item.englishLabel)"
+                v-for="i in 7"
+                :key="'skel-exp-' + i"
+                class="menu-item-container"
+                style="padding: 4px 12px"
               >
-                <div class="nav-icon">
-                  <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
-                </div>
-                <span class="nav-label">{{ item.label }}</span>
+                <UISkeletonLoader width="100%" height="32px" border-radius="8px" />
               </div>
-            </div>
+            </template>
+            <template v-else>
+              <div
+                v-for="(item, index) in sidebarItems"
+                :key="'expanded-' + index"
+                class="menu-item-container"
+              >
+                <div
+                  class="icon-wrapper"
+                  :class="{ active: selectedPage === item.label }"
+                  @click="routeToSidebarItem(item.englishLabel)"
+                >
+                  <div class="nav-icon">
+                    <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
+                  </div>
+                  <span class="nav-label">{{ item.label }}</span>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -94,22 +126,55 @@
       <!-- Topbar -->
       <div class="top-bar-c">
         <div class="top-bar-left">
-          <div class="greeting-section" v-if="isDashboard">
-            <span class="greeting-name">
-              {{ greetingTitle }}
-            </span>
-            <span class="greeting-time">
-              {{ greetingSubtitle }}
-            </span>
-          </div>
-          <div class="page-title" v-else>{{ selectedPage }}</div>
+          <template v-if="isLoadingUser">
+            <div class="greeting-section">
+              <UISkeletonLoader width="120px" height="14px" style="margin-bottom: 4px" />
+              <UISkeletonLoader width="180px" height="24px" />
+            </div>
+          </template>
+          <template v-else>
+            <div class="greeting-section" v-if="isDashboard">
+              <span class="greeting-name">
+                {{ greetingTitle }}
+              </span>
+              <span class="greeting-time">
+                {{ greetingSubtitle }}
+              </span>
+            </div>
+            <div class="page-title" v-else>{{ selectedPage }}</div>
+          </template>
         </div>
 
         <div class="top-bar-right">
-          <button 
-            v-if="['Dashboard', 'Kontrol Paneli', 'Recommendations', 'Öneriler', 'Income', 'Gelir', 'Expenses', 'Giderler', 'Budget', 'Bütçe', 'Goals', 'Hedefler', 'Settings', 'Ayarlar'].includes(selectedPage)"
-            class="refetch-btn" 
-            @click="handleRefetch" 
+          <button
+            class="refetch-btn export-btn-layout"
+            @click="isExportModalOpen = true"
+            :title="texts.export"
+          >
+            <font-awesome-icon icon="download" />
+          </button>
+
+          <button
+            v-if="
+              [
+                'Dashboard',
+                'Kontrol Paneli',
+                'Recommendations',
+                'Öneriler',
+                'Income',
+                'Gelir',
+                'Expenses',
+                'Giderler',
+                'Budget',
+                'Bütçe',
+                'Goals',
+                'Hedefler',
+                'Settings',
+                'Ayarlar',
+              ].includes(selectedPage)
+            "
+            class="refetch-btn"
+            @click="handleRefetch"
             :title="texts.refetch"
           >
             <font-awesome-icon icon="rotate-right" />
@@ -117,7 +182,7 @@
 
           <!-- Privacy Mode Toggle -->
           <button
-            class="refetch-btn"
+            class="refetch-btn privacy-btn-layout"
             @click="togglePrivacyMode"
             :title="texts.privacy"
           >
@@ -130,10 +195,13 @@
           <div class="profile-section-wrapper" ref="profileWrapperRef">
             <div class="profile-section" @click="toggleSettingsPanel">
               <div class="profile-avatar">
-                <img v-if="userAvatarUrl" :src="userAvatarUrl" alt="User Avatar" />
-                <div v-else class="avatar-initials">
-                  {{ userInitials }}
-                </div>
+                <UISkeletonLoader v-if="isLoadingUser" type="circle" width="100%" height="100%" />
+                <template v-else>
+                  <img v-if="userAvatarUrl" :src="userAvatarUrl" alt="User Avatar" />
+                  <div v-else class="avatar-initials">
+                    {{ userInitials }}
+                  </div>
+                </template>
               </div>
             </div>
 
@@ -156,7 +224,19 @@
 
       <!-- Content Area -->
       <div class="content-area">
-        <slot />
+        <div v-if="isLoadingUser" class="layout-loading-skeleton">
+          <div class="skeleton-header">
+            <UISkeletonLoader width="300px" height="32px" />
+            <UISkeletonLoader width="200px" height="16px" />
+          </div>
+          <div class="skeleton-grid">
+            <UISkeletonLoader v-for="i in 4" :key="i" height="200px" border-radius="16px" />
+          </div>
+          <div class="skeleton-content">
+            <UISkeletonLoader height="400px" border-radius="16px" />
+          </div>
+        </div>
+        <slot v-else />
       </div>
     </div>
 
@@ -174,6 +254,12 @@
 
     <!-- Copilot Chatbot -->
     <CopilotChat :selectedLanguage="selectedLanguage" />
+
+    <UIExportModal
+      v-if="isExportModalOpen"
+      :selectedLanguage="selectedLanguage"
+      @close="isExportModalOpen = false"
+    />
   </div>
 </template>
 
@@ -183,10 +269,12 @@ import { useRouter } from 'vue-router'
 import UILanguageButton from '@/components/UILanguageButton.vue'
 import UIThemeButton from '@/components/UIThemeButton.vue'
 import CopilotChat from '@/components/CopilotChat.vue'
+import UIExportModal from '@/modules/dashboard/components/UIExportModal.vue'
 import { clearAuth, getUserId, isAdmin, setAdminStatus } from '@/utils/auth'
 import { arrowIcons, leftSidebarIconMap, profileIcon } from '@/icons/fontawesome-icons'
 import { accountService } from '@/services/api/account/account.service'
 import { useCurrency } from '@/composables/useCurrency'
+import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 
 export default defineComponent({
   name: 'ModuleLayout',
@@ -194,6 +282,8 @@ export default defineComponent({
     UILanguageButton,
     UIThemeButton,
     CopilotChat,
+    UISkeletonLoader,
+    UIExportModal,
   },
   props: {
     selectedLanguage: {
@@ -214,6 +304,9 @@ export default defineComponent({
     const isCollapsed = ref(localStorage.getItem('sidebarCollapsed') !== 'false')
     const isSettingsPanelOpen = ref(false)
     const showLogoutTooltip = ref(false)
+    const isExportModalOpen = ref(false)
+    const isLoadingUser = ref(true)
+    const isFirstLoad = ref(true)
     const profileWrapperRef = ref<HTMLElement | null>(null)
 
     const { isPrivacyMode, togglePrivacyMode } = useCurrency()
@@ -222,11 +315,19 @@ export default defineComponent({
     const userLastName = ref<string>('')
     const userAvatarUrl = ref<string | null>(null)
 
-    const leftBarContentEnglish = ['Dashboard', 'Recommendations', 'Income', 'Expenses', 'Budget', 'Goals', 'Settings', 'Admin'] as const
+    const leftBarContentEnglish = [
+      'Dashboard',
+      'Recommendations',
+      'Income',
+      'Expenses',
+      'Budget',
+      'Goals',
+      'Settings',
+    ] as const
 
     const leftBarContent: Record<Language, readonly string[]> = {
       English: leftBarContentEnglish as readonly string[],
-      Turkish: ['Kontrol Paneli', 'Öneriler', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Ayarlar', 'Yönetim'],
+      Turkish: ['Kontrol Paneli', 'Öneriler', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Ayarlar'],
     }
 
     const isUserAdmin = ref(isAdmin())
@@ -281,6 +382,7 @@ export default defineComponent({
     }
 
     const loadCurrentUser = async () => {
+      isLoadingUser.value = true
       try {
         const me = await accountService.getMe()
         userFirstName.value = me.firstName
@@ -292,11 +394,21 @@ export default defineComponent({
           const { setCurrency } = useCurrency()
           setCurrency(me.preferredCurrency as any)
         }
-      } catch {
+      } catch (err: any) {
+        if (err.status === 401) {
+          handleLogout()
+          return
+        }
         const id = getUserId()
         if (!userFirstName.value && id) {
           userFirstName.value = 'User'
         }
+      } finally {
+        isLoadingUser.value = false
+        // Smooth transition for splash screen
+        setTimeout(() => {
+          isFirstLoad.value = false
+        }, 300)
       }
     }
 
@@ -329,15 +441,12 @@ export default defineComponent({
     const sidebarItems = computed(() => {
       const admin = isUserAdmin.value
       const lang = normalizedLanguage.value
-      
+
       return leftBarContentEnglish.map((eng, idx) => {
         return {
           englishLabel: eng,
-          label: leftBarContent[lang][idx]
+          label: leftBarContent[lang][idx],
         }
-      }).filter(item => {
-        if (item.englishLabel === 'Admin') return admin
-        return true
       })
     })
 
@@ -362,6 +471,7 @@ export default defineComponent({
       no: normalizedLanguage.value === 'English' ? 'Cancel' : 'İptal',
       refetch: normalizedLanguage.value === 'English' ? 'Refresh Data' : 'Verileri Yenile',
       privacy: normalizedLanguage.value === 'English' ? 'Privacy Mode' : 'Gizlilik Modu',
+      export: normalizedLanguage.value === 'English' ? 'Export Data' : 'Verileri Dışa Aktar',
     }))
 
     const userInitials = computed(() => {
@@ -400,9 +510,12 @@ export default defineComponent({
       userDisplayName,
       isDashboard,
       sidebarItems,
+      isLoadingUser,
       greetingTitle,
       greetingSubtitle,
       isPrivacyMode,
+      isExportModalOpen,
+      isFirstLoad,
       togglePrivacyMode,
       emitUpdateLanguage,
       toggleSidebar,
@@ -427,7 +540,7 @@ export default defineComponent({
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --border-radius-default: 8px;
-  --navbar-vertical-width-collapsed: 72px;
+  --navbar-vertical-width-collapsed: 68px;
 
   width: 100%;
   height: 100vh;
@@ -456,6 +569,30 @@ export default defineComponent({
   margin: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+.layout-loading-skeleton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding-top: 20px;
+
+  .skeleton-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+  }
+
+  .skeleton-content {
+    flex: 1;
+  }
 }
 
 /* ============================
@@ -512,21 +649,53 @@ export default defineComponent({
     gap: var(--spacing-md);
 
     .refetch-btn {
-      background: transparent;
-      border: none;
+      background: rgba(119, 119, 119, 0.12);
+      border: 1px solid rgba(119, 119, 119, 0.45);
       color: var(--normal-text-color);
-      font-size: 18px;
+      font-size: 16px;
       cursor: pointer;
-      padding: 4px;
-      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s ease, color 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: none;
 
       &:hover {
+        color: var(--header-text-color);
+        border-color: rgba(119, 119, 119, 0.5);
+        background-color: rgba(119, 119, 119, 0.15);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0) scale(0.95);
+      }
+
+      &.export-btn-layout {
         color: var(--primary-green-color);
-        transform: rotate(45deg);
+        border: 1px solid rgba(92, 184, 92, 0.45);
+        background-color: rgba(92, 184, 92, 0.12);
+
+        &:hover {
+          background-color: rgba(92, 184, 92, 0.2);
+          border-color: rgba(92, 184, 92, 0.7);
+          color: var(--reverse-primary-green-color);
+        }
+      }
+
+      &.privacy-btn-layout {
+        color: var(--primary-blue-color);
+        border: 1px solid rgba(133, 193, 233, 0.45);
+        background-color: rgba(133, 193, 233, 0.12);
+
+        &:hover {
+          background-color: rgba(133, 193, 233, 0.2);
+          border-color: rgba(133, 193, 233, 0.7);
+          color: var(--reverse-primary-blue-color);
+        }
       }
     }
 
@@ -552,6 +721,13 @@ export default defineComponent({
         border-radius: 50%;
         overflow: hidden;
         flex-shrink: 0;
+        border: 1px solid rgba(92, 184, 92, 0.45);
+        background-color: rgba(92, 184, 92, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s ease;
+        backdrop-filter: blur(4px);
 
         img {
           width: 100%;
@@ -565,8 +741,7 @@ export default defineComponent({
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--primary-green-color);
-          color: var(--background-color);
+          color: var(--primary-green-color);
           font-weight: 700;
           font-size: 16px;
           text-transform: uppercase;
@@ -620,7 +795,6 @@ export default defineComponent({
   background-color: var(--background-color);
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
   z-index: 1000;
-
   transition: width 0.25s ease;
 
   &.navbar-c--collapsed {
@@ -686,6 +860,7 @@ export default defineComponent({
     justify-content: flex-start;
     padding: var(--spacing-sm) 0;
     overflow-y: auto;
+    overflow-x: hidden;
 
     .middle-wrapper {
       display: flex;
@@ -852,6 +1027,96 @@ export default defineComponent({
       }
     }
   }
+}
+
+/* ============================
+   Splash Screen
+   ============================ */
+.app-splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--background-color);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+
+    .splash-logo {
+      width: 200px;
+      height: auto;
+      filter: drop-shadow(0 0 20px rgba(92, 184, 92, 0.15));
+      animation: pulse-logo 2.5s infinite ease-in-out;
+    }
+
+    .splash-loading-bar {
+      width: 240px;
+      height: 3px;
+      background: rgba(92, 184, 92, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+
+      .bar-progress {
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, var(--primary-green-color), transparent);
+        animation: loading-flow 2s infinite linear;
+        box-shadow: 0 0 10px var(--primary-green-color);
+      }
+    }
+
+    .splash-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--normal-text-color);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-top: 0.5rem;
+    }
+  }
+}
+
+@keyframes pulse-logo {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 20px rgba(92, 184, 92, 0.15));
+  }
+  50% {
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 35px rgba(92, 184, 92, 0.3));
+  }
+}
+
+@keyframes loading-flow {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 /* ============================

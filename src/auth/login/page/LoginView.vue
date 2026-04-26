@@ -123,10 +123,10 @@ export default {
 
       // Dummy admin login for local testing
       if (email === 'admin@gmail.com' && password === '1234') {
-        import('../../../utils/auth').then(({ setAuth }) => {
-          setAuth('dummy-admin-token', 'admin-id', ['Admin'])
-          this.$router.push('/admin')
-        })
+        const { setAuth, setAdminStatus } = await import('../../../utils/auth')
+        setAuth('dummy-admin-token', 'admin-id', ['Admin'])
+        setAdminStatus(true)
+        this.$router.push('/admin')
         return
       }
 
@@ -147,10 +147,25 @@ export default {
           throw new Error('No token received from server')
         }
 
-        import('../../../utils/auth').then(({ setAuth }) => {
-          setAuth(data.token, data.id)
+        // Set auth immediately so subsequent calls like getMe() have the token
+        const { setAuth, setAdminStatus } = await import('../../../utils/auth')
+        setAuth(data.token, data.id)
+
+        // Fetch /me first as requested
+        try {
+          const profile = await accountService.getMe()
+          setAdminStatus(profile.isAdmin)
+          
+          if (profile.isAdmin) {
+            this.$router.push('/admin')
+          } else {
+            this.$router.push('/dashboard')
+          }
+        } catch (profileError) {
+          console.error('Failed to fetch profile after login:', profileError)
+          // Fallback to dashboard if profile fetch fails
           this.$router.push('/dashboard')
-        })
+        }
       } catch {
         this.showError(
           this.selectedLanguage === 'English'

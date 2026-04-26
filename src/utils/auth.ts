@@ -69,9 +69,16 @@ export async function bootstrapAuth(): Promise<void> {
     const authData = await accountService.refreshToken()
     if (authData && authData.token) {
       setAuth(authData.token, authData.id, [])
+      
+      // Fetch /me to ensure isAdmin is correct
+      try {
+        const profile = await accountService.getMe()
+        setAdminStatus(profile.isAdmin)
+      } catch (profileError) {
+        console.error('Failed to fetch profile during bootstrap:', profileError)
+      }
     }
   } catch (err) {
     // Failure simply means the user needs to log in manually.
-    console.warn('Auth bootstrap failed (no valid refresh cookie found).')
   }
 }

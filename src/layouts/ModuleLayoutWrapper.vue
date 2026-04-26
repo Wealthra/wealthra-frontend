@@ -24,6 +24,8 @@ const ROUTE_NAME_TO_PAGE: Record<string, { en: string; tr: string }> = {
   budget: { en: 'Budget', tr: 'Bütçe' },
   goals: { en: 'Goals', tr: 'Hedefler' },
   settings: { en: 'Settings', tr: 'Ayarlar' },
+  recommendations: { en: 'Recommendations', tr: 'Öneriler' },
+  admin: { en: 'Admin', tr: 'Yönetici' },
 }
 
 export default defineComponent({

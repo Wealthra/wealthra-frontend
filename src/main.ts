@@ -43,6 +43,24 @@ import {
   faImage,
   faMicrophone,
   faPaperPlane,
+  faRightFromBracket,
+  faPlus,
+  faCheck,
+  faPenToSquare,
+  faTrashCan,
+  faSpinner,
+  faUserGroup,
+  faMagnifyingGlass,
+  faUserGear,
+  faDownload,
+  faReceipt,
+  faBoxOpen,
+  faSignal,
+  faLightbulb,
+  faAward,
+  faUsers,
+  faShield,
+  faCalendar,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -86,7 +104,25 @@ library.add(
   faRotateRight,
   faImage,
   faMicrophone,
-  faPaperPlane
+  faPaperPlane,
+  faRightFromBracket,
+  faPlus,
+  faCheck,
+  faPenToSquare,
+  faTrashCan,
+  faSpinner,
+  faUserGroup,
+  faMagnifyingGlass,
+  faUserGear,
+  faDownload,
+  faReceipt,
+  faBoxOpen,
+  faSignal,
+  faLightbulb,
+  faAward,
+  faUsers,
+  faShield,
+  faCalendar
 )
 
 async function initApp() {
@@ -94,10 +130,6 @@ async function initApp() {
   app.component('font-awesome-icon', FontAwesomeIcon)
   app.use(createPinia())
   app.use(router)
-
-  // Wait for bootstrap auth to attempt token recovery
-  const { bootstrapAuth } = await import('./utils/auth')
-  await bootstrapAuth()
 
   // Determine initial route based on current in-memory auth state
   const isUserAuthenticated = isAuthenticated()

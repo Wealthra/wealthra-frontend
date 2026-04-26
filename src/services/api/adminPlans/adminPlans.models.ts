@@ -1,26 +1,29 @@
 export interface AdminPlan {
   id: number
   name: string
-  price: number
-  currency: string
-  aiChatLimit: number
-  receiptScanLimit: number
-  features: string[]
-  isPopular: boolean
+  description: string
+  monthlyOcrLimit: number
+  monthlySttLimit: number
+  isActive: boolean
+  createdOn: string
+  updatedOn: string | null
 }
 
 export interface CreateAdminPlanRequest {
   name: string
-  price: number
-  currency: string
-  aiChatLimit: number
-  receiptScanLimit: number
-  features: string[]
-  isPopular: boolean
+  description: string
+  monthlyOcrLimit: number
+  monthlySttLimit: number
+  isActive: boolean
 }
 
-export interface UpdateAdminPlanRequest extends CreateAdminPlanRequest {
+export interface UpdateAdminPlanRequest {
   id: number
+  name: string
+  description: string
+  monthlyOcrLimit: number
+  monthlySttLimit: number
+  isActive: boolean
 }
 
 export interface UserPlanAssignmentRequest {
@@ -28,13 +31,31 @@ export interface UserPlanAssignmentRequest {
   planId: number
 }
 
-export interface AdminUserUsageSummary {
+export interface AdminUserUsage {
+  id: string
   email: string
-  name: string
-  tier: string
-  aiChatUsage: number
-  aiChatLimit: number
-  receiptScanUsage: number
-  receiptScanLimit: number
-  lastActive: string
+  firstName: string
+  lastName: string
+  subscriptionTier: number
+  subscriptionPlanId: number
+  subscriptionPlanName: string
+  ocrRequestsThisMonth: number
+  sttRequestsThisMonth: number
+  lastUsageActivityDate: string
+}
+
+export interface AdminPlanUsageBreakdown {
+  planId: number | null
+  planName: string
+  userCount: number
+  totalOcrRequests: number
+  totalSttRequests: number
+}
+
+export interface AdminUsageSummary {
+  totalUsers: number
+  activePlans: number
+  totalOcrRequestsThisMonth: number
+  totalSttRequestsThisMonth: number
+  planBreakdown: AdminPlanUsageBreakdown[]
 }

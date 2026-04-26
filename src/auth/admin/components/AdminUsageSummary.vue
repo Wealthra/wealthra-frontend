@@ -1,75 +1,64 @@
 <template>
-  <div class="table-container">
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>{{ t.user }}</th>
-          <th>{{ t.tier }}</th>
-          <th>{{ t.chatUsage }}</th>
-          <th>{{ t.scanUsage }}</th>
-          <th>{{ t.lastActive }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="usage in usages" :key="usage.email">
-          <td>
-            <div class="user-cell">
-              <span class="user-name">{{ usage.name }}</span>
-              <span class="user-email">{{ usage.email }}</span>
-            </div>
-          </td>
-          <td>
-            <span class="tier-badge">{{ usage.tier }}</span>
-          </td>
-          <td>
-            <div class="usage-bar-container">
-              <div class="usage-info">
-                <span>{{ usage.aiChatUsage }} / {{ usage.aiChatLimit }}</span>
-                <span>{{ Math.round((usage.aiChatUsage / usage.aiChatLimit) * 100) }}%</span>
-              </div>
-              <div class="progress-bar">
-                <div 
-                  class="progress-fill" 
-                  :style="{ width: Math.min((usage.aiChatUsage / usage.aiChatLimit) * 100, 100) + '%' }"
-                  :class="{ warning: usage.aiChatUsage / usage.aiChatLimit > 0.8 }"
-                ></div>
-              </div>
-            </div>
-          </td>
-          <td>
-            <div class="usage-bar-container">
-              <div class="usage-info">
-                <span>{{ usage.receiptScanUsage }} / {{ usage.receiptScanLimit }}</span>
-                <span>{{ Math.round((usage.receiptScanUsage / usage.receiptScanLimit) * 100) }}%</span>
-              </div>
-              <div class="progress-bar">
-                <div 
-                  class="progress-fill" 
-                  :style="{ width: Math.min((usage.receiptScanUsage / usage.receiptScanLimit) * 100, 100) + '%' }"
-                  :class="{ warning: usage.receiptScanUsage / usage.receiptScanLimit > 0.8 }"
-                ></div>
-              </div>
-            </div>
-          </td>
-          <td>
-            <span class="date-cell">{{ formatDate(usage.lastActive) }}</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="usage-summary-container">
+    <!-- Stat Cards -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">{{ t.totalUsers }}</div>
+        <div class="stat-value">{{ summary.totalUsers }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">{{ t.activePlans }}</div>
+        <div class="stat-value">{{ summary.activePlans }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">{{ t.totalOcr }}</div>
+        <div class="stat-value">{{ summary.totalOcrRequestsThisMonth }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">{{ t.totalStt }}</div>
+        <div class="stat-value">{{ summary.totalSttRequestsThisMonth }}</div>
+      </div>
+    </div>
+
+    <!-- Breakdown Table -->
+    <div class="glass-card mt-6">
+      <h3 class="breakdown-title">{{ t.planBreakdown }}</h3>
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>{{ t.plan }}</th>
+              <th>{{ t.userCount }}</th>
+              <th>{{ t.ocrUsage }}</th>
+              <th>{{ t.sttUsage }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in summary.planBreakdown" :key="item.planId || 'null'">
+              <td>
+                <span class="plan-name-tag">{{ item.planName }}</span>
+              </td>
+              <td>{{ item.userCount }}</td>
+              <td>{{ item.totalOcrRequests }}</td>
+              <td>{{ item.totalSttRequests }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
 import type { PropType } from 'vue'
-import type { AdminUserUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
+import type { AdminUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
 
 export default defineComponent({
   name: 'AdminUsageSummary',
   props: {
-    usages: {
-      type: Array as PropType<AdminUserUsageSummary[]>,
+    summary: {
+      type: Object as PropType<AdminUsageSummary>,
       required: true
     },
     selectedLanguage: {
@@ -81,31 +70,63 @@ export default defineComponent({
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
       return {
-        user: isTr ? 'Kullanıcı' : 'User',
-        tier: isTr ? 'Seviye' : 'Tier',
-        chatUsage: isTr ? 'AI Sohbet' : 'AI Chat',
-        scanUsage: isTr ? 'Fiş Tarama' : 'Receipt Scan',
-        lastActive: isTr ? 'Son Aktif' : 'Last Active'
+        totalUsers: isTr ? 'Toplam Kullanıcı' : 'Total Users',
+        activePlans: isTr ? 'Aktif Planlar' : 'Active Plans',
+        totalOcr: isTr ? 'Toplam OCR' : 'Total OCR',
+        totalStt: isTr ? 'Toplam STT' : 'Total STT',
+        planBreakdown: isTr ? 'Plan Dağılımı' : 'Plan Breakdown',
+        plan: isTr ? 'Plan' : 'Plan',
+        userCount: isTr ? 'Kullanıcı Sayısı' : 'User Count',
+        ocrUsage: isTr ? 'OCR Kullanımı' : 'OCR Usage',
+        sttUsage: isTr ? 'STT Kullanımı' : 'STT Usage'
       }
     })
 
-    const formatDate = (dateStr: string) => {
-      if (!dateStr) return 'N/A'
-      const date = new Date(dateStr)
-      return date.toLocaleDateString(props.selectedLanguage === 'Turkish' ? 'tr-TR' : 'en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }
-
-    return { t, formatDate }
+    return { t }
   }
 })
 </script>
 
 <style scoped lang="scss">
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  .stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--normal-text-color);
+    text-transform: uppercase;
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary-green-color);
+  }
+}
+
+.mt-6 { margin-top: 24px; }
+
+.breakdown-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--header-text-color);
+}
+
 .table-container {
   overflow-x: auto;
 }
@@ -116,8 +137,8 @@ export default defineComponent({
   text-align: left;
 
   th {
-    padding: 16px;
-    font-size: 12px;
+    padding: 12px 16px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     color: var(--normal-text-color);
@@ -125,65 +146,26 @@ export default defineComponent({
   }
 
   td {
-    padding: 16px;
+    padding: 12px 16px;
     font-size: 14px;
     color: var(--header-text-color);
     border-bottom: 1px solid var(--border-color);
-    vertical-align: middle;
   }
 }
 
-.user-cell {
-  display: flex;
-  flex-direction: column;
-  
-  .user-name { font-weight: 600; }
-  .user-email { font-size: 11px; color: var(--normal-text-color); }
-}
-
-.tier-badge {
+.plan-name-tag {
   background: var(--hover-color);
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.usage-bar-container {
-  width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  .usage-info {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--normal-text-color);
-  }
-
-  .progress-bar {
-    height: 6px;
-    background: var(--background-color-soft);
-    border-radius: 3px;
-    overflow: hidden;
-
-    .progress-fill {
-      height: 100%;
-      background: var(--primary-green-color);
-      border-radius: 3px;
-      transition: width 0.3s ease;
-
-      &.warning {
-        background: #ffc107;
-      }
-    }
-  }
-}
-
-.date-cell {
-  font-size: 13px;
-  color: var(--normal-text-color);
+.glass-card {
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 </style>
