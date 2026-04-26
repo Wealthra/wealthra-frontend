@@ -178,6 +178,7 @@ export default {
           isRecurring: payload.isRecurring,
           categoryId: Number(payload.categoryId),
           transactionDate: payload.transactionDate,
+          currency: this.currencyHelper.currency,
         })
         await this.loadAppropriateData()
       } catch {
@@ -204,6 +205,7 @@ export default {
           isRecurring: payload.isRecurring,
           categoryId: Number(payload.categoryId),
           transactionDate: payload.transactionDate,
+          currency: this.currencyHelper.currency,
         })
         await this.loadAppropriateData()
       } catch {

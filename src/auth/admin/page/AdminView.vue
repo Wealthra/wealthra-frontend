@@ -126,7 +126,7 @@ export default defineComponent({
       { id: 'usages', label: 'Usages' }
     ]
 
-    const t = computed(() => {
+    const t = computed<Record<string, string>>(() => {
       const isTr = selectedLanguage.value === 'Turkish'
       return {
         plans: isTr ? 'Abonelik Planları' : 'Subscription Plans',

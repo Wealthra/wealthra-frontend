@@ -174,6 +174,7 @@ export default {
           method: source.method,
           isRecurring: source.isRecurring,
           transactionDate: new Date(source.transactionDate).toISOString(),
+          currency: this.currencyHelper.currency,
         })
         await this.loadAppropriateData()
       } catch (error) {
@@ -198,6 +199,7 @@ export default {
           method: data.method,
           isRecurring: data.isRecurring,
           transactionDate: new Date(data.transactionDate).toISOString(),
+          currency: this.currencyHelper.currency,
         })
         await this.loadAppropriateData()
       } catch (error) {

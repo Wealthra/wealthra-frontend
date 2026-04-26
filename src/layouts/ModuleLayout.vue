@@ -288,6 +288,10 @@ export default defineComponent({
         userAvatarUrl.value = me.avatarUrl || null
         setAdminStatus(me.isAdmin)
         isUserAdmin.value = me.isAdmin
+        if (me.preferredCurrency) {
+          const { setCurrency } = useCurrency()
+          setCurrency(me.preferredCurrency as any)
+        }
       } catch {
         const id = getUserId()
         if (!userFirstName.value && id) {

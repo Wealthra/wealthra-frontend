@@ -43,6 +43,7 @@ import { budgetTexts } from '@/data/budgetTexts'
 import { budgetService } from '@/services/api/budget/budget.service'
 import { categoryService } from '@/services/api/category/category.service'
 import { notificationService } from '@/services/api/notification/notification.service'
+import { useCurrency } from '@/composables/useCurrency'
 
 // Budget Components
 import BudgetOverviewComponent from '@/modules/budget/components/BudgetOverviewComponent.vue'
@@ -61,6 +62,10 @@ export default {
     BudgetOverviewComponent,
     NotificationsComponent,
     UIBudgetTableComponent,
+  },
+  setup() {
+    const { currency } = useCurrency()
+    return { currency }
   },
   data() {
     return {
@@ -136,7 +141,7 @@ export default {
 
     async handleCreateBudget(payload: { categoryId: number; limitAmount: number }) {
       try {
-        await budgetService.apiCreateBudget(payload)
+        await budgetService.apiCreateBudget({ ...payload, currency: this.currency })
         this.loadAppropriateData()
       } catch (error) {
         console.error('Error creating budget:', error)
@@ -145,7 +150,7 @@ export default {
 
     async handleUpdateBudget(id: number, limitAmount: number) {
       try {
-        await budgetService.apiUpdateBudget(id, limitAmount)
+        await budgetService.apiUpdateBudget(id, limitAmount, this.currency)
         this.loadAppropriateData()
       } catch (error) {
         console.error('Error updating budget:', error)

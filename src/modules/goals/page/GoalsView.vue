@@ -28,6 +28,7 @@ import type { Goal } from '@/services/api/goal/goal.models'
 
 // Utilities
 import { goalService } from '@/services/api/goal/goal.service'
+import { useCurrency } from '@/composables/useCurrency'
 
 // Goals Components
 import GoalsOverviewComponent from '@/modules/goals/components/GoalsOverviewComponent.vue'
@@ -39,6 +40,10 @@ export default {
   components: {
     GoalsOverviewComponent,
     UIGoalsTableComponent,
+  },
+  setup() {
+    const { currency } = useCurrency()
+    return { currency }
   },
 
   props: {
@@ -102,6 +107,7 @@ export default {
           targetAmount: payload.targetAmount,
           currentAmount,
           deadline: payload.deadline,
+          currency: this.currency,
         })
         this.loadAppropriateData()
       } catch (error) {
@@ -125,6 +131,7 @@ export default {
           targetAmount: payload.targetAmount,
           currentAmount,
           deadline: payload.deadline,
+          currency: this.currency,
         })
         this.loadAppropriateData()
       } catch (error) {
