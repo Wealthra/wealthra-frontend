@@ -308,7 +308,7 @@
       </section>
 
       <!-- Quotas Card Skeleton / Content -->
-      <section class="settings-card">
+      <section v-if="!hideUsageSection" class="settings-card">
         <div v-if="isInitialLoading" class="skeleton-box title-skeleton"></div>
         <h2 v-else>{{ selectedLanguage === 'English' ? 'Quotas and Usage' : 'Kotalar ve Kullanım' }}</h2>
         
@@ -454,6 +454,10 @@ export default defineComponent({
       type: String as () => 'English' | 'Turkish',
       default: 'English',
     },
+    hideUsageSection: {
+      type: Boolean,
+      default: false,
+    },
   },
   components: {
     UILoading,
@@ -462,6 +466,7 @@ export default defineComponent({
   setup(props) {
     const router = useRouter()
     const selectedLanguage = toRef(props, 'selectedLanguage')
+    const hideUsageSection = toRef(props, 'hideUsageSection')
     const { setCurrency } = useCurrency()
 
     const me = ref<AccountProfileResponse | null>(null)
@@ -903,6 +908,7 @@ export default defineComponent({
       openDeleteAccountModal,
       closeDeleteAccountModal,
       confirmDeleteAccount,
+      hideUsageSection,
     }
   },
 })

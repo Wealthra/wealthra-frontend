@@ -79,6 +79,9 @@ import {
   faCrown,
   faBoxOpen,
   faUsers,
+  faChartPie,
+  faHeadset,
+  faShieldHalved,
 } from '@fortawesome/free-solid-svg-icons'
 
 export const leftSidebarIconMap: Record<string, IconDefinition> = {
@@ -90,6 +93,10 @@ export const leftSidebarIconMap: Record<string, IconDefinition> = {
   Goals: faBullseye,
   Admin: faCrown,
   Settings: faGear,
+  Overview: faChartPie,
+  'Users & Reports': faUsers,
+  'Support & Ops': faHeadset,
+  'System & Security': faShieldHalved,
 }
 
 /** Icons for empty-state placeholders (no data) */

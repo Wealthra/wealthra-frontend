@@ -147,6 +147,7 @@
 
         <div class="top-bar-right">
           <button
+            v-if="!isUserAdmin"
             class="refetch-btn notifications-btn-layout"
             :title="texts.notifications"
             @click="routeToPage('Notifications', selectedLanguage)"
@@ -158,6 +159,7 @@
           </button>
 
           <button
+            v-if="!isUserAdmin"
             class="refetch-btn export-btn-layout"
             @click="isExportModalOpen = true"
             :title="texts.export"
@@ -266,7 +268,7 @@
     </div>
 
     <!-- Copilot Chatbot -->
-    <CopilotChat :selectedLanguage="selectedLanguage" />
+    <CopilotChat v-if="!isUserAdmin" :selectedLanguage="selectedLanguage" />
 
     <UIExportModal
       v-if="isExportModalOpen"
@@ -278,7 +280,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, onMounted, onBeforeUnmount, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import UILanguageButton from '@/components/UILanguageButton.vue'
 import UIThemeButton from '@/components/UIThemeButton.vue'
 import CopilotChat from '@/components/CopilotChat.vue'
@@ -345,7 +347,11 @@ export default defineComponent({
       Turkish: ['Kontrol Paneli', 'Öneriler', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Ayarlar'],
     }
 
-    const isUserAdmin = ref(isAdmin())
+    const route = useRoute()
+    const isUserAdmin = computed(() => {
+      // Check both the auth state and the current route as a fallback
+      return isAdmin() || route.path.startsWith('/admin') || route.name === 'admin'
+    })
 
     const settingsLabelEnglish = 'Settings'
     const settingsLabelTurkish = 'Ayarlar'
@@ -406,7 +412,19 @@ export default defineComponent({
     }
 
     const routeToSidebarItem = (englishPage: string) => {
-      routeToPage(englishPage, props.selectedLanguage)
+      if (isUserAdmin.value) {
+        // Handle Admin tab switching
+        const tabMap: Record<string, string> = {
+          'Overview': 'overview',
+          'Users & Reports': 'users',
+          'Support & Ops': 'support',
+          'System & Security': 'system',
+          'Settings': 'settings'
+        }
+        router.push({ name: 'admin', query: { tab: tabMap[englishPage] || 'overview' } })
+      } else {
+        routeToPage(englishPage, props.selectedLanguage)
+      }
     }
 
     const routeToSettings = () => {
@@ -422,7 +440,7 @@ export default defineComponent({
         userLastName.value = me.lastName
         userAvatarUrl.value = me.avatarUrl || null
         setAdminStatus(me.isAdmin)
-        isUserAdmin.value = me.isAdmin
+        // No need to manually update isUserAdmin anymore as it's computed
         if (me.preferredCurrency) {
           const { setCurrency } = useCurrency()
           setCurrency(me.preferredCurrency as any)
@@ -460,7 +478,7 @@ export default defineComponent({
 
     const handleLogout = () => {
       clearAuth()
-      router.push('/')
+      router.push('/login')
     }
 
     const normalizedLanguage = computed<Language>(() =>
@@ -474,6 +492,17 @@ export default defineComponent({
     const sidebarItems = computed(() => {
       const admin = isUserAdmin.value
       const lang = normalizedLanguage.value
+
+      if (admin) {
+        const adminContentEnglish = ['Overview', 'Users & Reports', 'Support & Ops', 'System & Security', 'Settings']
+        const adminContentTurkish = ['Özet', 'Kullanıcılar ve Rapor', 'Destek & Ops', 'Sistem ve Güvenlik', 'Ayarlar']
+        const content = lang === 'Turkish' ? adminContentTurkish : adminContentEnglish
+        
+        return adminContentEnglish.map((eng, idx) => ({
+          englishLabel: eng,
+          label: content[idx]
+        }))
+      }
 
       return leftBarContentEnglish.map((eng, idx) => {
         return {
@@ -562,6 +591,7 @@ export default defineComponent({
       toggleLogoutTooltip,
       handleLogout,
       handleRefetch: () => window.dispatchEvent(new CustomEvent('app:refetch')),
+      isUserAdmin,
     }
   },
 })

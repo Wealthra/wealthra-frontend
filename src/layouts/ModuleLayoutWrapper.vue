@@ -44,6 +44,20 @@ export default defineComponent({
       const name = (route.name as string) || ''
       const mapping = ROUTE_NAME_TO_PAGE[name]
       if (!mapping) return ''
+      
+      if (name === 'admin') {
+        const tab = (route.query.tab as string) || 'overview'
+        const tabNames: Record<string, { en: string; tr: string }> = {
+          overview: { en: 'Overview', tr: 'Özet' },
+          users: { en: 'Users & Reports', tr: 'Kullanıcılar ve Rapor' },
+          support: { en: 'Support & Ops', tr: 'Destek & Ops' },
+          system: { en: 'System & Security', tr: 'Sistem ve Güvenlik' },
+          settings: { en: 'Settings', tr: 'Ayarlar' }
+        }
+        const tabMapping = tabNames[tab] || tabNames.overview
+        return selectedLanguage.value === 'Turkish' ? tabMapping.tr : tabMapping.en
+      }
+      
       return selectedLanguage.value === 'Turkish' ? mapping.tr : mapping.en
     })
 

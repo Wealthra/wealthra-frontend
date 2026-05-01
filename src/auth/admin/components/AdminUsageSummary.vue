@@ -21,7 +21,7 @@
     </div>
 
     <!-- Breakdown Table -->
-    <div class="glass-card mt-6">
+    <div class="glass-card breakdown-card mt-6">
       <h3 class="breakdown-title">{{ t.planBreakdown }}</h3>
       <div class="table-container">
         <table class="admin-table">
@@ -35,12 +35,12 @@
           </thead>
           <tbody>
             <tr v-for="item in summary.planBreakdown" :key="item.planId || 'null'">
-              <td>
+              <td :data-label="t.plan">
                 <span class="plan-name-tag">{{ item.planName }}</span>
               </td>
-              <td>{{ item.userCount }}</td>
-              <td>{{ item.totalOcrRequests }}</td>
-              <td>{{ item.totalSttRequests }}</td>
+              <td :data-label="t.userCount">{{ item.userCount }}</td>
+              <td :data-label="t.ocrUsage">{{ item.totalOcrRequests }}</td>
+              <td :data-label="t.sttUsage">{{ item.totalSttRequests }}</td>
             </tr>
           </tbody>
         </table>
@@ -88,10 +88,21 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+.usage-summary-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
+
+  @media (max-width: 1280px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .stat-card {
@@ -120,14 +131,17 @@ export default defineComponent({
 
 .mt-6 { margin-top: 24px; }
 
-.breakdown-title {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 20px;
-  color: var(--header-text-color);
+.breakdown-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .table-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   overflow-x: auto;
 }
 
@@ -137,19 +151,61 @@ export default defineComponent({
   text-align: left;
 
   th {
-    padding: 12px 16px;
+    padding: 16px 20px;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     color: var(--normal-text-color);
     border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
   }
 
   td {
-    padding: 12px 16px;
+    padding: 16px 20px;
     font-size: var(--font-size-sm);
     color: var(--header-text-color);
     border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    thead {
+      display: none;
+    }
+
+    tr {
+      display: block;
+      padding: 16px;
+      border-bottom: 2px solid var(--border-color);
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--background-color-soft);
+      white-space: normal;
+      text-align: right;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--normal-text-color);
+        margin-right: 16px;
+        text-align: left;
+      }
+    }
   }
 }
 

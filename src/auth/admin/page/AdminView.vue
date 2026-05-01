@@ -8,25 +8,10 @@
     </div>
     
     <template v-else>
-      <div class="admin-tabs">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.id"
-          :class="['tab-btn', { active: activeTab === tab.id }]"
-          @click="activeTab = tab.id"
-        >
-          <font-awesome-icon v-if="tab.icon" :icon="tab.icon" class="tab-icon" />
-          {{ tab.name }}
-        </button>
-      </div>
-
       <div class="tab-content">
         <!-- Overview Tab -->
-        <div v-if="activeTab === 'overview'" class="tab-pane">
-          <section id="usage-summary" class="admin-section">
-            <div class="section-header">
-              <h2>{{ t.usageSummary }}</h2>
-            </div>
+        <div v-if="activeTab === 'overview'" class="tab-pane overview-pane">
+          <section id="usage-summary" class="admin-section full-height">
             <AdminUsageSummary 
               v-if="usageSummary"
               :summary="usageSummary" 
@@ -132,6 +117,11 @@
             </div>
           </section>
         </div>
+
+        <!-- Settings Tab -->
+        <div v-if="activeTab === 'settings'" class="tab-pane">
+          <SettingsView :selectedLanguage="selectedLanguage" :hide-usage-section="true" />
+        </div>
       </div>
     </template>
 
@@ -147,7 +137,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed } from 'vue'
+import { defineComponent, onMounted, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
 import type { AdminPlan, AdminUsageSummary as IUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
@@ -166,6 +156,7 @@ import AdminFxControls from '../components/AdminFxControls.vue'
 import AdminAiSettings from '../components/AdminAiSettings.vue'
 import AdminSecurity from '../components/AdminSecurity.vue'
 import AdminErrorLogs from '../components/AdminErrorLogs.vue'
+import SettingsView from '@/modules/settings/page/SettingsView.vue'
 
 export default defineComponent({
   name: 'AdminView',
@@ -181,16 +172,28 @@ export default defineComponent({
     AdminFxControls,
     AdminAiSettings,
     AdminSecurity,
-    AdminErrorLogs
+    AdminErrorLogs,
+    SettingsView
   },
   setup() {
     const router = useRouter()
-    const selectedLanguage = ref(localStorage.getItem('selectedLanguage') || 'English')
+    type Language = 'English' | 'Turkish'
+    const selectedLanguage = ref<Language>(
+      (localStorage.getItem('selectedLanguage') as Language) || 'English'
+    )
     
     const plans = ref<AdminPlan[]>([])
     const usageSummary = ref<IUsageSummary | null>(null)
     const isLoading = ref(true)
-    const activeTab = ref('overview')
+    const activeTab = ref(router.currentRoute.value.query.tab?.toString() || 'overview')
+    
+    // Watch for query parameter changes to update active tab
+    const route = router.currentRoute
+    watch(() => route.value.query.tab, (newTab) => {
+      if (newTab) {
+        activeTab.value = newTab.toString()
+      }
+    })
     
     const isPlanModalOpen = ref(false)
     const selectedPlan = ref<AdminPlan | null>(null)
@@ -199,9 +202,10 @@ export default defineComponent({
       const isTr = selectedLanguage.value === 'Turkish'
       return {
         overviewTab: isTr ? 'Özet' : 'Overview',
-        usersTab: isTr ? 'Kullanıcılar & Planlar' : 'Users & Plans',
+        usersTab: isTr ? 'Kullanıcılar ve Rapor' : 'Users & Reports',
         supportTab: isTr ? 'Destek & Ops' : 'Support & Ops',
         systemTab: isTr ? 'Sistem & Güvenlik' : 'System & Security',
+        settingsTab: isTr ? 'Ayarlar' : 'Settings',
         plans: isTr ? 'Abonelik Planları' : 'Subscription Plans',
         assignments: isTr ? 'Plan Atamaları' : 'Plan Assignments',
         usageSummary: isTr ? 'Kullanım Özeti' : 'Usage Summary',
@@ -216,11 +220,12 @@ export default defineComponent({
       { id: 'users', name: t.value.usersTab, icon: 'users' },
       { id: 'support', name: t.value.supportTab, icon: 'headset' },
       { id: 'system', name: t.value.systemTab, icon: 'shield-halved' },
+      { id: 'settings', name: t.value.settingsTab, icon: 'gear' },
     ])
 
     const handleLogout = () => {
       clearAuth()
-      router.push('/')
+      router.push('/login')
     }
 
     const fetchData = async () => {
@@ -288,7 +293,10 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .admin-view-content {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 .admin-tabs {
@@ -329,8 +337,30 @@ export default defineComponent({
   }
 }
 
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .tab-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   animation: fadeIn 0.3s ease-in-out;
+
+  &.overview-pane {
+    height: 100%;
+  }
+}
+
+.admin-section.full-height {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 @keyframes fadeIn {
