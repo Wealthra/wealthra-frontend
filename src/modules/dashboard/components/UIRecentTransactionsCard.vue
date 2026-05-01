@@ -179,7 +179,7 @@ export default {
   .card-header {
     margin-bottom: 1.5rem;
     .card-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--header-text-color);
       margin: 0;
@@ -291,7 +291,7 @@ export default {
     min-width: 0;
 
     .tx-desc {
-      font-size: 0.95rem;
+      font-size: var(--font-size-sm);
       font-weight: 600;
       color: var(--header-text-color);
       white-space: nowrap;
@@ -322,7 +322,7 @@ export default {
     flex-shrink: 0;
 
     .tx-amount {
-      font-size: 1rem;
+      font-size: var(--font-size-sm);
       font-weight: 700;
 
       &.income { color: var(--primary-green-color); }

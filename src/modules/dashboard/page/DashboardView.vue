@@ -31,60 +31,52 @@
         icon-color="var(--primary-yellow-color)"
         :showTrend="false"
       />
-      <div class="kpi-item">
-        <UIInformationBox
-          :loading="isLoading"
-          :currentAmount="summaryHeader.totalExpenses"
-          :lastAmount="summaryHeader.totalIncome"
-          :title="dashboardTexts[selectedLanguage].totalSpendingThisMonth"
-          color="blue"
-          type="spending"
-          icon="fas fa-credit-card"
-          icon-color="var(--primary-blue-color)"
-          :showTrend="false"
-        />
-      </div>
-      <div class="kpi-item">
-        <UIInformationBox
-          :loading="isLoading"
-          :currentAmount="summaryHeader.totalIncome"
-          :lastAmount="summaryHeader.totalIncome"
-          :title="dashboardTexts[selectedLanguage].totalIncome"
-          color="green"
-          type="income"
-          icon="fas fa-arrow-trend-up"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-      </div>
-      <div class="kpi-item">
-        <UIInformationBox
-          :loading="isLoading"
-          :currentAmount="budgetAlerts.length"
-          :lastAmount="0"
-          :title="dashboardTexts[selectedLanguage].budgetAlerts"
-          color="red"
-          type="spending"
-          icon="fas fa-triangle-exclamation"
-          icon-color="var(--primary-red-color)"
-          :showTrend="false"
-          valuePrefix=""
-        />
-      </div>
-      <div class="kpi-item">
-        <UIInformationBox
-          :loading="isLoading"
-          :currentAmount="summaryHeader.unreadNotificationsCount"
-          :lastAmount="summaryHeader.unreadNotificationsCount"
-          :title="dashboardTexts[selectedLanguage].unreadNotifications"
-          color="pink"
-          type="income"
-          icon="fas fa-bell"
-          icon-color="var(--primary-pink-color)"
-          :showTrend="false"
-          valuePrefix=""
-        />
-      </div>
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="summaryHeader.totalExpenses"
+        :lastAmount="summaryHeader.totalIncome"
+        :title="dashboardTexts[selectedLanguage].totalSpendingThisMonth"
+        color="blue"
+        type="spending"
+        icon="fas fa-credit-card"
+        icon-color="var(--primary-blue-color)"
+        :showTrend="false"
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="summaryHeader.totalIncome"
+        :lastAmount="summaryHeader.totalIncome"
+        :title="dashboardTexts[selectedLanguage].totalIncome"
+        color="green"
+        type="income"
+        icon="fas fa-arrow-trend-up"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="budgetAlerts.length"
+        :lastAmount="0"
+        :title="dashboardTexts[selectedLanguage].budgetAlerts"
+        color="red"
+        type="spending"
+        icon="fas fa-triangle-exclamation"
+        icon-color="var(--primary-red-color)"
+        :showTrend="false"
+        valuePrefix=""
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="summaryHeader.unreadNotificationsCount"
+        :lastAmount="summaryHeader.unreadNotificationsCount"
+        :title="dashboardTexts[selectedLanguage].unreadNotifications"
+        color="pink"
+        type="income"
+        icon="fas fa-bell"
+        icon-color="var(--primary-pink-color)"
+        :showTrend="false"
+        valuePrefix=""
+      />
     </div>
 
     <!-- ANA 12-COLUMN DASHBOARD GRID -->
@@ -444,7 +436,7 @@ export default {
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 1.5rem;
   width: 100%;
 }
 
@@ -524,7 +516,7 @@ export default {
 
 /* KART BAŞLIKLARI */
 .card-header {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--header-text-color);
   padding: 1.25rem 1.25rem 0 1.25rem;

@@ -133,16 +133,13 @@
           class="pagination-results-icon"
           aria-hidden="true"
         />
-        <select
-          :value="pageSize"
+        <UISelect
+          :model-value="pageSize"
           class="page-size-select"
-          :aria-label="selectedLanguage == 'English' ? 'Results per page' : 'Sayfa başına sonuç'"
-          @change="onPageSizeChange"
-        >
-          <option v-for="opt in pageSizeOptions" :key="opt" :value="opt">
-            {{ opt }}
-          </option>
-        </select>
+          :label="selectedLanguage == 'English' ? 'Results per page' : 'Sayfa başına sonuç'"
+          :options="pageSizeOptions"
+          @update:model-value="val => $emit('updatePageSize', Number(val))"
+        />
         <span class="pagination-results-label">
           {{ selectedLanguage == 'English' ? 'of' : '/' }}
           <span class="pagination-total">{{ totalCount }}</span>
@@ -331,11 +328,13 @@ import {
 import { useCurrency } from '@/composables/useCurrency'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
+import UISelect from '@/components/UISelect.vue'
 
 export default {
   name: 'UIIncomeSourcesComponent',
   components: {
     Datepicker,
+    UISelect,
   },
   setup() {
     const { formatCurrency, currencySymbol } = useCurrency()

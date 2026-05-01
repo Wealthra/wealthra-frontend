@@ -82,11 +82,10 @@ export default defineComponent({
     background-color: rgba(119, 119, 119, 0.1);
     border-color: rgba(119, 119, 119, 0.4);
     color: var(--header-text-color);
-    transform: translateY(-1px);
   }
 
   &:active {
-    transform: scale(0.97) translateY(0);
+    opacity: 0.8;
   }
 
   .language-icon {

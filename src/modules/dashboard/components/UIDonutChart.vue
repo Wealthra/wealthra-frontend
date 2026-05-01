@@ -219,7 +219,7 @@ export default {
   .card-header {
     margin-bottom: 1.25rem;
     .card-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--header-text-color);
       margin: 0;
@@ -303,7 +303,7 @@ export default {
       letter-spacing: 0.05em;
     }
     .total-value {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 800;
       color: var(--header-text-color);
       line-height: 1.1;
@@ -343,7 +343,7 @@ export default {
         flex-shrink: 0;
       }
       .category-name {
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
         font-weight: 500;
         color: var(--header-text-color);
         white-space: nowrap;
@@ -359,14 +359,14 @@ export default {
       flex-shrink: 0;
 
       .category-pct {
-        font-size: 0.75rem;
+        font-size: var(--font-size-xs);
         font-weight: 700;
         color: var(--normal-text-color);
         width: 35px;
         text-align: right;
       }
       .category-val {
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
         font-weight: 600;
         color: var(--header-text-color);
         min-width: 60px;

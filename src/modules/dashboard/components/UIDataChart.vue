@@ -490,7 +490,7 @@ export default {
 
     .chart-title {
       font-weight: 500;
-      font-size: 1.2rem;
+      font-size: 1rem;
       color: var(--header-text-color);
     }
 

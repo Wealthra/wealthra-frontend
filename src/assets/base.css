@@ -84,6 +84,9 @@
   /* Skeleton Loading */
   --skeleton-bg: #e8e8e8;
   --skeleton-shimmer: #fcfcfc;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
 }
 
 /* Dark theme variables */
@@ -425,7 +428,7 @@ body {
     'Droid Sans',
     'Helvetica Neue',
     sans-serif;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

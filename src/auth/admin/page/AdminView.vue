@@ -8,63 +8,131 @@
     </div>
     
     <template v-else>
-      <!-- Usage Summary Section -->
-      <section id="usage-summary" class="admin-section">
-        <div class="section-header">
-          <h2>{{ t.usageSummary }}</h2>
-        </div>
-        <AdminUsageSummary 
-          v-if="usageSummary"
-          :summary="usageSummary" 
-          :selectedLanguage="selectedLanguage"
-        />
-      </section>
+      <div class="admin-tabs">
+        <button 
+          v-for="tab in tabs" 
+          :key="tab.id"
+          :class="['tab-btn', { active: activeTab === tab.id }]"
+          @click="activeTab = tab.id"
+        >
+          <font-awesome-icon v-if="tab.icon" :icon="tab.icon" class="tab-icon" />
+          {{ tab.name }}
+        </button>
+      </div>
 
-      <!-- Plans Section -->
-      <section id="plans" class="admin-section">
-        <div class="section-header">
-          <h2>{{ t.plans }}</h2>
-          <button class="add-btn" @click="openPlanModal()">
-            <font-awesome-icon icon="plus" />
-            {{ t.addNewPlan }}
-          </button>
+      <div class="tab-content">
+        <!-- Overview Tab -->
+        <div v-if="activeTab === 'overview'" class="tab-pane">
+          <section id="usage-summary" class="admin-section">
+            <div class="section-header">
+              <h2>{{ t.usageSummary }}</h2>
+            </div>
+            <AdminUsageSummary 
+              v-if="usageSummary"
+              :summary="usageSummary" 
+              :selectedLanguage="selectedLanguage"
+            />
+          </section>
         </div>
-        <div class="glass-card">
-          <AdminPlanTable 
-            :plans="plans" 
-            :selectedLanguage="selectedLanguage"
-            @edit="openPlanModal"
-            @delete="handleDeletePlan"
-          />
-        </div>
-      </section>
 
-      <!-- Assignments Section -->
-      <section id="assignments" class="admin-section">
-        <div class="section-header">
-          <h2>{{ t.assignments }}</h2>
-        </div>
-        <div class="glass-card">
-          <AdminUserAssignment 
-            :plans="plans" 
-            :selectedLanguage="selectedLanguage"
-            @assigned="fetchData"
-          />
-        </div>
-      </section>
+        <!-- Users & Plans Tab -->
+        <div v-if="activeTab === 'users'" class="tab-pane">
+          <section id="users" class="admin-section">
+            <div class="section-header">
+              <h2>{{ t.userManagement }}</h2>
+            </div>
+            <div class="glass-card">
+              <AdminUserManagementTable 
+                :selectedLanguage="selectedLanguage"
+                :plans="plans"
+              />
+            </div>
+          </section>
 
-      <!-- User Management Section -->
-      <section id="users" class="admin-section">
-        <div class="section-header">
-          <h2>{{ t.userManagement }}</h2>
+          <section id="assignments" class="admin-section mt-8">
+            <div class="section-header">
+              <h2>{{ t.assignments }}</h2>
+            </div>
+            <div class="glass-card">
+              <AdminUserAssignment 
+                :plans="plans" 
+                :selectedLanguage="selectedLanguage"
+                @assigned="fetchData"
+              />
+            </div>
+          </section>
+
+          <section id="plans" class="admin-section mt-8">
+            <div class="section-header">
+              <h2>{{ t.plans }}</h2>
+              <button class="add-btn" @click="openPlanModal()">
+                <font-awesome-icon icon="plus" />
+                {{ t.addNewPlan }}
+              </button>
+            </div>
+            <div class="glass-card">
+              <AdminPlanTable 
+                :plans="plans" 
+                :selectedLanguage="selectedLanguage"
+                @edit="openPlanModal"
+                @delete="handleDeletePlan"
+              />
+            </div>
+          </section>
         </div>
-        <div class="glass-card">
-          <AdminUserManagementTable 
-            :selectedLanguage="selectedLanguage"
-            :plans="plans"
-          />
+
+        <!-- Support & Ops Tab -->
+        <div v-if="activeTab === 'support'" class="tab-pane">
+          <section class="admin-section">
+            <div class="section-header">
+              <h2>Support Tickets</h2>
+            </div>
+            <div class="glass-card">
+              <AdminSupportTickets />
+            </div>
+          </section>
+          <section class="admin-section mt-8">
+            <div class="section-header">
+              <h2>Announcements</h2>
+            </div>
+            <div class="glass-card">
+              <AdminAnnouncements />
+            </div>
+          </section>
+          <section class="admin-section mt-8">
+            <div class="section-header">
+              <h2>FX Controls</h2>
+            </div>
+            <div class="glass-card">
+              <AdminFxControls />
+            </div>
+          </section>
         </div>
-      </section>
+
+        <!-- System & Security Tab -->
+        <div v-if="activeTab === 'system'" class="tab-pane">
+          <section class="admin-section">
+            <div class="section-header">
+              <h2>AI Settings</h2>
+            </div>
+            <AdminAiSettings />
+          </section>
+          <section class="admin-section mt-8">
+            <div class="section-header">
+              <h2>Security (Blocked IPs)</h2>
+            </div>
+            <AdminSecurity />
+          </section>
+          <section class="admin-section mt-8">
+            <div class="section-header">
+              <h2>Error Logs</h2>
+            </div>
+            <div class="glass-card">
+              <AdminErrorLogs :selectedLanguage="selectedLanguage" />
+            </div>
+          </section>
+        </div>
+      </div>
     </template>
 
     <!-- Plan Modal (for Create/Edit) -->
@@ -85,8 +153,6 @@ import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
 import type { AdminPlan, AdminUsageSummary as IUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
 import { clearAuth } from '@/utils/auth'
 
-import UILanguageButton from '@/components/UILanguageButton.vue'
-import UIThemeButton from '@/components/UIThemeButton.vue'
 import AdminPlanTable from '../components/AdminPlanTable.vue'
 import AdminUserAssignment from '../components/AdminUserAssignment.vue'
 import AdminUsageSummary from '../components/AdminUsageSummary.vue'
@@ -94,17 +160,28 @@ import UIPlanModal from '../components/UIPlanModal.vue'
 import AdminUserManagementTable from '../components/AdminUserManagementTable.vue'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 
+import AdminSupportTickets from '../components/AdminSupportTickets.vue'
+import AdminAnnouncements from '../components/AdminAnnouncements.vue'
+import AdminFxControls from '../components/AdminFxControls.vue'
+import AdminAiSettings from '../components/AdminAiSettings.vue'
+import AdminSecurity from '../components/AdminSecurity.vue'
+import AdminErrorLogs from '../components/AdminErrorLogs.vue'
+
 export default defineComponent({
   name: 'AdminView',
   components: {
-    UILanguageButton,
-    UIThemeButton,
     AdminPlanTable,
     AdminUserAssignment,
     AdminUsageSummary,
     UIPlanModal,
     AdminUserManagementTable,
-    UISkeletonLoader
+    UISkeletonLoader,
+    AdminSupportTickets,
+    AdminAnnouncements,
+    AdminFxControls,
+    AdminAiSettings,
+    AdminSecurity,
+    AdminErrorLogs
   },
   setup() {
     const router = useRouter()
@@ -113,6 +190,7 @@ export default defineComponent({
     const plans = ref<AdminPlan[]>([])
     const usageSummary = ref<IUsageSummary | null>(null)
     const isLoading = ref(true)
+    const activeTab = ref('overview')
     
     const isPlanModalOpen = ref(false)
     const selectedPlan = ref<AdminPlan | null>(null)
@@ -120,6 +198,10 @@ export default defineComponent({
     const t = computed<Record<string, string>>(() => {
       const isTr = selectedLanguage.value === 'Turkish'
       return {
+        overviewTab: isTr ? 'Özet' : 'Overview',
+        usersTab: isTr ? 'Kullanıcılar & Planlar' : 'Users & Plans',
+        supportTab: isTr ? 'Destek & Ops' : 'Support & Ops',
+        systemTab: isTr ? 'Sistem & Güvenlik' : 'System & Security',
         plans: isTr ? 'Abonelik Planları' : 'Subscription Plans',
         assignments: isTr ? 'Plan Atamaları' : 'Plan Assignments',
         usageSummary: isTr ? 'Kullanım Özeti' : 'Usage Summary',
@@ -129,9 +211,12 @@ export default defineComponent({
       }
     })
 
-    const handleLanguageUpdate = (lang: string) => {
-      selectedLanguage.value = lang
-    }
+    const tabs = computed(() => [
+      { id: 'overview', name: t.value.overviewTab, icon: 'chart-pie' },
+      { id: 'users', name: t.value.usersTab, icon: 'users' },
+      { id: 'support', name: t.value.supportTab, icon: 'headset' },
+      { id: 'system', name: t.value.systemTab, icon: 'shield-halved' },
+    ])
 
     const handleLogout = () => {
       clearAuth()
@@ -185,10 +270,11 @@ export default defineComponent({
       plans,
       usageSummary,
       isLoading,
+      activeTab,
+      tabs,
       isPlanModalOpen,
       selectedPlan,
       t,
-      handleLanguageUpdate,
       handleLogout,
       openPlanModal,
       closePlanModal,
@@ -201,67 +287,59 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
-.admin-view {
-  min-height: 100vh;
-  background-color: var(--background-color-soft);
-  color: var(--header-text-color);
-  font-family: var(--main-font);
+.admin-view-content {
+  width: 100%;
 }
 
-.admin-topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 64px;
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1px;
+}
+
+.tab-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 40px;
-  background: var(--background-color);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--normal-text-color);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 8px 8px 0 0;
 
-  .topbar-left {
-    .admin-logo {
-      height: 32px;
-    }
+  &:hover {
+    color: var(--header-text-color);
+    background: var(--background-color-soft);
   }
 
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  &.active {
+    color: var(--primary-green-color);
+    border-bottom-color: var(--primary-green-color);
+  }
 
-    .logout-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 1px solid var(--border-color);
-      background: transparent;
-      color: var(--primary-red-color);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-
-      &:hover {
-        background: var(--primary-red-color);
-        color: white;
-        border-color: var(--primary-red-color);
-      }
-    }
+  .tab-icon {
+    font-size: 16px;
   }
 }
 
-.admin-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 100px 40px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
+.tab-pane {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mt-8 {
+  margin-top: 2rem;
 }
 
 .admin-loading-skeleton {
@@ -278,9 +356,10 @@ export default defineComponent({
     margin-bottom: 24px;
 
     h2 {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
       margin: 0;
+      color: var(--header-text-color);
     }
 
     .add-btn {
@@ -310,14 +389,5 @@ export default defineComponent({
   padding: 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
-
-@media (max-width: 768px) {
-  .admin-topbar {
-    padding: 0 20px;
-  }
-
-  .admin-content {
-    padding: 80px 20px 20px;
-  }
-}
 </style>
+

@@ -58,7 +58,7 @@
           </div>
           <ul v-else-if="planUsers.length > 0" class="user-list">
             <li v-for="user in planUsers" :key="user.email">
-              <span class="user-name">{{ user.name }}</span>
+              <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
               <span class="user-email">{{ user.email }}</span>
             </li>
           </ul>
@@ -73,7 +73,7 @@
 import { defineComponent, ref, computed } from 'vue'
 import type { PropType } from 'vue'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
-import type { AdminPlan, AdminPlanUser } from '@/services/api/adminPlans/adminPlans.models'
+import type { AdminPlan, AdminUserUsage } from '@/services/api/adminPlans/adminPlans.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 
 export default defineComponent({
@@ -95,7 +95,7 @@ export default defineComponent({
   setup(props) {
     const isUsersModalOpen = ref(false)
     const selectedPlan = ref<AdminPlan | null>(null)
-    const planUsers = ref<AdminPlanUser[]>([])
+    const planUsers = ref<AdminUserUsage[]>([])
     const isLoadingUsers = ref(false)
 
     const t = computed(() => {

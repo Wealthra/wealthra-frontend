@@ -318,11 +318,10 @@ export default {
 
   .information-wrapper {
     flex-shrink: 0;
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     width: 100%;
-    justify-content: space-between;
-    gap: 0.5rem;
+    gap: 1rem;
   }
   .statistics-wrapper {
     display: flex;
@@ -340,7 +339,7 @@ export default {
     min-height: min-content;
 
     .information-wrapper {
-      flex-wrap: wrap;
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
     }
     .statistics-wrapper {
@@ -361,7 +360,7 @@ export default {
     gap: 1rem;
 
     .information-wrapper {
-      flex-direction: column;
+      grid-template-columns: 1fr;
       gap: 0.5rem;
     }
     .statistics-wrapper {

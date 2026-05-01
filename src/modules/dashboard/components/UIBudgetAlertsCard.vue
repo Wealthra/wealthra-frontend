@@ -151,7 +151,7 @@ export default {
   .card-header {
     margin-bottom: 1.25rem;
     .card-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--header-text-color);
       margin: 0;
@@ -252,7 +252,7 @@ export default {
       color: var(--header-text-color);
     }
     .category-name {
-      font-size: 0.9rem;
+      font-size: var(--font-size-sm);
       font-weight: 700;
       color: var(--header-text-color);
     }
@@ -278,7 +278,7 @@ export default {
       gap: 0.4rem;
 
       .current {
-        font-size: 0.95rem;
+        font-size: var(--font-size-sm);
         font-weight: 800;
         color: var(--header-text-color);
       }
@@ -288,14 +288,14 @@ export default {
         opacity: 0.5;
       }
       .limit {
-        font-size: 0.8rem;
+        font-size: var(--font-size-xs);
         font-weight: 600;
         color: var(--normal-text-color);
       }
     }
 
     .pct-label {
-      font-size: 0.8rem;
+      font-size: var(--font-size-xs);
       font-weight: 800;
       color: var(--header-text-color);
     }

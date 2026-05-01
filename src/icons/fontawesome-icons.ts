@@ -10,8 +10,10 @@ import {
   faCalendarDay,
   faCalendarWeek,
   faChartLine,
+  faChevronDown,
   faChevronLeft,
   faChevronRight,
+  faChevronUp,
   faCircleCheck,
   faCircleExclamation,
   faCircleInfo,
@@ -129,8 +131,8 @@ export const languageIcons = {
 export const arrowIcons = {
   right: faChevronRight,
   left: faChevronLeft,
-  up: faArrowUp,
-  down: faArrowDown,
+  up: faChevronUp,
+  down: faChevronDown,
 }
 
 export const trendIcons = {
@@ -165,6 +167,8 @@ export const kpiIconMap: Record<string, IconDefinition> = {
   'fa-bell': faBell,
   'chart-line': faChartLine,
   'fa-chart-line': faChartLine,
+  'triangle-exclamation': faTriangleExclamation,
+  'fa-triangle-exclamation': faTriangleExclamation,
 }
 
 export const transactionCategoryIconMap: Record<string, IconDefinition> = {

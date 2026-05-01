@@ -146,11 +146,16 @@
               <label for="preferredCurrency">
                 {{ selectedLanguage === 'English' ? 'Preferred Currency' : 'Tercih Edilen Para Birimi' }}
               </label>
-              <select id="preferredCurrency" v-model="profileForm.preferredCurrency" class="settings-select">
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="TRY">TRY (₺)</option>
-              </select>
+              <UISelect
+                id="preferredCurrency"
+                v-model="profileForm.preferredCurrency"
+                class="settings-select"
+                :options="[
+                  { label: 'USD ($)', value: 'USD' },
+                  { label: 'EUR (€)', value: 'EUR' },
+                  { label: 'TRY (₺)', value: 'TRY' }
+                ]"
+              />
             </div>
 
             <div class="actions-row">
@@ -440,6 +445,7 @@ import { uploadAvatar } from '@/services/external/imageHost.service'
 import { clearAuth } from '@/utils/auth'
 import { useCurrency } from '@/composables/useCurrency'
 import type { CurrencyCode } from '@/composables/useCurrency'
+import UISelect from '@/components/UISelect.vue'
 
 export default defineComponent({
   name: 'SettingsView',
@@ -451,6 +457,7 @@ export default defineComponent({
   },
   components: {
     UILoading,
+    UISelect,
   },
   setup(props) {
     const router = useRouter()
@@ -615,7 +622,7 @@ export default defineComponent({
         clearAuth()
         router.push('/')
       } catch (err: unknown) {
-        // eslint-disable-next-line no-console
+         
         console.error('deleteMe failed', err)
         deleteAccountError.value =
           selectedLanguage.value === 'English'
@@ -650,7 +657,7 @@ export default defineComponent({
           isLoadingUsage.value = false
         })
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.error('Failed to load /Account/me', err)
         initialError.value =
           selectedLanguage.value === 'English'
@@ -699,7 +706,7 @@ export default defineComponent({
         profileSuccess.value = true
         await loadMe()
       } catch (err: unknown) {
-        // eslint-disable-next-line no-console
+         
         console.error('updateProfile failed', err)
         profileError.value =
           selectedLanguage.value === 'English'
@@ -754,7 +761,7 @@ export default defineComponent({
         profileForm.value.avatarUrl = url
         avatarFile.value = null
       } catch (err: unknown) {
-        // eslint-disable-next-line no-console
+         
         console.error('Avatar upload failed', err)
         avatarError.value =
           selectedLanguage.value === 'English'
@@ -812,7 +819,7 @@ export default defineComponent({
         passwordForm.value.newPassword = ''
         passwordForm.value.confirmPassword = ''
       } catch (err: unknown) {
-        // eslint-disable-next-line no-console
+         
         console.error('changePassword failed', err)
         passwordError.value =
           selectedLanguage.value === 'English'

@@ -173,11 +173,13 @@ export default defineComponent({
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
+  height: 100%;
   min-width: 0;
   padding: 1rem 1.25rem;
   border-radius: var(--border-radius);
   font-family: var(--main-font);
   background: var(--background-color);
+  box-sizing: border-box;
   box-shadow: none;
   transition: box-shadow 0.2s ease;
 
@@ -235,7 +237,7 @@ export default defineComponent({
   }
 
   .kpi-card__label {
-    font-size: 0.8125rem;
+    font-size: var(--font-size-xs);
     font-weight: 500;
     color: var(--normal-text-color);
     letter-spacing: 0.01em;
@@ -243,7 +245,7 @@ export default defineComponent({
   }
 
   .kpi-card__value {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--header-text-color);
     line-height: 1.25;

@@ -188,11 +188,11 @@
                             :placeholder="t.description"
                           />
                           <div class="copilot-item__row">
-                            <select v-model="editForm.categoryId" class="copilot-item__select">
-                              <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                                {{ cat.categoryName }}
-                              </option>
-                            </select>
+                            <UISelect
+                              v-model="editForm.categoryId"
+                              class="copilot-item__select"
+                              :options="categories.map(cat => ({ label: cat.categoryName, value: cat.id }))"
+                            />
                             <div class="copilot-item__price-wrap">
                               <span class="copilot-item__currency">{{ currencySymbol }}</span>
                               <input
@@ -375,6 +375,7 @@ import type {
   BulkExpenseRequest,
 } from '@/services/api/copilot/copilot.models'
 import type { Category, ApiCategory } from '@/services/api/category/category.models'
+import UISelect from '@/components/UISelect.vue'
 
 interface ChatMessage {
   id: string
@@ -400,6 +401,9 @@ const generateId = () => Math.random().toString(36).substr(2, 9)
 
 export default defineComponent({
   name: 'CopilotChat',
+  components: {
+    UISelect
+  },
   props: {
     selectedLanguage: {
       type: String,
@@ -423,7 +427,7 @@ export default defineComponent({
 
       const div = document.createElement('div')
       div.innerText = text
-      let escaped = div.innerHTML
+      const escaped = div.innerHTML
 
       return escaped
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')

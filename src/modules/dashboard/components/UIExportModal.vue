@@ -35,27 +35,17 @@
         <div class="form-row">
           <div class="form-group">
             <label>{{ t.format }}</label>
-            <select v-model="format">
-              <option value="PDF">PDF</option>
-              <option value="Excel">Excel</option>
-            </select>
+            <UISelect v-model="format" :options="['PDF', 'Excel']" />
           </div>
           <div class="form-group">
             <label>{{ t.currency }}</label>
-            <select v-model="currency">
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="TRY">TRY</option>
-            </select>
+            <UISelect v-model="currency" :options="['USD', 'EUR', 'TRY']" />
           </div>
         </div>
 
         <div class="form-group">
           <label>{{ t.language }}</label>
-          <select v-model="language">
-            <option value="English">English</option>
-            <option value="Turkish">Turkish</option>
-          </select>
+          <UISelect v-model="language" :options="['English', 'Turkish']" />
         </div>
       </div>
 
@@ -75,10 +65,11 @@ import { defineComponent, ref, computed } from 'vue'
 import DatePicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 import { exportService } from '@/services/api/export/export.service'
+import UISelect from '@/components/UISelect.vue'
 
 export default defineComponent({
   name: 'UIExportModal',
-  components: { DatePicker },
+  components: { DatePicker, UISelect },
   props: {
     selectedLanguage: {
       type: String,

@@ -4,18 +4,8 @@
     <div v-else-if="!hasData" class="line-chart-no-data">
       {{ noDataText }}
     </div>
-    <div
-      v-else
-      ref="chartWrapperRef"
-      class="line-chart-wrapper"
-      :style="wrapperStyle"
-    >
-      <Line
-        v-if="wrapperReady"
-        :data="chartData"
-        :options="chartOptions"
-        class="line-chart"
-      />
+    <div v-else class="line-chart-wrapper">
+      <Line :data="chartData" :options="chartOptions" class="line-chart" />
     </div>
   </div>
 </template>
@@ -56,10 +46,10 @@ export default {
   },
   data() {
     return {
-      wrapperReady: false,
-      wrapperWidth: 0,
-      _resizeObserver: null as ResizeObserver | null,
-      themeKey: (typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null) || 'light',
+      themeKey:
+        (typeof document !== 'undefined'
+          ? document.documentElement.getAttribute('data-theme')
+          : null) || 'light',
       themeObserver: null as MutationObserver | null,
     }
   },
@@ -95,7 +85,10 @@ export default {
   },
   computed: {
     hasData(): boolean {
-      return this.labels.length > 0 && (this.incomeValues.some(v => v !== 0) || this.expenseValues.some(v => v !== 0))
+      return (
+        this.labels.length > 0 &&
+        (this.incomeValues.some(v => v !== 0) || this.expenseValues.some(v => v !== 0))
+      )
     },
     chartData() {
       void this.themeKey
@@ -127,13 +120,6 @@ export default {
         ],
       }
     },
-    wrapperStyle(): Record<string, string> {
-      const w = this.wrapperWidth
-      return {
-        width: w > 0 ? `${w}px` : '100%',
-        height: '100%',
-      }
-    },
     chartOptions() {
       void this.themeKey
       void this.isPrivacyMode // Trigger reactivity on privacy mode change
@@ -142,15 +128,16 @@ export default {
       return {
         responsive: true,
         maintainAspectRatio: false,
-        devicePixelRatio: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1,
+        devicePixelRatio:
+          typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1,
         interaction: { intersect: false, mode: 'index' as const },
         scales: {
           y: {
             beginAtZero: true,
             grid: { color: styles.getPropertyValue('--border-color').trim() },
-            ticks: { 
+            ticks: {
               color: styles.getPropertyValue('--normal-text-color').trim(),
-              callback: (value: any) => this.formatCurrency(Number(value))
+              callback: (value: any) => this.formatCurrency(Number(value)),
             },
           },
           x: {
@@ -187,15 +174,14 @@ export default {
                 const label = context.dataset.label || ''
                 const value = context.parsed.y
                 return ` ${label}: ${this.formatCurrency(value)}`
-              }
-            }
+              },
+            },
           },
         },
       }
     },
   },
   mounted() {
-    this.$nextTick(() => this.measureAndMountChart())
     this.themeObserver = new MutationObserver(() => {
       this.themeKey = document.documentElement.getAttribute('data-theme') || 'light'
     })
@@ -205,40 +191,19 @@ export default {
     })
   },
   beforeUnmount() {
-    if (this._resizeObserver) {
-      this._resizeObserver.disconnect()
-    }
     if (this.themeObserver) {
       this.themeObserver.disconnect()
     }
-  },
-  methods: {
-    measureAndMountChart() {
-      const el = this.$refs.containerRef as HTMLElement | undefined
-      if (!el) return
-      const setSize = () => {
-        const w = el.clientWidth
-        if (w > 0) {
-          this.wrapperWidth = w
-          if (!this.wrapperReady) this.wrapperReady = true
-        }
-      }
-      setSize()
-      this._resizeObserver = new ResizeObserver(setSize)
-      this._resizeObserver.observe(el)
-    },
   },
 }
 </script>
 
 <style scoped lang="scss">
-
 .line-chart-container {
   width: 100%;
   max-width: 100%;
   min-width: 0;
   height: 100%;
-  min-height: 160px;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -247,7 +212,6 @@ export default {
   .chart-skeleton {
     width: 100%;
     height: 100%;
-    min-height: 200px;
     border-radius: var(--border-radius);
   }
 
@@ -265,22 +229,15 @@ export default {
     position: relative;
     flex: 1;
     min-height: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-    max-width: 100%;
   }
 
   .line-chart {
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  :deep(canvas) {
-    max-width: 100% !important;
     display: block;
+    width: 100%;
+    height: 100%;
   }
 }
 </style>
-

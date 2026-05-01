@@ -667,11 +667,10 @@ export default defineComponent({
         color: var(--header-text-color);
         border-color: rgba(119, 119, 119, 0.5);
         background-color: rgba(119, 119, 119, 0.15);
-        transform: translateY(-1px);
       }
 
       &:active {
-        transform: translateY(0) scale(0.95);
+        opacity: 0.8;
       }
 
       &.export-btn-layout {
@@ -1128,35 +1127,46 @@ export default defineComponent({
   }
 
   .top-bar-c {
-    padding: 8px 12px;
-    gap: 8px;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    padding: var(--spacing-sm) var(--spacing-md);
+    gap: var(--spacing-md);
 
     .top-bar-left {
-      gap: 8px;
+      width: 100%;
+      justify-content: space-between;
+      gap: var(--spacing-sm);
 
       .greeting-section {
         .greeting-name {
           display: none;
         }
         .greeting-time {
-          font-size: 16px;
-          line-height: normal;
+          font-size: 18px;
+          line-height: 1.2;
         }
       }
 
       .page-title {
-        font-size: 16px;
-        line-height: normal;
+        font-size: 18px;
+        line-height: 1.2;
       }
     }
 
     .top-bar-right {
-      gap: 6px;
+      width: 100%;
+      justify-content: flex-start;
+      gap: var(--spacing-sm);
+      flex-wrap: wrap;
+
+      .profile-section-wrapper {
+        margin-left: auto;
+      }
 
       .refetch-btn {
         font-size: 16px;
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
       }
 
       .profile-section {
@@ -1169,8 +1179,8 @@ export default defineComponent({
       /* Compact sub-components */
       :deep(.language-trigger),
       :deep(.theme-toggle) {
-        padding: 4px 10px;
-        font-size: 12px;
+        padding: 6px 12px;
+        font-size: 13px;
       }
     }
   }

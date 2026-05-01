@@ -105,14 +105,14 @@ export default defineComponent({
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 
   .stat-label {
-    font-size: 13px;
+    font-size: var(--font-size-xs);
     font-weight: 600;
     color: var(--normal-text-color);
     text-transform: uppercase;
   }
 
   .stat-value {
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 800;
     color: var(--primary-green-color);
   }
@@ -121,7 +121,7 @@ export default defineComponent({
 .mt-6 { margin-top: 24px; }
 
 .breakdown-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   margin-bottom: 20px;
   color: var(--header-text-color);
@@ -147,7 +147,7 @@ export default defineComponent({
 
   td {
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     color: var(--header-text-color);
     border-bottom: 1px solid var(--border-color);
   }

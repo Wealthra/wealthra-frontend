@@ -19,21 +19,16 @@
           </template>
           <template v-else>
             <div class="filter-group">
-              <select
-                :value="categoryId ?? ''"
+              <UISelect
+                :model-value="categoryId ?? 'all'"
                 class="filter-select"
-                :aria-label="t('category')"
-                @change="onCategoryFilterChange"
-              >
-                <option value="">{{ t('allCategories') }}</option>
-                <option
-                  v-for="cat in categories"
-                  :key="cat.id"
-                  :value="cat.id"
-                >
-                  {{ cat.name }}
-                </option>
-              </select>
+                :label="t('category')"
+                :options="[
+                  { label: t('allCategories'), value: 'all' },
+                  ...categories.map(cat => ({ label: cat.name, value: cat.id }))
+                ]"
+                @update:model-value="val => $emit('updateCategory', val === 'all' ? null : Number(val))"
+              />
             </div>
             <div class="filter-group date-range-wrap">
               <Datepicker
@@ -147,14 +142,13 @@
           class="pagination-results-icon"
           aria-hidden="true"
         />
-        <select
-          :value="pageSize"
+        <UISelect
+          :model-value="pageSize"
           class="page-size-select"
-          :aria-label="t('resultsPerPage')"
-          @change="onPageSizeChange"
-        >
-          <option v-for="opt in pageSizeOptions" :key="opt" :value="opt">{{ opt }}</option>
-        </select>
+          :label="t('resultsPerPage')"
+          :options="pageSizeOptions"
+          @update:model-value="val => $emit('updatePageSize', Number(val))"
+        />
         <span class="pagination-results-label">
           {{ selectedLanguage === 'English' ? 'of' : '/' }}
           <span class="pagination-total">{{ totalCount }}</span>
@@ -276,14 +270,15 @@
           </div>
           <div class="form-group">
             <label for="expense-category">{{ t('category') }}</label>
-            <select
+            <UISelect
               id="expense-category"
               v-model="newExpense.categoryId"
               class="modal-input category-select"
-            >
-              <option :value="0">{{ t('noCategories') }}</option>
-              <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-            </select>
+              :options="[
+                { label: t('noCategories'), value: 0 },
+                ...categories.map(cat => ({ label: cat.name, value: cat.id }))
+              ]"
+            />
           </div>
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           <button type="button" class="add-btn" @click="submitExpense">
@@ -307,6 +302,7 @@ import type { Category } from '@/services/api/category/category.models'
 import { useCurrency } from '@/composables/useCurrency'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
+import UISelect from '@/components/UISelect.vue'
 
 type ExpenseItem = {
   id: number
@@ -322,7 +318,7 @@ type ExpenseItem = {
 
 export default {
   name: 'UIExpenseHistoryComponent',
-  components: { Datepicker },
+  components: { Datepicker, UISelect },
   props: {
     loading: { type: Boolean, default: false },
     expenseHistory: { type: Array as () => ExpenseItem[], required: true },
