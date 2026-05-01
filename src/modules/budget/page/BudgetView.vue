@@ -20,14 +20,6 @@
           @categoriesUpdated="fetchCategories"
         />
       </div>
-      <div class="budget-notifications-wrap">
-        <NotificationsComponent
-          :loading="isLoading"
-          :selectedLanguage="selectedLanguage"
-          :notifications="financialData.budgetNotifications"
-          @deleteNotifications="handleDeleteNotifications"
-        />
-      </div>
     </div>
   </div>
 </template>
@@ -47,7 +39,6 @@ import { useCurrency } from '@/composables/useCurrency'
 
 // Budget Components
 import BudgetOverviewComponent from '@/modules/budget/components/BudgetOverviewComponent.vue'
-import NotificationsComponent from '@/modules/budget/components/NotificationsComponent.vue'
 import UIBudgetTableComponent from '@/modules/budget/components/UIBudgetTableComponent.vue'
 
 export default {
@@ -60,7 +51,6 @@ export default {
   },
   components: {
     BudgetOverviewComponent,
-    NotificationsComponent,
     UIBudgetTableComponent,
   },
   setup() {
@@ -112,33 +102,6 @@ export default {
       }
     },
 
-    async fetchNotifications() {
-      try {
-        const data = await notificationService.apiGetNotifications(false)
-        this.financialData.budgetNotifications = data.map(n => ({
-          id: n.id,
-          message: n.message,
-          type: n.type,
-          created: n.createdOn,
-          budgetId: n.relatedEntityId,
-          categoryName: '',
-        }))
-      } catch {
-        console.error('Error fetching notifications')
-        this.hasError = true
-      }
-    },
-
-    async deleteNotifications() {
-      try {
-        await notificationService.apiDeleteNotifications({ clearAll: true, notificationIds: [] })
-        this.loadAppropriateData()
-      } catch (error) {
-        console.error('Error deleting notifications:', error)
-        this.hasError = true
-      }
-    },
-
     async handleCreateBudget(payload: { categoryId: number; limitAmount: number }) {
       try {
         await budgetService.apiCreateBudget({ ...payload, currency: this.currency })
@@ -166,9 +129,7 @@ export default {
       }
     },
 
-    handleDeleteNotifications() {
-      this.deleteNotifications()
-    },
+
 
     async loadAppropriateData() {
       this.isLoading = true
@@ -177,7 +138,6 @@ export default {
           this.fetchOverview(),
           this.fetchBudgets(),
           this.fetchCategories(),
-          this.fetchNotifications(),
         ])
       } finally {
         this.isLoading = false
@@ -216,15 +176,7 @@ export default {
 }
 
 .budget-table-wrap {
-  flex: 0.75;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.budget-notifications-wrap {
-  flex: 0.25;
+  flex: 1;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -261,10 +213,6 @@ export default {
   .budget-table-wrap {
     flex: 1 1 auto;
     min-height: 18rem;
-  }
-
-  .budget-notifications-wrap {
-    flex: 0 0 auto;
   }
 }
 </style>

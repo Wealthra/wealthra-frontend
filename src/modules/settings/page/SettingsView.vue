@@ -1297,18 +1297,27 @@ export default defineComponent({
 
 .settings-select {
   width: 100%;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background-color: var(--background-color);
-  color: var(--header-text-color);
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
 
-.settings-select:focus {
-  border-color: var(--primary-green-color);
+  :deep(.select-trigger) {
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--background-color-soft);
+    color: var(--header-text-color);
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+    height: auto;
+    min-height: 2.25rem;
+
+    &:hover:not(:disabled) {
+      border-color: var(--primary-green-color);
+      background-color: var(--background-color-soft);
+    }
+
+    &:focus {
+      border-color: var(--primary-green-color);
+      box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.1);
+    }
+  }
 }
 
 .usage-layout {

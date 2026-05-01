@@ -30,10 +30,18 @@
     <div class="table-wrap" :class="{ 'table-wrap--empty': !loading && isTableEmpty }">
       <div v-if="loading || (incomeSources && incomeSources.length > 0)" class="table" role="table">
         <div v-if="loading" class="table-header" role="row">
-          <div class="col col-name" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-type" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-amount" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-actions" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-name" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-type" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-amount" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-actions" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
         </div>
         <div v-else class="table-header" role="row">
           <div class="col col-name" role="columnheader">
@@ -50,29 +58,57 @@
           </div>
         </div>
         <template v-if="loading">
-          <div v-for="i in 5" :key="i" class="table-row skeleton-row" role="row">
-            <div class="col col-name"><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-type"><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-amount"><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-actions"><div class="skeleton-box row-skeleton"></div></div>
+          <div v-for="i in 5" :key="i" class="table-row income-card skeleton-row" role="row">
+            <div class="col col-name">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-type">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-amount">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-actions">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="col-actions-buttons">
+                <div class="skeleton-box action-icon-skeleton"></div>
+                <div class="skeleton-box action-icon-skeleton"></div>
+              </div>
+            </div>
           </div>
         </template>
         <template v-else>
-          <div v-for="(source, index) in incomeSources" :key="index" class="table-row income-card" role="row">
+          <div
+            v-for="(source, index) in incomeSources"
+            :key="index"
+            class="table-row income-card"
+            role="row"
+          >
             <div class="col col-name">
-              <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Name' : 'Ad' }}</span>
+              <span class="col-mobile-label">{{
+                selectedLanguage == 'English' ? 'Name' : 'Ad'
+              }}</span>
               <div class="source-name">{{ source.name }}</div>
             </div>
             <div class="col col-type">
-              <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Type' : 'Tür' }}</span>
+              <span class="col-mobile-label">{{
+                selectedLanguage == 'English' ? 'Type' : 'Tür'
+              }}</span>
               <span class="col-value">{{ isRecurrent(source) }} – {{ source.method }}</span>
             </div>
             <div class="col col-amount">
-              <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Amount' : 'Miktar' }}</span>
+              <span class="col-mobile-label">{{
+                selectedLanguage == 'English' ? 'Amount' : 'Miktar'
+              }}</span>
               <span class="col-value">{{ formatCurrency(source.amount) }}</span>
             </div>
             <div class="col col-actions">
-              <span class="col-mobile-label">{{ selectedLanguage == 'English' ? 'Actions' : 'İşlemler' }}</span>
+              <span class="col-mobile-label">{{
+                selectedLanguage == 'English' ? 'Actions' : 'İşlemler'
+              }}</span>
               <div class="col-actions-buttons">
                 <button
                   type="button"
@@ -126,7 +162,10 @@
         <div class="skeleton-box nav-skeleton"></div>
       </div>
     </div>
-    <div v-else-if="incomeSources && incomeSources.length > 0 && totalPages > 0" class="pagination-bar">
+    <div
+      v-else-if="incomeSources && incomeSources.length > 0 && totalPages > 0"
+      class="pagination-bar"
+    >
       <div class="pagination-results">
         <font-awesome-icon
           :icon="paginationIcons.results"
@@ -135,10 +174,11 @@
         />
         <UISelect
           :model-value="pageSize"
-          class="page-size-select"
+          class="page-size-select-premium"
           :label="selectedLanguage == 'English' ? 'Results per page' : 'Sayfa başına sonuç'"
           :options="pageSizeOptions"
           @update:model-value="val => $emit('updatePageSize', Number(val))"
+          compact
         />
         <span class="pagination-results-label">
           {{ selectedLanguage == 'English' ? 'of' : '/' }}
@@ -754,7 +794,7 @@ export default {
   min-height: 0;
   background-color: var(--background-color);
   border-radius: var(--border-radius);
-  padding: 1.5rem 1.25rem;
+  padding: 1.25rem 1rem;
 
   .header {
     flex-shrink: 0;
@@ -766,7 +806,7 @@ export default {
   }
 
   .header .title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 700;
     margin: 0;
     color: var(--header-text-color);
@@ -787,10 +827,10 @@ export default {
     color: white;
     border: none;
     border-radius: var(--border-radius);
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.75rem;
     cursor: pointer;
     font-weight: 600;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     white-space: nowrap;
 
     &:hover {
@@ -803,24 +843,46 @@ export default {
     height: 1.5rem;
     border-radius: 4px;
     margin: 0;
+
+    @media screen and (max-width: 1024px) {
+      width: 0%;
+      display: none;
+    }
   }
 
   .btn-skeleton {
     width: 100px;
     height: 2.25rem;
     border-radius: var(--border-radius);
+    @media screen and (max-width: 1024px) {
+      width: 100%;
+    }
   }
 
   .date-skeleton {
     width: 12rem;
     height: 2.25rem;
     border-radius: var(--border-radius);
+    @media screen and (max-width: 1024px) {
+      width: 100%;
+    }
   }
 
   .row-skeleton {
     width: 80%;
     height: 1rem;
     border-radius: 4px;
+    flex: 1;
+    max-width: 80%;
+    @media screen and (max-width: 1024px) {
+      width: 100px;
+    }
+  }
+
+  .action-icon-skeleton {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 6px;
   }
 
   .results-skeleton {
@@ -890,7 +952,7 @@ export default {
     padding: 0.6rem 1rem;
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--normal-text-color);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -928,25 +990,26 @@ export default {
     text-align: left;
   }
 
-  .col-mobile-label {
+  .col-mobile-label,
+  .col-mobile-label-skeleton {
     display: none;
   }
 
   .col-name .source-name {
     font-weight: 600;
     color: var(--header-text-color);
-    font-size: 0.8125rem;
+    font-size: 0.8rem;
   }
 
   .col-type {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--normal-text-color);
   }
 
   .col-amount {
     font-weight: 600;
     color: var(--primary-green-color);
-    font-size: 0.8125rem;
+    font-size: 0.8rem;
     text-align: left;
   }
 
@@ -1054,6 +1117,7 @@ export default {
     gap: 0.5rem;
     font-size: 0.75rem;
     color: var(--normal-text-color);
+    white-space: nowrap;
 
     .pagination-results-icon {
       color: var(--header-text-color);
@@ -1061,19 +1125,32 @@ export default {
       flex-shrink: 0;
     }
 
-    .page-size-select {
-      padding: 0.35rem 0.5rem;
-      border-radius: var(--border-radius);
-      border: 1px solid var(--border-color);
-      background-color: var(--background-color);
-      color: var(--header-text-color);
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
+    .page-size-select-premium {
+      :deep(.select-trigger) {
+        padding: 0;
+        border: none;
+        background: transparent;
+        height: auto;
+        min-width: 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--header-text-color);
+        gap: 0.25rem;
+
+        &:hover {
+          background: transparent;
+          color: var(--primary-green-color);
+        }
+
+        .select-icon {
+          font-size: 0.65rem;
+        }
+      }
     }
 
     .pagination-results-label {
       display: inline;
+      white-space: nowrap;
     }
 
     .pagination-count,
@@ -1376,18 +1453,144 @@ export default {
 }
 @media (max-width: 1024px) {
   .income-sources-container {
-    flex: 1 1 auto;
+    width: 100%;
     min-height: 0;
+    height: auto;
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 1rem;
+    gap: 0.75rem;
+  }
+
+  .header .title {
+    display: none;
+  }
+
+  .header .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .header .add-source-btn,
+  .header .btn-skeleton {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+  .header .btn-skeleton {
     height: auto;
   }
 
-  .header .date-range-picker-wrap {
-    width: 12rem;
-    min-width: 10rem;
+  .header .date-range-picker-wrap,
+  .header .date-skeleton {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .header .date-skeleton {
+    min-height: 2.75rem;
+    height: auto;
+  }
+
+  .header .date-range-picker-wrap :deep(.mx-datepicker) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .header .date-range-picker-wrap :deep(.mx-input) {
+    width: 100%;
+    min-height: 2.75rem;
+    font-size: 1rem;
+    padding: 0.625rem 0.75rem;
   }
 
   .table-wrap {
-    min-height: 12rem;
+    overflow: visible;
+    min-height: 10rem;
+  }
+
+  .income-sources-container .table-header,
+  .table .table-header {
+    display: none !important;
+  }
+
+  .table-row.income-card,
+  .table-row.skeleton-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    grid-template-columns: unset;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .table-row.income-card:last-child,
+  .table-row.skeleton-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .table-row .col {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0;
+    border: none;
+  }
+
+  .table-row .col-mobile-label {
+    display: inline;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--normal-text-color);
+    min-width: 5rem;
+  }
+
+  .table-row .col-mobile-label-skeleton {
+    display: block;
+    width: 50px;
+    height: 1rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .table-row .col-name .source-name,
+  .table-row .col-value {
+    font-size: 0.875rem;
+    color: var(--header-text-color);
+  }
+
+  .table-row .col-actions {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    width: 100%;
+  }
+
+  .table-row .col-actions-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .pagination-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.75rem;
   }
 }
 
@@ -1417,18 +1620,27 @@ export default {
     gap: 0.75rem;
   }
 
-  .header .add-source-btn {
+  .header .add-source-btn,
+  .header .btn-skeleton {
     width: 100%;
     min-height: 2.75rem;
     padding: 0.625rem 1rem;
     font-size: 0.875rem;
   }
+  .header .btn-skeleton {
+    height: auto;
+  }
 
-  .header .date-range-picker-wrap {
+  .header .date-range-picker-wrap,
+  .header .date-skeleton {
     width: 100%;
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
+  }
+  .header .date-skeleton {
+    min-height: 2.75rem;
+    height: auto;
   }
 
   .header .date-range-picker-wrap :deep(.mx-datepicker) {
@@ -1447,64 +1659,6 @@ export default {
   .table-wrap {
     overflow: visible;
     min-height: 10rem;
-  }
-
-  .income-sources-container .table-header,
-  .table .table-header {
-    display: none !important;
-  }
-
-  .table-row.income-card {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    grid-template-columns: unset;
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background-color: var(--background-color);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-
-  .table-row.income-card:last-child {
-    margin-bottom: 0;
-  }
-
-  .table-row .col {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0;
-    border: none;
-  }
-
-  .table-row .col-mobile-label {
-    display: inline;
-    flex-shrink: 0;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--normal-text-color);
-    min-width: 5rem;
-  }
-
-  .table-row .col-name .source-name,
-  .table-row .col-value {
-    font-size: 0.875rem;
-    color: var(--header-text-color);
-  }
-
-  .table-row .col-actions {
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-color);
-    width: 100%;
-  }
-
-  .table-row .col-actions-buttons {
-    display: flex;
-    gap: 0.5rem;
   }
 
   .empty-state {
@@ -1531,14 +1685,10 @@ export default {
   }
 
   .pagination-bar {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     padding-top: 0.75rem;
-  }
-
-  .pagination-nav {
-    width: 100%;
-    justify-content: flex-end;
   }
 
   .modal-content {

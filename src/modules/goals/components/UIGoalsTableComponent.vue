@@ -26,15 +26,19 @@
               />
             </div>
             <div class="filter-group">
-              <select
-                v-model="statusFilter"
+              <UISelect
+                :model-value="statusFilter || 'all-status'"
+                @update:model-value="
+                  val => (statusFilter = val === 'all-status' ? '' : String(val))
+                "
                 class="filter-select"
-                :aria-label="t('status')"
-              >
-                <option value="">{{ t('allStatuses') }}</option>
-                <option value="completed">{{ t('completed') }}</option>
-                <option value="inProgress">{{ t('inProgress') }}</option>
-              </select>
+                compact
+                :options="[
+                  { label: t('allStatuses'), value: 'all-status' },
+                  { label: t('completed'), value: 'completed' },
+                  { label: t('inProgress'), value: 'inProgress' },
+                ]"
+              />
             </div>
           </template>
         </div>
@@ -44,12 +48,24 @@
     <div class="table-wrap" :class="{ 'table-wrap--empty': !loading && isTableEmpty }">
       <div v-if="loading || filteredGoals.length > 0" class="table" role="table">
         <div v-if="loading" class="table-header" role="row">
-          <div class="col col-name" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-target" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-current" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-percent" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-status" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-actions" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-name" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-target" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-current" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-percent" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-status" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-actions" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
         </div>
         <div v-else class="table-header" role="row">
           <div class="col col-name" role="columnheader">{{ t('name') }}</div>
@@ -60,13 +76,31 @@
           <div class="col col-actions" role="columnheader">{{ t('actions') }}</div>
         </div>
         <template v-if="loading">
-          <div v-for="i in 5" :key="i" class="table-row skeleton-row" role="row">
-            <div class="col col-name"><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-target"><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-current"><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-percent"><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-status"><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-actions"><div class="skeleton-box row-skeleton"></div></div>
+          <div v-for="i in 5" :key="i" class="table-row goal-card skeleton-row" role="row">
+            <div class="col col-name">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-target">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-current">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-percent">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-status">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-actions">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
           </div>
         </template>
         <template v-else>
@@ -120,11 +154,7 @@
 
       <div v-if="!loading && isTableEmpty" class="empty-state">
         <div class="empty-state__icon-wrap">
-          <font-awesome-icon
-            :icon="emptyStateIcon"
-            class="empty-state__icon"
-            aria-hidden="true"
-          />
+          <font-awesome-icon :icon="emptyStateIcon" class="empty-state__icon" aria-hidden="true" />
         </div>
         <h2 class="empty-state__heading">{{ t('noGoalsYet') }}</h2>
         <p class="empty-state__text">{{ t('noGoalsYetText') }}</p>
@@ -136,7 +166,9 @@
       <div class="modal-content">
         <div class="modal-header">
           <h3>{{ t('addGoal') }}</h3>
-          <button type="button" class="close-btn" @click="hideCreateModal" aria-label="Close">&times;</button>
+          <button type="button" class="close-btn" @click="hideCreateModal" aria-label="Close">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -203,7 +235,9 @@
       <div class="modal-content">
         <div class="modal-header">
           <h3>{{ t('editGoalLimit') }}</h3>
-          <button type="button" class="close-btn" @click="hideEditModal" aria-label="Close">&times;</button>
+          <button type="button" class="close-btn" @click="hideEditModal" aria-label="Close">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -275,12 +309,16 @@ import type { Goal } from '@/services/api/goal/goal.models'
 import { useCurrency } from '@/composables/useCurrency'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import UISelect from '@/components/UISelect.vue'
 
 export default {
   name: 'UIGoalsTableComponent',
 
   components: {
     Datepicker,
+    FontAwesomeIcon,
+    UISelect,
   },
 
   props: {
@@ -334,13 +372,13 @@ export default {
       let out = list
       if (this.searchQuery.trim() !== '') {
         const q = this.searchQuery.trim().toLowerCase()
-        out = out.filter((g) => g.name?.toLowerCase().includes(q))
+        out = out.filter(g => g.name?.toLowerCase().includes(q))
       }
       if (this.statusFilter === 'completed') {
-        out = out.filter((g) => g.isCompleted === true)
+        out = out.filter(g => g.isCompleted === true)
       }
       if (this.statusFilter === 'inProgress') {
-        out = out.filter((g) => !g.isCompleted)
+        out = out.filter(g => !g.isCompleted)
       }
       return out
     },
@@ -500,7 +538,7 @@ export default {
   min-height: 0;
   background-color: var(--background-color);
   border-radius: var(--border-radius);
-  padding: 1.5rem 1.25rem;
+  padding: 1.25rem 1rem;
 
   .header {
     flex-shrink: 0;
@@ -514,7 +552,7 @@ export default {
   }
 
   .header__title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 700;
     margin: 0;
     color: var(--header-text-color);
@@ -532,6 +570,10 @@ export default {
     width: 200px;
     height: 1.5rem;
     border-radius: 4px;
+
+    @media (max-width: 1024px) {
+      display: none;
+    }
   }
 
   .toolbar-actions {
@@ -549,7 +591,7 @@ export default {
   .btn {
     padding: 0.4rem 0.75rem;
     border-radius: var(--border-radius);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     border: 1px solid transparent;
@@ -567,19 +609,34 @@ export default {
     border-color: var(--border-color);
   }
 
-  .filter-input,
-  .filter-select {
-    padding: 0.4rem 0.75rem;
+  .filter-input {
+    min-width: 12rem;
+    padding: 0.5rem 0.75rem;
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     background-color: var(--background-color);
     color: var(--header-text-color);
-    font-size: 0.8125rem;
-    min-width: 10rem;
+    font-size: 0.75rem;
+    &:focus {
+      outline: none;
+      border-color: var(--primary-green-color);
+      box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2);
+    }
   }
 
-  .filter-input {
-    min-width: 12rem;
+  .filter-select {
+    min-width: 10rem;
+    :deep(.select-trigger) {
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+      background-color: var(--background-color);
+      color: var(--header-text-color);
+      font-size: 0.75rem;
+      height: auto;
+      min-height: auto;
+      cursor: pointer;
+    }
   }
 
   .filter-group {
@@ -601,7 +658,13 @@ export default {
     width: 10rem;
     height: 2.25rem;
     border-radius: var(--border-radius);
-    &.search-skeleton { width: 12rem; }
+    &.search-skeleton {
+      width: 12rem;
+
+      @media (max-width: 1024px) {
+        width: 100%;
+      }
+    }
   }
 
   .row-skeleton {
@@ -659,18 +722,19 @@ export default {
     min-width: 0;
   }
 
-  .col-mobile-label {
+  .col-mobile-label,
+  .col-mobile-label-skeleton {
     display: none;
   }
 
   .goal-name {
     font-weight: 600;
     color: var(--header-text-color);
-    font-size: 0.8125rem;
+    font-size: 0.8rem;
   }
 
   .col-value {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: var(--normal-text-color);
   }
 
@@ -851,6 +915,9 @@ export default {
       border-radius: var(--border-radius);
       background-color: var(--background-color);
       overflow: hidden;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
       .input-prefix {
         display: flex;
         align-items: center;
@@ -865,6 +932,14 @@ export default {
         min-width: 0;
         border: none;
         border-radius: 0;
+        &:focus {
+          outline: none;
+          box-shadow: none;
+        }
+      }
+      &:focus-within {
+        border-color: var(--primary-green-color);
+        box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2);
       }
     }
 
@@ -892,26 +967,89 @@ export default {
 
 @media (max-width: 1024px) {
   .goals-table-container {
-    flex: 1 1 auto;
-    min-height: 0;
-    height: auto;
-  }
-
-  .header__toolbar {
-    gap: 0.75rem;
-  }
-
-  .toolbar-filters {
-    flex-wrap: wrap;
-  }
-
-  .filter-input,
-  .filter-select {
-    min-width: 8rem;
-  }
-
-  .table-wrap {
-    min-height: 12rem;
+    padding: 1rem;
+    .header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .header__title {
+      display: none;
+    }
+    .header__toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .toolbar-actions {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .toolbar-actions .btn,
+    .toolbar-actions .btn-skeleton {
+      width: 100%;
+      min-height: 2.75rem;
+      font-size: 0.875rem;
+    }
+    .toolbar-actions .btn-skeleton {
+      height: auto;
+    }
+    .toolbar-filters {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .filter-input,
+    .filter-select,
+    .filter-skeleton {
+      width: 100%;
+      min-width: 0;
+    }
+    .filter-skeleton {
+      min-height: 2.75rem;
+      height: auto;
+    }
+    .table-header {
+      display: none !important;
+    }
+    .table-row.goal-card,
+    .table-row.skeleton-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      margin-bottom: 0.75rem;
+      .col {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .col-mobile-label {
+        display: inline;
+        min-width: 5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--normal-text-color);
+      }
+      .col-mobile-label-skeleton {
+        display: block;
+        width: 100px;
+        height: 1rem;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .col-actions {
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+      }
+    }
   }
 }
 
@@ -951,13 +1089,17 @@ export default {
     min-width: 0;
   }
 
-  .toolbar-actions .btn {
+  .toolbar-actions .btn,
+  .toolbar-actions .btn-skeleton {
     width: 100%;
     min-width: 0;
     min-height: 2.75rem;
     padding: 0.625rem 1rem;
     font-size: 0.875rem;
     box-sizing: border-box;
+  }
+  .toolbar-actions .btn-skeleton {
+    height: auto;
   }
 
   .toolbar-filters {
@@ -973,7 +1115,8 @@ export default {
   }
 
   .filter-input,
-  .filter-select {
+  .filter-select,
+  .filter-skeleton {
     width: 100%;
     min-width: 0;
     max-width: none;
@@ -981,62 +1124,12 @@ export default {
     font-size: 1rem;
     box-sizing: border-box;
   }
+  .filter-skeleton {
+    height: auto;
+  }
 
   .table-wrap {
     overflow: visible;
-  }
-
-  .goals-table-container .table-header,
-  .table .table-header {
-    display: none !important;
-  }
-
-  .table-row.goal-card {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    grid-template-columns: unset;
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background-color: var(--background-color);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-
-  .table-row.goal-card:last-child {
-    margin-bottom: 0;
-  }
-
-  .table-row .col {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0;
-    border: none;
-  }
-
-  .table-row .col-mobile-label {
-    display: inline;
-    flex-shrink: 0;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--normal-text-color);
-    min-width: 5rem;
-  }
-
-  .table-row .col-name .goal-name,
-  .table-row .col-value {
-    font-size: 0.875rem;
-    color: var(--header-text-color);
-  }
-
-  .table-row .col-actions {
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-color);
-    width: 100%;
   }
 
   .empty-state {

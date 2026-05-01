@@ -65,24 +65,12 @@
         :showTrend="false"
         valuePrefix=""
       />
-      <UIInformationBox
-        :loading="isLoading"
-        :currentAmount="summaryHeader.unreadNotificationsCount"
-        :lastAmount="summaryHeader.unreadNotificationsCount"
-        :title="dashboardTexts[selectedLanguage].unreadNotifications"
-        color="pink"
-        type="income"
-        icon="fas fa-bell"
-        icon-color="var(--primary-pink-color)"
-        :showTrend="false"
-        valuePrefix=""
-      />
     </div>
 
     <!-- ANA 12-COLUMN DASHBOARD GRID -->
     <div class="dashboard-grid">
-      <!-- 2. LAYER (BIG/PRIMARY): Ana Analiz (8 Kolon) + Asistan Modülleri (4 Kolon) -->
-      <div class="grid-item col-span-8 main-chart-card">
+      <!-- ROW 1: FULL WIDTH CHART -->
+      <div class="grid-item col-span-12 main-chart-card">
         <div class="card-inner">
           <UIIncomeExpenseLineChart
             :loading="isLoading"
@@ -96,53 +84,88 @@
         </div>
       </div>
 
-      <div class="grid-item col-span-4 assistant-sidebar">
-        <div class="info-card">
-          <UIBudgetAlertsCard
-            :loading="isLoading"
-            :alerts="budgetAlerts"
-            :title="dashboardTexts[selectedLanguage].budgetAlerts"
-            :emptyText="dashboardTexts[selectedLanguage].noBudgetAlerts"
-            :statusExceededText="dashboardTexts[selectedLanguage].statusExceeded"
-            :statusWarningText="dashboardTexts[selectedLanguage].statusWarning"
-          />
-        </div>
-        <div class="info-card recommendations-card">
-          <div v-if="isLoading" class="card-header">
-            <div class="skeleton-box title-skeleton"></div>
-          </div>
-          <div v-else class="card-header">
-            {{ dashboardTexts[selectedLanguage].recommendations }}
-          </div>
+      <!-- ROW 2: 50/50 ALERTS AND RECS -->
+      <div class="grid-item col-span-6 info-card">
+        <UIBudgetAlertsCard
+          :loading="isLoading"
+          :alerts="budgetAlerts"
+          :title="dashboardTexts[selectedLanguage].budgetAlerts"
+          :emptyText="dashboardTexts[selectedLanguage].noBudgetAlerts"
+          :statusExceededText="dashboardTexts[selectedLanguage].statusExceeded"
+          :statusWarningText="dashboardTexts[selectedLanguage].statusWarning"
+          :carousel="true"
+        />
+      </div>
 
-          <div v-if="isLoading" class="rec-list">
-            <div v-for="i in 3" :key="i" class="rec-item skeleton-item">
+      <div class="grid-item col-span-6 info-card recommendations-card">
+        <div v-if="isLoading" class="card-header">
+          <div class="skeleton-box title-skeleton"></div>
+        </div>
+        <div v-else class="card-header carousel-header">
+          <div class="header-left">
+            <span class="title-text">{{ dashboardTexts[selectedLanguage].recommendations }}</span>
+            <span v-if="recommendations.length > 1" class="page-indicator">
+              {{ currentRecIndex + 1 }} / {{ recommendations.length }}
+            </span>
+          </div>
+          <div v-if="recommendations.length > 1" class="header-actions">
+            <button
+              class="nav-btn prev"
+              @click="scrollRecs('prev')"
+              :disabled="currentRecIndex === 0"
+            >
+              <font-awesome-icon icon="chevron-left" />
+            </button>
+            <button
+              class="nav-btn next"
+              @click="scrollRecs('next')"
+              :disabled="currentRecIndex === recommendations.length - 1"
+            >
+              <font-awesome-icon icon="chevron-right" />
+            </button>
+          </div>
+        </div>
+
+        <div v-if="isLoading" class="rec-list carousel-mode">
+          <div v-for="i in 3" :key="i" class="rec-item skeleton-item">
+            <div class="rec-top">
+              <div class="skeleton-box rec-icon-skeleton"></div>
+              <div class="skeleton-box rec-badge-skeleton"></div>
+            </div>
+            <div class="rec-content">
               <div class="skeleton-box rec-title-skeleton"></div>
               <div class="skeleton-box rec-desc-skeleton"></div>
+              <div class="skeleton-box rec-desc-skeleton-short"></div>
             </div>
           </div>
-
-          <div v-else-if="!recommendations || recommendations.length === 0" class="empty-state">
-            <font-awesome-icon :icon="emptyRecommendationsIcon" class="empty-icon" />
-            <p>{{ dashboardTexts[selectedLanguage].noRecommendations }}</p>
-          </div>
-          <ul v-else class="rec-list">
-            <li
-              v-for="rec in recommendations"
-              :key="rec.id"
-              :class="[
-                'rec-item',
-                'rec-item--' + (rec.severity ? rec.severity.toLowerCase() : 'low'),
-              ]"
-            >
-              <div class="rec-title">
-                <span>{{ rec.title }}</span>
-                <span v-if="rec.severity" class="badge">{{ rec.severity }}</span>
-              </div>
-              <div class="rec-desc">{{ rec.description }}</div>
-            </li>
-          </ul>
         </div>
+
+        <div v-else-if="!recommendations || recommendations.length === 0" class="empty-state">
+          <font-awesome-icon :icon="emptyRecommendationsIcon" class="empty-icon" />
+          <p>{{ dashboardTexts[selectedLanguage].noRecommendations }}</p>
+        </div>
+        <ul v-else class="rec-list carousel-mode" ref="recListRef" @scroll="handleRecScroll">
+          <li
+            v-for="rec in recommendations"
+            :key="rec.id"
+            :class="[
+              'rec-item',
+              'rec-item--' + (rec.severity ? rec.severity.toLowerCase() : 'low'),
+            ]"
+          >
+            <div class="rec-card-glow"></div>
+            <div class="rec-top">
+              <div class="rec-icon-box">
+                <font-awesome-icon :icon="getRecIcon(rec.severity)" />
+              </div>
+              <span v-if="rec.severity" class="severity-pill">{{ rec.severity }}</span>
+            </div>
+            <div class="rec-content">
+              <div class="rec-title">{{ rec.title }}</div>
+              <div class="rec-desc">{{ rec.description }}</div>
+            </div>
+          </li>
+        </ul>
       </div>
 
       <!-- 3. LAYER (MEDIUM/FILTER): Dağılım, Harcamalar ve Tasarruf Hedefi -->
@@ -195,7 +218,6 @@
         />
       </div>
     </div>
-
   </div>
 </template>
 
@@ -266,6 +288,7 @@ export default {
       emptySavingsIcon: emptyStateIcons.incomeSources,
       emptyRecommendationsIcon: emptyStateIcons.transactions,
       currencyHelper: useCurrency(),
+      currentRecIndex: 0,
     }
   },
   computed: {
@@ -356,7 +379,9 @@ export default {
       this.hasError = false
 
       try {
-        const data = await summaryService.getDashboardSummary({ currency: this.currencyHelper.currency })
+        const data = await summaryService.getDashboardSummary({
+          currency: this.currencyHelper.currency,
+        })
 
         this.dashboardSummary = data
         this.summaryHeader = data.summary ?? {
@@ -365,6 +390,11 @@ export default {
           totalExpenses: data.totalExpenses,
           unreadNotificationsCount: data.unreadNotificationsCount,
         }
+        window.dispatchEvent(
+          new CustomEvent('unread-notifications-updated', {
+            detail: this.summaryHeader.unreadNotificationsCount,
+          })
+        )
         this.charts = data.charts ?? {}
         this.lists = data.lists ?? {
           recentTransactions: data.recentTransactions ?? [],
@@ -399,6 +429,28 @@ export default {
         this.isLoading = false
       }
     },
+    getRecIcon(severity: string) {
+      const s = severity?.toLowerCase()
+      if (s === 'high') return 'circle-exclamation'
+      if (s === 'medium') return 'triangle-exclamation'
+      return 'lightbulb'
+    },
+    scrollRecs(direction: 'next' | 'prev') {
+      const list = this.$refs.recListRef as HTMLElement
+      if (!list) return
+      const clientWidth = list.clientWidth
+      const gap = 16
+      const scrollAmount = direction === 'next' ? clientWidth + gap : -(clientWidth + gap)
+      list.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    },
+    handleRecScroll(e: Event) {
+      const list = e.target as HTMLElement
+      const clientWidth = list.clientWidth
+      const gap = 16
+      if (clientWidth > 0) {
+        this.currentRecIndex = Math.round(list.scrollLeft / (clientWidth + gap))
+      }
+    },
   },
   mounted() {
     this.fetchFinancialData()
@@ -425,7 +477,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+
   .header-right {
     display: flex;
     align-items: center;
@@ -456,6 +508,9 @@ export default {
 .col-span-8 {
   grid-column: span 8;
 }
+.col-span-6 {
+  grid-column: span 6;
+}
 .col-span-4 {
   grid-column: span 4;
 }
@@ -474,7 +529,7 @@ export default {
 
 /* MAIN CHART ÖZEL STİLİ */
 .main-chart-card {
-  min-height: 480px;
+  height: 550px;
   .card-inner {
     padding: 1.25rem;
     height: 100%;
@@ -486,21 +541,6 @@ export default {
       flex: 1;
       height: 100%;
     }
-  }
-}
-
-/* SAĞ ASİSTAN SÜTUNU (Alerts & Recs) */
-.assistant-sidebar {
-  background: transparent;
-  box-shadow: none;
-  min-height: 480px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-
-  .info-card {
-    flex: 1;
-    min-height: 0;
   }
 }
 
@@ -526,6 +566,59 @@ export default {
     width: 150px;
     height: 1.1rem;
     margin-bottom: 0;
+  }
+
+  &.carousel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .page-indicator {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--normal-text-color);
+      background: var(--background-color-soft);
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      opacity: 0.7;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.4rem;
+
+      .nav-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--background-color);
+        color: var(--normal-text-color);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        font-size: 0.7rem;
+
+        &:hover:not(:disabled) {
+          background: var(--background-color-soft);
+          border-color: var(--header-text-color);
+          color: var(--header-text-color);
+        }
+
+        &:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+      }
+    }
   }
 }
 
@@ -597,87 +690,210 @@ export default {
 .recommendations-card {
   .rec-list {
     list-style: none;
-    padding: 0 1.25rem 1.25rem 1.25rem;
     margin: 0;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     overflow-y: auto;
-  }
+    height: 100%;
+    padding-bottom: 1.25rem;
 
-  .rec-item {
-    padding: 0.85rem;
-    border-radius: var(--border-radius);
-    background: var(--background-color-soft);
-    border-left: 4px solid var(--border-color);
-    transition: transform 0.2s ease;
+    &.carousel-mode {
+      padding: 0 0 1.25rem 0;
+      flex-direction: row;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      gap: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
 
-    &:hover {
-      transform: translateX(4px);
-    }
-
-    &--high {
-      border-left-color: var(--notification-alert-color);
-      background: var(--notification-alert-color-soft);
-      .badge {
-        color: var(--notification-alert-color-header);
-        background: rgba(220, 53, 69, 0.1);
-      }
-      .rec-title span {
-        color: var(--notification-alert-color-header);
-      }
-      .rec-desc {
-        color: var(--notification-alert-color-text);
-      }
-    }
-    &--medium {
-      border-left-color: var(--notification-warning-color);
-      background: var(--notification-warning-color-soft);
-      .badge {
-        color: var(--notification-warning-color-header);
-        background: rgba(243, 156, 18, 0.1);
-      }
-      .rec-title span {
-        color: var(--notification-warning-color-header);
-      }
-      .rec-desc {
-        color: var(--notification-warning-color-text);
-      }
-    }
-    &--low {
-      border-left-color: var(--notification-info-color);
-      background: var(--notification-info-color-soft);
-      .badge {
-        color: var(--notification-info-color-header);
-        background: rgba(13, 202, 240, 0.1);
-      }
-      .rec-title span {
-        color: var(--notification-info-color-header);
-      }
-      .rec-desc {
-        color: var(--notification-info-color-text);
+      &::-webkit-scrollbar {
+        display: none;
       }
     }
 
-    .rec-title {
+    .rec-item {
+      padding: 1.5rem;
+      border-radius: 1.5rem;
+      background: var(--background-color);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 700;
-      font-size: 0.9rem;
-      margin-bottom: 0.4rem;
+      flex-direction: column;
+      gap: 1.25rem;
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      border-top: 1px solid var(--border-color);
 
-      .badge {
-        font-size: 0.65rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 999px;
-        text-transform: uppercase;
-        font-weight: 800;
+      /* Edge-to-edge box but inset content/background */
+      border-left: 1.25rem solid transparent;
+      border-right: 1.25rem solid transparent;
+      background-clip: padding-box;
+
+      .rec-card-glow {
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        filter: blur(40px);
+        opacity: 0.1;
+        z-index: 0;
+        pointer-events: none;
       }
-    }
-    .rec-desc {
-      font-size: 0.8rem;
-      line-height: 1.4;
+
+      .rec-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1;
+
+        .rec-icon-box {
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.3rem;
+          background: var(--background-color-soft);
+          color: var(--primary-blue-color);
+        }
+
+        .severity-pill {
+          font-size: 0.65rem;
+          font-weight: 800;
+          padding: 0.3rem 0.8rem;
+          border-radius: 999px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+      }
+
+      .rec-content {
+        flex: 1;
+        z-index: 1;
+        .rec-title {
+          font-size: 1.3rem;
+          font-weight: 800;
+          color: var(--header-text-color);
+          margin-bottom: 0.5rem;
+          line-height: 1.2;
+        }
+        .rec-desc {
+          font-size: 0.95rem;
+          color: var(--normal-text-color);
+          opacity: 0.8;
+          line-height: 1.5;
+        }
+      }
+
+      .rec-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 1rem;
+        margin-top: auto;
+        z-index: 1;
+
+        .action-text {
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: var(--primary-blue-color);
+        }
+
+        .action-icon {
+          font-size: 0.8rem;
+          color: var(--primary-blue-color);
+          transition: transform 0.2s ease;
+        }
+      }
+
+      /* Severity Variants */
+      &--critical,
+      &--high {
+        .rec-card-glow {
+          background: var(--notification-alert-color);
+          opacity: 0.12;
+        }
+        .rec-icon-box {
+          background: var(--notification-alert-color-soft);
+          color: var(--notification-alert-color);
+        }
+        .severity-pill {
+          background: var(--notification-alert-color-soft);
+          color: var(--notification-alert-color);
+        }
+      }
+
+      &--medium {
+        .rec-card-glow {
+          background: var(--notification-warning-color);
+          opacity: 0.12;
+        }
+        .rec-icon-box {
+          background: var(--notification-warning-color-soft);
+          color: var(--notification-warning-color);
+        }
+        .severity-pill {
+          background: var(--notification-warning-color-soft);
+          color: var(--notification-warning-color);
+        }
+      }
+
+      &--low {
+        .rec-card-glow {
+          background: var(--notification-info-color);
+          opacity: 0.12;
+        }
+        .rec-icon-box {
+          background: var(--notification-info-color-soft);
+          color: var(--notification-info-color);
+        }
+        .severity-pill {
+          background: var(--notification-info-color-soft);
+          color: var(--notification-info-color);
+        }
+      }
+
+      /* Skeleton Overrides */
+      &.skeleton-item {
+        pointer-events: none;
+        background: var(--background-color);
+
+        .rec-icon-skeleton {
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+        }
+        .rec-badge-skeleton {
+          width: 60px;
+          height: 1.25rem;
+          border-radius: 999px;
+        }
+        .rec-title-skeleton {
+          width: 70%;
+          height: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .rec-desc-skeleton {
+          width: 100%;
+          height: 0.9rem;
+          margin-bottom: 0.4rem;
+        }
+        .rec-desc-skeleton-short {
+          width: 60%;
+          height: 0.9rem;
+        }
+        .rec-action-skeleton {
+          width: 100px;
+          height: 1rem;
+        }
+      }
     }
   }
 }
@@ -688,35 +904,30 @@ export default {
 
 /* RESPONSIVE KIRILMALAR */
 @media (max-width: 1200px) {
-  .col-span-8 {
-    grid-column: span 12;
-  }
-  .assistant-sidebar {
-    grid-column: span 12;
-    flex-direction: row;
-    min-height: 300px;
-  }
+  .col-span-12,
+  .col-span-8,
+  .col-span-6,
   .col-span-4 {
-    grid-column: span 6;
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 1000px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .col-span-4,
-  .col-span-6,
-  .col-span-8,
-  .col-span-12 {
-    grid-column: span 12;
-  }
-  .assistant-sidebar {
-    flex-direction: column;
-    min-height: auto;
-  }
   .grid-item {
     min-height: 320px;
   }
   .main-chart-card {
-    min-height: 350px;
+    height: 450px;
+  }
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }
 </style>

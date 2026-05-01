@@ -1,74 +1,74 @@
 <template>
   <div class="income-content">
-      <div class="information-wrapper">
-        <UIInformationBox
-          :loading="isLoading"
-          :currentAmount="financialData.weeklyTotalIncome"
-          :lastAmount="0"
-          color="green"
-          type="income"
-          :title="incomeTexts[selectedLanguage].weeklyIncome"
-          icon="fas fa-calendar-week"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-        <UIInformationBox
-          :loading="isLoading"
-          :currentAmount="financialData.monthlyTotalIncome"
-          :lastAmount="0"
-          color="green"
-          type="income"
-          :title="incomeTexts[selectedLanguage].monthlyIncome"
-          icon="fas fa-calendar-day"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-        <UIInformationBox
-          :loading="isLoading"
-          :currentAmount="financialData.averageMonthlyIncome"
-          :lastAmount="0"
-          color="green"
-          type="income"
-          :title="incomeTexts[selectedLanguage].averageMonthlyIncome"
-          icon="fas fa-chart-line"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-        <UIInformationBox
-          :loading="isLoading"
-          :currentAmount="financialData.yearlyTotalIncome"
-          :lastAmount="0"
-          color="green"
-          type="income"
-          :title="incomeTexts[selectedLanguage].annualIncome"
-          icon="fas fa-calendar"
-          icon-color="var(--primary-green-color)"
-          :showTrend="false"
-        />
-      </div>
-      <div class="statistics-wrapper">
-        <UIIncomeSourcesComponent
-          v-if="isLoading || (financialData && Array.isArray(financialData.incomeSources))"
-          :incomeSources="financialData.incomeSources || []"
-          :hasMoreItems="financialData.incomeHasMoreItems ?? false"
-          :selectedLanguage="selectedLanguage"
-          :loading="isLoading"
-          :pageNumber="financialData.pageNumberIncome ?? page"
-          :pageSize="financialData.pageSizeIncome ?? pageSizeIncome"
-          :totalCount="financialData.totalCountIncome ?? 0"
-          :totalPages="financialData.totalPagesIncome ?? 0"
-          :startDate="startDateIncome ?? undefined"
-          :endDate="endDateIncome ?? undefined"
-          :getIncomeById="getIncomeById"
-          @changePage="handleChangePage"
-          @updateDateRange="handleDateRangeUpdate"
-          @updatePageSize="handlePageSizeUpdate"
-          @addIncomeSource="handleAddIncome"
-          @updateIncomeSource="handleUpdateIncomeSource"
-          @deleteSource="handleDeleteIncome"
-        />
-      </div>
+    <div class="information-wrapper">
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="financialData.weeklyTotalIncome"
+        :lastAmount="0"
+        color="green"
+        type="income"
+        :title="incomeTexts[selectedLanguage].weeklyIncome"
+        icon="fas fa-calendar-week"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="financialData.monthlyTotalIncome"
+        :lastAmount="0"
+        color="green"
+        type="income"
+        :title="incomeTexts[selectedLanguage].monthlyIncome"
+        icon="fas fa-calendar-day"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="financialData.averageMonthlyIncome"
+        :lastAmount="0"
+        color="green"
+        type="income"
+        :title="incomeTexts[selectedLanguage].averageMonthlyIncome"
+        icon="fas fa-chart-line"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
+      <UIInformationBox
+        :loading="isLoading"
+        :currentAmount="financialData.yearlyTotalIncome"
+        :lastAmount="0"
+        color="green"
+        type="income"
+        :title="incomeTexts[selectedLanguage].annualIncome"
+        icon="fas fa-calendar"
+        icon-color="var(--primary-green-color)"
+        :showTrend="false"
+      />
     </div>
+    <div class="statistics-wrapper">
+      <UIIncomeSourcesComponent
+        v-if="isLoading || (financialData && Array.isArray(financialData.incomeSources))"
+        :incomeSources="financialData.incomeSources || []"
+        :hasMoreItems="financialData.incomeHasMoreItems ?? false"
+        :selectedLanguage="selectedLanguage"
+        :loading="isLoading"
+        :pageNumber="financialData.pageNumberIncome ?? page"
+        :pageSize="financialData.pageSizeIncome ?? pageSizeIncome"
+        :totalCount="financialData.totalCountIncome ?? 0"
+        :totalPages="financialData.totalPagesIncome ?? 0"
+        :startDate="startDateIncome ?? undefined"
+        :endDate="endDateIncome ?? undefined"
+        :getIncomeById="getIncomeById"
+        @changePage="handleChangePage"
+        @updateDateRange="handleDateRangeUpdate"
+        @updatePageSize="handlePageSizeUpdate"
+        @addIncomeSource="handleAddIncome"
+        @updateIncomeSource="handleUpdateIncomeSource"
+        @deleteSource="handleDeleteIncome"
+      />
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -118,7 +118,6 @@ export default {
     }
   },
   methods: {
-
     getIncomeById(id: number) {
       return incomeService.getIncomeById(id)
     },
@@ -279,10 +278,7 @@ export default {
     async loadAppropriateData() {
       this.isLoading = true
       try {
-        await Promise.all([
-          this.fetchFinancialData(),
-          this.fetchIncomeSources()
-        ])
+        await Promise.all([this.fetchFinancialData(), this.fetchIncomeSources()])
       } finally {
         this.isLoading = false
       }
@@ -335,16 +331,9 @@ export default {
 
 @media (max-width: 1024px) {
   .income-content {
-    flex: 0 0 auto;
-    min-height: min-content;
-
     .information-wrapper {
       grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
-    }
-    .statistics-wrapper {
-      flex: none;
-      min-height: 0;
     }
   }
 }
@@ -360,7 +349,7 @@ export default {
     gap: 1rem;
 
     .information-wrapper {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.5rem;
     }
     .statistics-wrapper {

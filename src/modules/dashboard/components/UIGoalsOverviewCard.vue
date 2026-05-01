@@ -2,7 +2,12 @@
   <div class="goals-overview-card-content">
     <template v-if="loading">
       <div class="goals-chart-area">
-        <div class="skeleton-box radial-skeleton"></div>
+        <div class="skeleton-box radial-skeleton">
+          <div class="radial-hole">
+            <div class="skeleton-box center-text-sm"></div>
+            <div class="skeleton-box center-text-lg"></div>
+          </div>
+        </div>
       </div>
       <div class="goals-detail-footer">
         <div class="skeleton-box footer-row-skeleton"></div>
@@ -196,6 +201,32 @@ export default {
       width: 160px;
       height: 160px;
       border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+
+      .radial-hole {
+        width: 130px;
+        height: 130px;
+        background: var(--background-color);
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+      }
+
+      .center-text-sm {
+        width: 30px;
+        height: 0.5rem;
+      }
+      .center-text-lg {
+        width: 60px;
+        height: 1.5rem;
+      }
     }
 
     .radial-progress-container {

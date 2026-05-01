@@ -23,11 +23,15 @@
                 :model-value="categoryId ?? 'all'"
                 class="filter-select"
                 :label="t('category')"
+                searchable
+                compact
                 :options="[
                   { label: t('allCategories'), value: 'all' },
-                  ...categories.map(cat => ({ label: cat.name, value: cat.id }))
+                  ...categories.map(cat => ({ label: cat.name, value: cat.id })),
                 ]"
-                @update:model-value="val => $emit('updateCategory', val === 'all' ? null : Number(val))"
+                @update:model-value="
+                  val => $emit('updateCategory', val === 'all' ? null : Number(val))
+                "
               />
             </div>
             <div class="filter-group date-range-wrap">
@@ -50,18 +54,46 @@
       <!-- Loading / Skeleton State -->
       <div v-if="loading" class="table" role="table">
         <div class="table-header" role="row">
-          <div class="col col-name" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-type" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-amount" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-category" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-          <div class="col col-actions" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+          <div class="col col-name" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-type" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-amount" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-category" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
+          <div class="col col-actions" role="columnheader">
+            <div class="skeleton-box header-skeleton"></div>
+          </div>
         </div>
-        <div v-for="i in 5" :key="i" class="table-row skeleton-row" role="row">
-          <div class="col col-name"><div class="skeleton-box row-skeleton"></div></div>
-          <div class="col col-type"><div class="skeleton-box row-skeleton"></div></div>
-          <div class="col col-amount"><div class="skeleton-box row-skeleton"></div></div>
-          <div class="col col-category"><div class="skeleton-box row-skeleton"></div></div>
-          <div class="col col-actions"><div class="skeleton-box row-skeleton"></div></div>
+        <div v-for="i in 5" :key="i" class="table-row expense-card skeleton-row" role="row">
+          <div class="col col-name">
+            <div class="skeleton-box col-mobile-label-skeleton"></div>
+            <div class="skeleton-box row-skeleton"></div>
+          </div>
+          <div class="col col-type">
+            <div class="skeleton-box col-mobile-label-skeleton"></div>
+            <div class="skeleton-box row-skeleton"></div>
+          </div>
+          <div class="col col-amount">
+            <div class="skeleton-box col-mobile-label-skeleton"></div>
+            <div class="skeleton-box row-skeleton"></div>
+          </div>
+          <div class="col col-category">
+            <div class="skeleton-box col-mobile-label-skeleton"></div>
+            <div class="skeleton-box row-skeleton"></div>
+          </div>
+          <div class="col col-actions">
+            <div class="skeleton-box col-mobile-label-skeleton"></div>
+            <div class="col-actions-buttons">
+              <div class="skeleton-box action-icon-skeleton"></div>
+              <div class="skeleton-box action-icon-skeleton"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -74,7 +106,12 @@
           <div class="col col-category" role="columnheader">{{ t('category') }}</div>
           <div class="col col-actions" role="columnheader">{{ t('actions') }}</div>
         </div>
-        <div v-for="(expense, index) in expenseHistory" :key="expense.id ?? index" class="table-row expense-card" role="row">
+        <div
+          v-for="(expense, index) in expenseHistory"
+          :key="expense.id ?? index"
+          class="table-row expense-card"
+          role="row"
+        >
           <div class="col col-name">
             <span class="col-mobile-label">{{ t('name') }}</span>
             <div class="source-name">{{ expense.description }}</div>
@@ -89,25 +126,30 @@
           </div>
           <div class="col col-category">
             <span class="col-mobile-label">{{ t('category') }}</span>
-            <span class="category-badge">{{ expense.categoryName || resolveCategoryName(expense.categoryId) }}</span>
+            <span class="category-badge">{{
+              expense.categoryName || resolveCategoryName(expense.categoryId)
+            }}</span>
           </div>
           <div class="col col-actions">
-            <button
-              type="button"
-              class="row-action-btn"
-              @click="openEditModal(expense)"
-              :aria-label="t('editExpense')"
-            >
-              <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
-            </button>
-            <button
-              type="button"
-              class="row-action-btn"
-              @click="handleDeleteExpense(expense.id)"
-              :aria-label="t('deleteExpense')"
-            >
-              <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
-            </button>
+            <span class="col-mobile-label">{{ t('actions') }}</span>
+            <div class="col-actions-buttons">
+              <button
+                type="button"
+                class="row-action-btn"
+                @click="openEditModal(expense)"
+                :aria-label="t('editExpense')"
+              >
+                <font-awesome-icon :icon="actionIcons.edit" class="action-icon" />
+              </button>
+              <button
+                type="button"
+                class="row-action-btn"
+                @click="handleDeleteExpense(expense.id)"
+                :aria-label="t('deleteExpense')"
+              >
+                <font-awesome-icon :icon="actionIcons.delete" class="delete-icon" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -135,7 +177,10 @@
         <div class="skeleton-box nav-skeleton"></div>
       </div>
     </div>
-    <div v-else-if="expenseHistory && expenseHistory.length > 0 && totalPages > 0" class="pagination-bar">
+    <div
+      v-else-if="expenseHistory && expenseHistory.length > 0 && totalPages > 0"
+      class="pagination-bar"
+    >
       <div class="pagination-results">
         <font-awesome-icon
           :icon="paginationIcons.results"
@@ -144,10 +189,11 @@
         />
         <UISelect
           :model-value="pageSize"
-          class="page-size-select"
+          class="page-size-select-premium"
           :label="t('resultsPerPage')"
           :options="pageSizeOptions"
           @update:model-value="val => $emit('updatePageSize', Number(val))"
+          compact
         />
         <span class="pagination-results-label">
           {{ selectedLanguage === 'English' ? 'of' : '/' }}
@@ -202,7 +248,9 @@
           <h3>
             {{ editingExpenseId != null ? t('editExpense') : t('addExpenseModule') }}
           </h3>
-          <button type="button" class="close-btn" @click="hideAddModal" aria-label="Close">&times;</button>
+          <button type="button" class="close-btn" @click="hideAddModal" aria-label="Close">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -273,10 +321,11 @@
             <UISelect
               id="expense-category"
               v-model="newExpense.categoryId"
-              class="modal-input category-select"
+              class="category-select"
+              searchable
               :options="[
                 { label: t('noCategories'), value: 0 },
-                ...categories.map(cat => ({ label: cat.name, value: cat.id }))
+                ...categories.map(cat => ({ label: cat.name, value: cat.id })),
               ]"
             />
           </div>
@@ -363,11 +412,48 @@ export default {
       const toDate = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
       const isEn = this.selectedLanguage === 'English'
       return [
-        { text: isEn ? 'Today' : 'Bugün', onClick: () => { const d = toDate(new Date()); return [d, d] } },
-        { text: isEn ? 'Yesterday' : 'Dün', onClick: () => { const d = toDate(new Date()); d.setDate(d.getDate() - 1); return [d, d] } },
-        { text: isEn ? 'Last 7 days' : 'Son 7 gün', onClick: () => { const end = toDate(new Date()); const start = toDate(new Date()); start.setDate(start.getDate() - 7); return [start, end] } },
-        { text: isEn ? 'Last 30 days' : 'Son 30 gün', onClick: () => { const end = toDate(new Date()); const start = toDate(new Date()); start.setDate(start.getDate() - 30); return [start, end] } },
-        { text: isEn ? 'This month' : 'Bu ay', onClick: () => { const end = toDate(new Date()); const start = toDate(new Date()); start.setDate(1); return [start, end] } },
+        {
+          text: isEn ? 'Today' : 'Bugün',
+          onClick: () => {
+            const d = toDate(new Date())
+            return [d, d]
+          },
+        },
+        {
+          text: isEn ? 'Yesterday' : 'Dün',
+          onClick: () => {
+            const d = toDate(new Date())
+            d.setDate(d.getDate() - 1)
+            return [d, d]
+          },
+        },
+        {
+          text: isEn ? 'Last 7 days' : 'Son 7 gün',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setDate(start.getDate() - 7)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'Last 30 days' : 'Son 30 gün',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setDate(start.getDate() - 30)
+            return [start, end]
+          },
+        },
+        {
+          text: isEn ? 'This month' : 'Bu ay',
+          onClick: () => {
+            const end = toDate(new Date())
+            const start = toDate(new Date())
+            start.setDate(1)
+            return [start, end]
+          },
+        },
       ]
     },
     dateRangeModel(): [Date, Date] | null {
@@ -393,10 +479,16 @@ export default {
       return pages
     },
     showEllipsis(): boolean {
-      return this.displayedPages.length > 0 && this.displayedPages[this.displayedPages.length - 1] < this.totalPages - 1
+      return (
+        this.displayedPages.length > 0 &&
+        this.displayedPages[this.displayedPages.length - 1] < this.totalPages - 1
+      )
     },
     showLastPage(): boolean {
-      return this.displayedPages.length > 0 && this.displayedPages[this.displayedPages.length - 1] < this.totalPages
+      return (
+        this.displayedPages.length > 0 &&
+        this.displayedPages[this.displayedPages.length - 1] < this.totalPages
+      )
     },
   },
   methods: {
@@ -420,7 +512,8 @@ export default {
         return
       }
       const [start, end] = value
-      const toYmd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const toYmd = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       this.$emit('updateDateRange', toYmd(start), toYmd(end))
     },
     onCategoryFilterChange(event: Event) {
@@ -505,7 +598,7 @@ export default {
         return
       }
       const d = (dateVal as unknown) instanceof Date ? (dateVal as Date) : null
-      const transactionDateStr = d ? d.toISOString() : (typeof dateVal === 'string' ? dateVal : '')
+      const transactionDateStr = d ? d.toISOString() : typeof dateVal === 'string' ? dateVal : ''
       const payload = {
         description: this.newExpense.description.trim(),
         amount,
@@ -534,7 +627,7 @@ export default {
   min-height: 0;
   background-color: var(--background-color);
   border-radius: var(--border-radius);
-  padding: 1.5rem 1.25rem;
+  padding: 1.25rem 1rem;
 
   .header {
     flex-shrink: 0;
@@ -546,7 +639,7 @@ export default {
   }
 
   .header__title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 700;
     margin: 0;
     color: var(--header-text-color);
@@ -557,6 +650,10 @@ export default {
     width: 15rem;
     height: 1.5rem;
     border-radius: 4px;
+
+    @media (max-width: 1024px) {
+      display: none;
+    }
   }
 
   .header__toolbar {
@@ -567,21 +664,33 @@ export default {
     flex-shrink: 0;
   }
 
-  .toolbar-actions { display: flex; align-items: center; }
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+  }
 
   .btn {
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.75rem;
     border-radius: var(--border-radius);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     border: 1px solid transparent;
     transition: opacity 0.15s ease;
-    &:hover:not(:disabled) { opacity: var(--hover-opacity); }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:hover:not(:disabled) {
+      opacity: var(--hover-opacity);
+    }
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 
-  .btn--primary { background-color: var(--primary-green-color); color: white; border-color: var(--primary-green-color); }
+  .btn--primary {
+    background-color: var(--primary-green-color);
+    color: white;
+    border-color: var(--primary-green-color);
+  }
 
   .toolbar-filters {
     display: flex;
@@ -590,16 +699,18 @@ export default {
   }
 
   .filter-select {
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
-    background-color: var(--background-color);
-    color: var(--header-text-color);
-    font-size: 0.8125rem;
-    min-height: auto;
-    cursor: pointer;
     min-width: 10rem;
-    appearance: auto;
+    :deep(.select-trigger) {
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+      background-color: var(--background-color);
+      color: var(--header-text-color);
+      font-size: 0.75rem;
+      height: auto;
+      min-height: auto;
+      cursor: pointer;
+    }
   }
 
   .btn-skeleton {
@@ -612,13 +723,27 @@ export default {
     width: 80%;
     height: 1rem;
     border-radius: 4px;
+    flex: 1;
+    max-width: 80%;
+  }
+
+  .action-icon-skeleton {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 6px;
   }
 
   .filter-skeleton {
     width: 10rem;
     height: 2.25rem;
     border-radius: var(--border-radius);
-    &.date-skeleton { width: 12rem; }
+    &.date-skeleton {
+      width: 12rem;
+
+      @media (max-width: 1024px) {
+        width: 100%;
+      }
+    }
   }
 
   .results-skeleton {
@@ -635,7 +760,10 @@ export default {
 
   .date-range-wrap {
     min-width: 12rem;
-    :deep(.mx-datepicker) { width: 100%; cursor: pointer; }
+    :deep(.mx-datepicker) {
+      width: 100%;
+      cursor: pointer;
+    }
     :deep(.mx-input) {
       padding: 0.5rem 0.75rem;
       border-radius: var(--border-radius);
@@ -655,10 +783,18 @@ export default {
     overflow: auto;
     background-color: var(--background-color);
     padding-right: 0.75rem;
-    &.table-wrap--empty { display: flex; align-items: center; justify-content: center; }
+    &.table-wrap--empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
 
-  .table { width: 100%; display: flex; flex-direction: column; }
+  .table {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 
   .table-header {
     display: grid;
@@ -667,7 +803,7 @@ export default {
     padding: 0.6rem 1rem;
     border-bottom: 1px solid var(--border-color);
     font-weight: 700;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--normal-text-color);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -683,33 +819,65 @@ export default {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 6rem minmax(7rem, 1fr) 5.5rem;
     gap: 1rem;
-    padding: 1rem;
+    padding: 0.7rem 1rem;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
-    &:last-child { border-bottom: none; }
+    &:last-child {
+      border-bottom: none;
+    }
   }
 
-  .col { min-width: 0; }
-  .col-mobile-label { display: none; }
+  .col {
+    min-width: 0;
+  }
+  .col-mobile-label,
+  .col-mobile-label-skeleton {
+    display: none;
+  }
 
-  .source-name { font-weight: 600; color: var(--header-text-color); font-size: 0.9375rem; }
-  .col-type { font-size: 0.875rem; color: var(--normal-text-color); }
-  .col-amount { font-weight: 700; color: var(--primary-red-color); font-size: 0.9375rem; }
+  .source-name {
+    font-weight: 600;
+    color: var(--header-text-color);
+    font-size: 0.8rem;
+  }
+  .col-type {
+    font-size: 0.7rem;
+    color: var(--normal-text-color);
+  }
+  .col-amount {
+    font-weight: 700;
+    color: var(--primary-red-color);
+    font-size: 0.8rem;
+  }
   .category-badge {
     display: inline-block;
-    padding: 0.25rem 0.625rem;
+    padding: 0.2rem 0.5rem;
     background: var(--background-color-soft);
     border-radius: 6px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--normal-text-color);
   }
 
   .row-action-btn {
-    width: 2rem; height: 2rem; border: none; background: transparent; cursor: pointer;
-    color: var(--normal-text-color); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
-    &:hover { background-color: var(--background-color-soft); color: var(--primary-red-color); }
-    .delete-icon, .action-icon { font-size: 0.75rem; }
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--normal-text-color);
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    &:hover {
+      background-color: var(--background-color-soft);
+      color: var(--primary-red-color);
+    }
+    .delete-icon,
+    .action-icon {
+      font-size: 0.75rem;
+    }
   }
 
   .pagination-bar {
@@ -722,71 +890,484 @@ export default {
     margin-top: 0.5rem;
     border-top: 1px solid var(--border-color);
 
-    .pagination-results { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--normal-text-color); }
-    .pagination-results-icon { color: var(--header-text-color); font-size: 0.875rem; }
-    .page-size-select { padding: 0.35rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background-color); color: var(--header-text-color); font-size: 0.75rem; cursor: pointer; }
-    .pagination-nav { display: flex; align-items: center; gap: 0.25rem; }
+    .pagination-results {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--normal-text-color);
+      white-space: nowrap;
+    }
+    .pagination-results-icon {
+      color: var(--header-text-color);
+      font-size: 0.875rem;
+    }
+    .page-size-select-premium {
+      :deep(.select-trigger) {
+        padding: 0;
+        border: none;
+        background: transparent;
+        height: auto;
+        min-width: 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--header-text-color);
+        gap: 0.25rem;
+
+        &:hover {
+          background: transparent;
+          color: var(--primary-green-color);
+        }
+
+        .select-icon {
+          font-size: 0.65rem;
+        }
+      }
+    }
+    .pagination-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
     .pagination-btn {
-      display: inline-flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem;
-      border: 1px solid var(--primary-green-color); border-radius: var(--border-radius);
-      background-color: var(--primary-green-color); color: white; cursor: pointer;
-      &:disabled { opacity: 0.4; cursor: not-allowed; }
-      .arrow-icon { font-size: 0.65rem; }
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      border: 1px solid var(--primary-green-color);
+      border-radius: var(--border-radius);
+      background-color: var(--primary-green-color);
+      color: white;
+      cursor: pointer;
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .arrow-icon {
+        font-size: 0.65rem;
+      }
     }
     .pagination-num {
-      display: inline-flex; align-items: center; justify-content: center; min-width: 1.75rem; height: 1.75rem;
-      padding: 0 0.4rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);
-      background-color: var(--background-color); color: var(--header-text-color); font-size: 0.75rem; font-weight: 500; cursor: pointer;
-      &.active { background-color: var(--primary-green-color); border-color: var(--primary-green-color); color: white; }
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.75rem;
+      height: 1.75rem;
+      padding: 0 0.4rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background-color: var(--background-color);
+      color: var(--header-text-color);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      &.active {
+        background-color: var(--primary-green-color);
+        border-color: var(--primary-green-color);
+        color: white;
+      }
     }
   }
 
   .empty-state {
-    flex: 1; min-height: 16rem; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; width: 100%; text-align: center; padding: 3rem 2rem;
-    .empty-state__icon-wrap { width: 5.5rem; height: 5.5rem; border-radius: var(--border-radius); background-color: rgba(192, 57, 43, 0.12); color: var(--primary-red-color); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; }
-    .empty-state__icon { font-size: 2.5rem; }
-    .empty-state__heading { margin-bottom: 0.75rem; font-size: 1.375rem; font-weight: 700; color: var(--header-text-color); }
-    .empty-state__text { font-size: 1rem; color: var(--normal-text-color); line-height: 1.5; max-width: 24rem; }
+    flex: 1;
+    min-height: 16rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+    padding: 3rem 2rem;
+    .empty-state__icon-wrap {
+      width: 5.5rem;
+      height: 5.5rem;
+      border-radius: var(--border-radius);
+      background-color: rgba(192, 57, 43, 0.12);
+      color: var(--primary-red-color);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .empty-state__icon {
+      font-size: 2.5rem;
+    }
+    .empty-state__heading {
+      margin-bottom: 0.75rem;
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--header-text-color);
+    }
+    .empty-state__text {
+      font-size: 1rem;
+      color: var(--normal-text-color);
+      line-height: 1.5;
+      max-width: 24rem;
+    }
   }
 
-  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
   .modal-content {
-    background: var(--background-color); border-radius: var(--border-radius); width: 90%; max-width: 28rem; max-height: 90vh; display: flex; flex-direction: column;
-    .modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; h3 { margin: 0; font-size: 1.25rem; color: var(--header-text-color); } .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--normal-text-color); line-height: 1; } }
-    .modal-body { display: flex; flex-direction: column; padding: 1.25rem; gap: 1.25rem; overflow-y: auto; }
-    .form-group { display: flex; flex-direction: column; gap: 0.375rem; label, .form-group-label { font-size: 0.75rem; font-weight: 600; color: var(--normal-text-color); } }
-    .modal-input { width: 100%; height: 2.75rem; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background: var(--background-color); color: var(--header-text-color); font-size: 0.9375rem; &:focus { outline: none; border-color: var(--primary-green-color); box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2); } }
-    .input-with-prefix { display: flex; border: 1px solid var(--border-color); border-radius: var(--border-radius); overflow: hidden; .input-prefix { display: flex; align-items: center; padding: 0 1rem; color: var(--normal-text-color); border-right: 1px solid var(--border-color); } .modal-input { border: none; flex: 1; } }
-    .datepicker-wrapper { width: 100%; :deep(.mx-input) { width: 100%; height: 2.75rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--background-color); color: var(--header-text-color); padding: 0.75rem 1rem; } }
-    .frequency-segmented { display: flex; padding: 3px; border-radius: var(--border-radius); background: var(--background-color-soft); .frequency-option { flex: 1; padding: 0.5rem 1rem; border: none; border-radius: 6px; background: transparent; color: var(--normal-text-color); font-size: 0.875rem; font-weight: 500; cursor: pointer; &.active { background: var(--primary-green-color); color: white; } } }
-    .add-btn { width: 100%; padding: 0.75rem 1rem; border: none; border-radius: var(--border-radius); background: var(--primary-green-color); color: white; font-weight: 600; font-size: 0.9375rem; cursor: pointer; }
-    .error-message { color: #dc3545; font-size: 0.85rem; text-align: center; background: rgba(220,53,69,0.1); padding: 0.5rem; border-radius: var(--border-radius); }
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 28rem;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    .modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--header-text-color);
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--normal-text-color);
+        line-height: 1;
+      }
+    }
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem;
+      gap: 1.25rem;
+      overflow-y: auto;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      label,
+      .form-group-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--normal-text-color);
+      }
+    }
+    .modal-input {
+      width: 100%;
+      height: 2.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background: var(--background-color);
+      color: var(--header-text-color);
+      font-size: 0.9375rem;
+      &:focus {
+        outline: none;
+        border-color: var(--primary-green-color);
+        box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2);
+      }
+    }
+    .input-with-prefix {
+      display: flex;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+      .input-prefix {
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        color: var(--normal-text-color);
+        border-right: 1px solid var(--border-color);
+      }
+      .modal-input {
+        border: none;
+        flex: 1;
+        &:focus {
+          outline: none;
+          box-shadow: none;
+        }
+      }
+      &:focus-within {
+        border-color: var(--primary-green-color);
+        box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2);
+      }
+    }
+    .datepicker-wrapper {
+      width: 100%;
+      :deep(.mx-datepicker) {
+        width: 100%;
+      }
+      :deep(.mx-input) {
+        width: 100%;
+        height: 2.75rem;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        background: var(--background-color);
+        color: var(--header-text-color);
+        padding: 0.75rem 1rem;
+      }
+    }
+    .category-select {
+      width: 100%;
+      :deep(.select-trigger) {
+        width: 100%;
+        height: 2.75rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background: var(--background-color);
+        color: var(--header-text-color);
+        font-size: 0.9375rem;
+      }
+    }
+    .frequency-segmented {
+      display: flex;
+      padding: 3px;
+      border-radius: var(--border-radius);
+      background: var(--background-color-soft);
+      .frequency-option {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--normal-text-color);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        &.active {
+          background: var(--primary-green-color);
+          color: white;
+        }
+      }
+    }
+    .add-btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: var(--border-radius);
+      background: var(--primary-green-color);
+      color: white;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      cursor: pointer;
+    }
+    .error-message {
+      color: #dc3545;
+      font-size: 0.85rem;
+      text-align: center;
+      background: rgba(220, 53, 69, 0.1);
+      padding: 0.5rem;
+      border-radius: var(--border-radius);
+    }
   }
 }
 
 @media (max-width: 1024px) {
-  .expense-sources-container { flex: 1 1 auto; }
-  .table-wrap { min-height: 12rem; }
+  .expense-sources-container {
+    padding: 1rem;
+    .header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .header__title {
+      display: none;
+    }
+    .header__toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .toolbar-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    .btn,
+    .btn-skeleton {
+      min-height: 2.75rem;
+      font-size: 0.875rem;
+    }
+    .btn-skeleton {
+      width: 100%;
+      height: auto;
+    }
+    .toolbar-filters {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .filter-select,
+    .date-range-wrap,
+    .filter-skeleton {
+      width: 100%;
+      min-width: 0;
+    }
+    .filter-skeleton {
+      min-height: 2.75rem;
+      height: auto;
+    }
+    .date-range-wrap :deep(.mx-input) {
+      min-height: 2.75rem;
+      font-size: 1rem;
+    }
+    .table-header {
+      display: none;
+    }
+    .table-row.expense-card,
+    .table-row.skeleton-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      margin-bottom: 0.75rem;
+      .col {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .col-mobile-label {
+        display: inline;
+        min-width: 5rem;
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--normal-text-color);
+      }
+      .col-mobile-label-skeleton {
+        display: block;
+        width: 100px;
+        height: 1rem;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .col-actions {
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+      }
+      .col-actions-buttons {
+        display: flex;
+        gap: 0.5rem;
+      }
+    }
+  }
 }
 
 @media (max-width: 768px) {
   .expense-sources-container {
     padding: 1rem;
-    .header { flex-direction: column; align-items: stretch; gap: 0.75rem; }
-    .header__title { display: none; }
-    .header__toolbar { flex-direction: column; align-items: stretch; gap: 0.75rem; }
-    .toolbar-actions { display: grid; grid-template-columns: 1fr; }
-    .btn { min-height: 2.75rem; font-size: 0.875rem; }
-    .toolbar-filters { flex-direction: column; align-items: stretch; gap: 0.75rem; }
-    .filter-select, .date-range-wrap { width: 100%; min-width: 0; }
-    .date-range-wrap :deep(.mx-input) { min-height: 2.75rem; font-size: 1rem; }
-    .table-header { display: none; }
-    .table-row.expense-card {
-      display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); margin-bottom: 0.75rem;
-      .col { display: flex; align-items: flex-start; gap: 0.5rem; width: 100%; }
-      .col-mobile-label { display: inline; min-width: 5rem; font-size: 0.75rem; font-weight: 600; color: var(--normal-text-color); }
-      .col-actions { margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); }
+    .header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .header__title {
+      display: none;
+    }
+    .header__toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .toolbar-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    .btn,
+    .btn-skeleton {
+      min-height: 2.75rem;
+      font-size: 0.875rem;
+    }
+    .btn-skeleton {
+      width: 100%;
+      height: auto;
+    }
+    .toolbar-filters {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .filter-select,
+    .date-range-wrap,
+    .filter-skeleton {
+      width: 100%;
+      min-width: 0;
+    }
+    .filter-skeleton {
+      min-height: 2.75rem;
+      height: auto;
+    }
+    .date-range-wrap :deep(.mx-input) {
+      min-height: 2.75rem;
+      font-size: 1rem;
+    }
+    .table-header {
+      display: none;
+    }
+    .table-row.expense-card,
+    .table-row.skeleton-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      margin-bottom: 0.75rem;
+      .col {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .col-mobile-label {
+        display: inline;
+        min-width: 5rem;
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--normal-text-color);
+      }
+      .col-mobile-label-skeleton {
+        display: block;
+        width: 100px;
+        height: 1rem;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .col-actions {
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+      }
+      .col-actions-buttons {
+        display: flex;
+        gap: 0.5rem;
+      }
     }
   }
 }

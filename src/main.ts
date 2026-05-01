@@ -63,6 +63,8 @@ import {
   faUsers,
   faShield,
   faCalendar,
+  faBellSlash,
+  faEnvelopeOpen,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -126,7 +128,9 @@ library.add(
   faAward,
   faUsers,
   faShield,
-  faCalendar
+  faCalendar,
+  faBellSlash,
+  faEnvelopeOpen
 )
 
 async function initApp() {

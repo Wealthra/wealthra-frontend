@@ -7,7 +7,12 @@
 
     <div v-if="loading" class="chart-content">
       <div class="chart-main-visual">
-        <div class="skeleton-box donut-skeleton"></div>
+        <div class="skeleton-box donut-skeleton">
+          <div class="donut-hole">
+            <div class="skeleton-box center-text-sm"></div>
+            <div class="skeleton-box center-text-lg"></div>
+          </div>
+        </div>
       </div>
       <div class="custom-legend">
         <div v-for="i in 4" :key="i" class="legend-row skeleton-item">
@@ -231,6 +236,32 @@ export default {
     width: 180px;
     height: 180px;
     border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    .donut-hole {
+      width: 140px;
+      height: 140px;
+      background: var(--background-color);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .center-text-sm {
+      width: 40px;
+      height: 0.6rem;
+    }
+    .center-text-lg {
+      width: 80px;
+      height: 1.2rem;
+    }
   }
 
   .dot-skeleton {

@@ -358,16 +358,9 @@ export default {
 
 @media (max-width: 1024px) {
   .expenses-content {
-    flex: 0 0 auto;
-    min-height: min-content;
-
     .information-wrapper {
       grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
-    }
-    .statistics-wrapper {
-      flex: none;
-      min-height: 0;
     }
   }
 }
@@ -378,7 +371,7 @@ export default {
     gap: 1rem;
 
     .information-wrapper {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.5rem;
     }
     .statistics-wrapper {

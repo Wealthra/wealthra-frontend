@@ -301,7 +301,7 @@
 
 /* Global DatePicker Popup Z-Index */
 .mx-datepicker-popup {
-  z-index: 300 !important;
+  z-index: 9999 !important;
 }
 :root[data-theme='dark'] .mx-datepicker-popup {
   --mx-calendar-bg: var(--background-color);
@@ -500,9 +500,15 @@ html[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
 @keyframes shimmer {
   0% {
     background-position: 200% 0;
+    transform: translateX(-1px);
+  }
+  50% {
+    background-position: -200% 0;
+    transform: translateX(1px);
   }
   100% {
-    background-position: -200% 0;
+    background-position: 200% 0;
+    transform: translateX(-1px);
   }
 }
 

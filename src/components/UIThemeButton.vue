@@ -27,11 +27,16 @@ export default defineComponent({
   },
   methods: {
     updateTheme() {
+      document.body.classList.add('theme-transitioning')
       this.isLightTheme = !this.isLightTheme
       const theme = this.isLightTheme ? 'light' : 'dark'
       localStorage.setItem(THEME_KEY, theme)
       document.documentElement.setAttribute('data-theme', theme)
       this.$emit('updateTheme', theme)
+      
+      setTimeout(() => {
+        document.body.classList.remove('theme-transitioning')
+      }, 50)
     },
   },
 })

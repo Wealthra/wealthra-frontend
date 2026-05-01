@@ -147,6 +147,17 @@
 
         <div class="top-bar-right">
           <button
+            class="refetch-btn notifications-btn-layout"
+            :title="texts.notifications"
+            @click="routeToPage('Notifications', selectedLanguage)"
+          >
+            <font-awesome-icon icon="bell" />
+            <span v-if="unreadNotificationsCount > 0" class="notification-badge">
+              {{ unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount }}
+            </span>
+          </button>
+
+          <button
             class="refetch-btn export-btn-layout"
             @click="isExportModalOpen = true"
             :title="texts.export"
@@ -171,6 +182,8 @@
                 'Hedefler',
                 'Settings',
                 'Ayarlar',
+                'Notifications',
+                'Bildirimler',
               ].includes(selectedPage)
             "
             class="refetch-btn"
@@ -275,6 +288,7 @@ import { arrowIcons, leftSidebarIconMap, profileIcon } from '@/icons/fontawesome
 import { accountService } from '@/services/api/account/account.service'
 import { useCurrency } from '@/composables/useCurrency'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
+import { notificationService } from '@/services/api/notification/notification.service'
 
 export default defineComponent({
   name: 'ModuleLayout',
@@ -308,6 +322,7 @@ export default defineComponent({
     const isLoadingUser = ref(true)
     const isFirstLoad = ref(true)
     const profileWrapperRef = ref<HTMLElement | null>(null)
+    const unreadNotificationsCount = ref(0)
 
     const { isPrivacyMode, togglePrivacyMode } = useCurrency()
 
@@ -341,13 +356,31 @@ export default defineComponent({
       }
     }
 
+    const handleUnreadUpdate = (event: any) => {
+      if (event.detail !== undefined) {
+        unreadNotificationsCount.value = event.detail
+      }
+    }
+
+    const fetchInitialUnreadCount = async () => {
+      try {
+        const notifications = await notificationService.apiGetNotifications(true, props.selectedLanguage === 'Turkish' ? 'tr' : 'en')
+        unreadNotificationsCount.value = notifications.length
+      } catch (err) {
+        console.error('Failed to fetch initial unread count', err)
+      }
+    }
+
     onMounted(() => {
       document.addEventListener('click', handleClickOutside)
+      window.addEventListener('unread-notifications-updated', handleUnreadUpdate)
       loadCurrentUser()
+      fetchInitialUnreadCount()
     })
 
     onBeforeUnmount(() => {
       document.removeEventListener('click', handleClickOutside)
+      window.removeEventListener('unread-notifications-updated', handleUnreadUpdate)
     })
 
     const emitUpdateLanguage = (language: string) => {
@@ -472,6 +505,7 @@ export default defineComponent({
       refetch: normalizedLanguage.value === 'English' ? 'Refresh Data' : 'Verileri Yenile',
       privacy: normalizedLanguage.value === 'English' ? 'Privacy Mode' : 'Gizlilik Modu',
       export: normalizedLanguage.value === 'English' ? 'Export Data' : 'Verileri Dışa Aktar',
+      notifications: normalizedLanguage.value === 'English' ? 'Notifications' : 'Bildirimler',
     }))
 
     const userInitials = computed(() => {
@@ -516,6 +550,7 @@ export default defineComponent({
       isPrivacyMode,
       isExportModalOpen,
       isFirstLoad,
+      unreadNotificationsCount,
       togglePrivacyMode,
       emitUpdateLanguage,
       toggleSidebar,
@@ -672,6 +707,38 @@ export default defineComponent({
 
       &:active {
         opacity: 0.8;
+      }
+
+      &.notifications-btn-layout {
+        position: relative;
+        color: var(--primary-pink-color);
+        border: 1px solid rgba(255, 105, 180, 0.45);
+        background-color: rgba(255, 105, 180, 0.12);
+
+        &:hover {
+          background-color: rgba(255, 105, 180, 0.2);
+          border-color: rgba(255, 105, 180, 0.7);
+          color: var(--primary-pink-color);
+        }
+
+        .notification-badge {
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          background-color: var(--notification-alert-color);
+          color: white;
+          font-size: 10px;
+          font-weight: 800;
+          min-width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid var(--background-color);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          padding: 0 2px;
+        }
       }
 
       &.export-btn-layout {
@@ -1139,7 +1206,8 @@ export default defineComponent({
 
       .greeting-section {
         .greeting-name {
-          display: none;
+          display: block;
+          font-size: 13px;
         }
         .greeting-time {
           font-size: 18px;

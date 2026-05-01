@@ -4,3 +4,7 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
 }
+
+.theme-transitioning * {
+  transition: none !important;
+}

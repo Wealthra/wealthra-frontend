@@ -16,6 +16,7 @@ const IncomeView = () => import('../modules/income/page/IncomeView.vue')
 const GoalsView = () => import('../modules/goals/page/GoalsView.vue')
 const SettingsView = () => import('../modules/settings/page/SettingsView.vue')
 const RecommendationsView = () => import('../modules/recommendations/page/RecommendationsView.vue')
+const NotificationsView = () => import('../modules/notifications/page/NotificationsView.vue')
 
 import { isAuthenticated, isAdmin } from '../utils/auth'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -66,6 +67,7 @@ const router = createRouter({
         { path: 'goals', name: 'goals', component: GoalsView },
         { path: 'settings', name: 'settings', component: SettingsView },
         { path: 'recommendations', name: 'recommendations', component: RecommendationsView },
+        { path: 'notifications', name: 'notifications', component: NotificationsView },
         { path: 'admin', name: 'admin', component: AdminView, meta: { requiresAdmin: true } },
       ],
     },
