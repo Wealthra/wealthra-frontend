@@ -218,7 +218,7 @@ export default {
   min-height: 0;
   background-color: var(--background-color);
   border-radius: var(--border-radius);
-  padding: 1.5rem 1.25rem;
+  padding: 0.75rem 1rem;
   box-sizing: border-box;
 
   .budget-overview-component {
@@ -227,22 +227,22 @@ export default {
     width: 100%;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.5rem;
 
     .title-skeleton {
-      width: 200px;
-      height: 1.5rem;
+      width: 180px;
+      height: 1.1rem;
     }
 
     .amount-skeleton {
-      width: 120px;
-      height: 1.25rem;
+      width: 110px;
+      height: 1.1rem;
       flex-shrink: 0;
     }
 
     .progress-bar-skeleton {
       flex-grow: 1;
-      height: 22px;
+      height: 14px;
     }
 
     .doughnut-skeleton {
@@ -253,8 +253,8 @@ export default {
     }
 
     .percentage-skeleton {
-      width: 50px;
-      height: 1.25rem;
+      width: 46px;
+      height: 1.1rem;
       flex-shrink: 0;
       border-radius: 4px;
     }
@@ -263,7 +263,7 @@ export default {
       display: flex;
       align-items: center;
       width: 100%;
-      gap: 1.5rem;
+      gap: 1rem;
     }
 
     .budget-overview-header {
@@ -271,19 +271,19 @@ export default {
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0;
     }
 
     .analysis-btn {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.35rem;
       background: var(--primary-green-color);
       color: white;
       border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 12px;
-      font-size: 0.85rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 10px;
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
@@ -299,9 +299,10 @@ export default {
     }
 
     .budget-overview-component-title {
-      font-size: 1.25rem;
+      font-size: 1rem;
       font-weight: 700;
       margin: 0;
+      line-height: 1.25;
       color: var(--header-text-color);
       flex-shrink: 0;
     }
@@ -311,7 +312,7 @@ export default {
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      gap: 1.5rem;
+      gap: 1rem;
       flex-wrap: wrap;
 
       .budget-overview-component-amount {
@@ -321,10 +322,11 @@ export default {
         height: 100%;
         width: auto;
         font-weight: 700;
-        font-size: 1.35rem;
+        font-size: 1rem;
         color: var(--header-text-color);
         flex-shrink: 0;
         letter-spacing: -0.02em;
+        line-height: 1.2;
       }
 
       .budget-overview-component-progress-bar {
@@ -333,7 +335,7 @@ export default {
         align-items: center;
         flex-grow: 1;
         min-width: 0;
-        height: 18px;
+        height: 14px;
         border-radius: 999px;
         background-color: var(--background-color-soft);
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -353,9 +355,12 @@ export default {
         height: 100%;
         width: auto;
         font-weight: 700;
-        font-size: 1.35rem;
+        font-size: 1rem;
         color: var(--primary-green-color);
         flex-shrink: 0;
+        line-height: 1.2;
+        min-width: 3.25rem;
+        text-align: right;
       }
     }
   }
@@ -363,14 +368,14 @@ export default {
 
 @media (max-width: 768px) {
   .budget-overview-component-c {
-    padding: 0.875rem 1rem;
+    padding: 0.65rem 0.875rem;
     border-radius: var(--border-radius);
   }
 
   .budget-overview-component {
     width: 100%;
     min-width: 0;
-    gap: 0.75rem;
+    gap: 0.5rem;
 
     .budget-overview-component-title {
       display: none;
@@ -382,13 +387,13 @@ export default {
       align-items: stretch;
       width: 100%;
       min-width: 0;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .budget-overview-component-amount {
       width: 100%;
       min-width: 0;
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--header-text-color);
       text-align: left;

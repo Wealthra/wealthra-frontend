@@ -1,7 +1,8 @@
 export interface SupportTicket {
   id: number;
   userId: string;
-  userEmail: string;
+  /** Present on some endpoints (e.g. mine); admin list may omit. */
+  userEmail?: string;
   subject: string;
   body?: string;
   status: number;
@@ -16,7 +17,8 @@ export interface CreateSupportTicketRequest {
   priority?: number;
 }
 
+/** Ticket reply body — API expects numeric status (e.g. 0 Open, 1 Pending, 2 Closed). */
 export interface ReplySupportTicketRequest {
-  body: string;
-  newStatus?: string;
+  adminReply: string;
+  status: number;
 }

@@ -87,6 +87,9 @@
   --font-size-xs: 11px;
   --font-size-sm: 13px;
   --font-size-base: 14px;
+
+  /* Above UISidePanelShell overlay (10001) and panel (10002); used by teleported select/datepicker */
+  --z-portal-above-side-panel: 10050;
 }
 
 /* Dark theme variables */
@@ -301,7 +304,7 @@
 
 /* Global DatePicker Popup Z-Index */
 .mx-datepicker-popup {
-  z-index: 9999 !important;
+  z-index: var(--z-portal-above-side-panel) !important;
 }
 :root[data-theme='dark'] .mx-datepicker-popup {
   --mx-calendar-bg: var(--background-color);

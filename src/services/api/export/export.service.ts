@@ -8,7 +8,7 @@ export const exportService = {
     queryParams.append('endDate', params.endDate)
     queryParams.append('format', params.format)
     queryParams.append('currency', params.currency)
-    queryParams.append('language', params.language)
+    queryParams.append('lang', params.lang)
 
     return apiRequest<Blob>(`Export?${queryParams.toString()}`, {
       method: 'GET',

@@ -48,10 +48,12 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
     }
   }
 
+  // Public endpoints should not send cookies by default: stale session cookies can cause 401
+  // on endpoints meant to be anonymous (e.g. active announcements).
   const baseRequestInit: RequestInit = {
     method,
     headers: requestHeaders,
-    credentials: 'include',
+    credentials: requiresAuth ? 'include' : 'omit',
   }
 
   const createRequestInit = (): RequestInit => {

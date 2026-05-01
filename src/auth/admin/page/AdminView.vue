@@ -56,11 +56,8 @@
         <!-- Support & Ops Tab -->
         <div v-if="activeTab === 'support'" class="tab-pane">
           <section class="admin-section">
-            <div class="section-header">
-              <h2>Support Tickets</h2>
-            </div>
             <div class="glass-card">
-              <AdminSupportTickets />
+              <AdminSupportTickets :selectedLanguage="selectedLanguage" />
             </div>
           </section>
           <section class="admin-section mt-8">
@@ -77,30 +74,6 @@
             </div>
             <div class="glass-card">
               <AdminFxControls />
-            </div>
-          </section>
-        </div>
-
-        <!-- System & Security Tab -->
-        <div v-if="activeTab === 'system'" class="tab-pane">
-          <section class="admin-section">
-            <div class="section-header">
-              <h2>AI Settings</h2>
-            </div>
-            <AdminAiSettings />
-          </section>
-          <section class="admin-section mt-8">
-            <div class="section-header">
-              <h2>Security (Blocked IPs)</h2>
-            </div>
-            <AdminSecurity />
-          </section>
-          <section class="admin-section mt-8">
-            <div class="section-header">
-              <h2>Error Logs</h2>
-            </div>
-            <div class="glass-card">
-              <AdminErrorLogs :selectedLanguage="selectedLanguage" />
             </div>
           </section>
         </div>
@@ -145,8 +118,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { defineComponent, onMounted, ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
 import type { AdminPlan, AdminUsageSummary as IUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
 import { clearAuth } from '@/utils/auth'
@@ -161,9 +134,6 @@ import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import AdminSupportTickets from '../components/AdminSupportTickets.vue'
 import AdminAnnouncements from '../components/AdminAnnouncements.vue'
 import AdminFxControls from '../components/AdminFxControls.vue'
-import AdminAiSettings from '../components/AdminAiSettings.vue'
-import AdminSecurity from '../components/AdminSecurity.vue'
-import AdminErrorLogs from '../components/AdminErrorLogs.vue'
 import SettingsView from '@/modules/settings/page/SettingsView.vue'
 
 export default defineComponent({
@@ -178,13 +148,22 @@ export default defineComponent({
     AdminSupportTickets,
     AdminAnnouncements,
     AdminFxControls,
-    AdminAiSettings,
-    AdminSecurity,
-    AdminErrorLogs,
     SettingsView
   },
   setup() {
+    const route = useRoute()
     const router = useRouter()
+
+    const ROUTE_TO_TAB: Record<string, 'overview' | 'users' | 'support' | 'settings'> = {
+      'admin-overview': 'overview',
+      'admin-users': 'users',
+      'admin-support': 'support',
+      'admin-settings': 'settings',
+    }
+
+    const activeTab = computed(
+      () => ROUTE_TO_TAB[route.name as string] ?? 'overview'
+    )
     type Language = 'English' | 'Turkish'
     const selectedLanguage = ref<Language>(
       (localStorage.getItem('selectedLanguage') as Language) || 'English'
@@ -193,16 +172,6 @@ export default defineComponent({
     const plans = ref<AdminPlan[]>([])
     const usageSummary = ref<IUsageSummary | null>(null)
     const isLoading = ref(true)
-    const activeTab = ref(router.currentRoute.value.query.tab?.toString() || 'overview')
-    
-    // Watch for query parameter changes to update active tab
-    const route = router.currentRoute
-    watch(() => route.value.query.tab, (newTab) => {
-      if (newTab) {
-        activeTab.value = newTab.toString()
-      }
-    })
-    
     const isPlanModalOpen = ref(false)
     const selectedPlan = ref<AdminPlan | null>(null)
     const planToDelete = ref<number | null>(null)
@@ -214,7 +183,6 @@ export default defineComponent({
         overviewTab: isTr ? 'Özet' : 'Overview',
         usersTab: isTr ? 'Kullanıcılar ve Rapor' : 'Users & Reports',
         supportTab: isTr ? 'Destek & Ops' : 'Support & Ops',
-        systemTab: isTr ? 'Sistem & Güvenlik' : 'System & Security',
         settingsTab: isTr ? 'Ayarlar' : 'Settings',
         plans: isTr ? 'Abonelik Planları' : 'Subscription Plans',
         assignments: isTr ? 'Plan Atamaları' : 'Plan Assignments',
@@ -233,7 +201,6 @@ export default defineComponent({
       { id: 'overview', name: t.value.overviewTab, icon: 'chart-pie' },
       { id: 'users', name: t.value.usersTab, icon: 'users' },
       { id: 'support', name: t.value.supportTab, icon: 'headset' },
-      { id: 'system', name: t.value.systemTab, icon: 'shield-halved' },
       { id: 'settings', name: t.value.settingsTab, icon: 'gear' },
     ])
 

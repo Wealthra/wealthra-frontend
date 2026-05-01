@@ -13,7 +13,7 @@
       </div>
     </transition>
 
-    <UIAnnouncementBanner :selectedLanguage="selectedLanguage" />
+    <UIAnnouncementBanner v-if="!isUserAdmin" :selectedLanguage="selectedLanguage" />
 
     <!-- Left Sidebar -->
     <div
@@ -357,7 +357,11 @@ export default defineComponent({
     const route = useRoute()
     const isUserAdmin = computed(() => {
       // Check both the auth state and the current route as a fallback
-      return isAdmin() || route.path.startsWith('/admin') || route.name === 'admin'
+      return (
+        isAdmin() ||
+        route.path.startsWith('/admin') ||
+        (typeof route.name === 'string' && route.name.startsWith('admin-'))
+      )
     })
 
     const settingsLabelEnglish = 'Settings'
@@ -421,14 +425,15 @@ export default defineComponent({
     const routeToSidebarItem = (englishPage: string) => {
       if (isUserAdmin.value) {
         // Handle Admin tab switching
-        const tabMap: Record<string, string> = {
-          'Overview': 'overview',
-          'Users & Reports': 'users',
-          'Support & Ops': 'support',
-          'System & Security': 'system',
-          'Settings': 'settings'
+        const routeMap: Record<string, string> = {
+          Overview: 'admin-overview',
+          Analytics: 'admin-analytics',
+          'Users & Reports': 'admin-users',
+          'Support & Ops': 'admin-support',
+          'System & Security': 'admin-system',
+          Settings: 'admin-settings',
         }
-        router.push({ name: 'admin', query: { tab: tabMap[englishPage] || 'overview' } })
+        router.push({ name: routeMap[englishPage] || 'admin-overview' })
       } else {
         routeToPage(englishPage, props.selectedLanguage)
       }
@@ -502,8 +507,22 @@ export default defineComponent({
       const lang = normalizedLanguage.value
 
       if (admin) {
-        const adminContentEnglish = ['Overview', 'Users & Reports', 'Support & Ops', 'System & Security', 'Settings']
-        const adminContentTurkish = ['Özet', 'Kullanıcılar ve Rapor', 'Destek & Ops', 'Sistem ve Güvenlik', 'Ayarlar']
+        const adminContentEnglish = [
+          'Overview',
+          'Analytics',
+          'Users & Reports',
+          'Support & Ops',
+          'System & Security',
+          'Settings',
+        ]
+        const adminContentTurkish = [
+          'Özet',
+          'Analitik',
+          'Kullanıcılar ve Rapor',
+          'Destek & Ops',
+          'Sistem ve Güvenlik',
+          'Ayarlar',
+        ]
         const content = lang === 'Turkish' ? adminContentTurkish : adminContentEnglish
         
         return adminContentEnglish.map((eng, idx) => ({

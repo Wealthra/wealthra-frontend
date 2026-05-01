@@ -21,6 +21,8 @@ export interface IncomeSummaryItem {
   period: string
   totalAmount: number
   incomeCount: number
+  /** Present when API returns per-category breakdown (optional). */
+  categoryBreakdown?: Record<string, number>
 }
 
 export type IncomeSummaryResponse = IncomeSummaryItem[]

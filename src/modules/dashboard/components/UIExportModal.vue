@@ -109,7 +109,7 @@ export default defineComponent({
           endDate: endDate.value,
           format: format.value,
           currency: currency.value,
-          language: language.value
+          lang: language.value === 'Turkish' ? 'tr' : 'en',
         })
 
         const url = window.URL.createObjectURL(blob)

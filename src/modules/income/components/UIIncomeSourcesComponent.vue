@@ -6,10 +6,15 @@
         {{ selectedLanguage == 'English' ? 'Income Sources' : 'Gelir Kaynakları' }}
       </h1>
       <div v-if="loading" class="header-actions">
+        <div class="skeleton-box summary-btn-skeleton"></div>
         <div class="skeleton-box btn-skeleton"></div>
         <div class="skeleton-box date-skeleton"></div>
       </div>
       <div v-else class="header-actions">
+        <button type="button" class="summary-trigger-btn" @click="$emit('openSummary')">
+          <font-awesome-icon icon="chart-simple" />
+          {{ summaryLabel }}
+        </button>
         <button class="add-source-btn" @click="showAddModal">
           {{ selectedLanguage == 'English' ? 'Add Source' : 'Kaynak Ekle' }}
         </button>
@@ -358,6 +363,7 @@
 </template>
 
 <script lang="ts">
+import { incomeTexts } from '@/data/incomeTexts'
 import type { IncomeSource } from '@/interfaces/IncomeSources'
 import {
   arrowIcons,
@@ -372,6 +378,15 @@ import UISelect from '@/components/UISelect.vue'
 
 export default {
   name: 'UIIncomeSourcesComponent',
+  emits: [
+    'openSummary',
+    'changePage',
+    'updateDateRange',
+    'updatePageSize',
+    'deleteSource',
+    'updateIncomeSource',
+    'addIncomeSource',
+  ],
   components: {
     Datepicker,
     UISelect,
@@ -456,6 +471,10 @@ export default {
   },
 
   computed: {
+    summaryLabel(): string {
+      const lang = this.selectedLanguage === 'English' ? 'English' : 'Turkish'
+      return incomeTexts[lang].openSummary
+    },
     dateRangeShortcuts(): Array<{ text: string; onClick: () => [Date, Date] }> {
       const toDate = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
       const isEn = this.selectedLanguage === 'English'
@@ -819,6 +838,36 @@ export default {
     gap: 0.75rem;
     flex-wrap: nowrap;
     flex-shrink: 0;
+  }
+
+  .header .summary-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    background: var(--primary-green-color);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+  }
+
+  .summary-btn-skeleton {
+    width: 100px;
+    height: 2.25rem;
+    border-radius: 12px;
+    @media screen and (max-width: 1024px) {
+      width: 100%;
+    }
   }
 
   .header .add-source-btn {
@@ -1477,6 +1526,8 @@ export default {
     gap: 0.75rem;
   }
 
+  .header .summary-trigger-btn,
+  .header .summary-btn-skeleton,
   .header .add-source-btn,
   .header .btn-skeleton {
     width: 100%;
@@ -1620,6 +1671,8 @@ export default {
     gap: 0.75rem;
   }
 
+  .header .summary-trigger-btn,
+  .header .summary-btn-skeleton,
   .header .add-source-btn,
   .header .btn-skeleton {
     width: 100%;

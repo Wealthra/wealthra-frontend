@@ -24,7 +24,7 @@
           <div class="form-group">
             <label>Expiry Date</label>
             <div class="input-wrapper">
-              <font-awesome-icon icon="calendar-clock" class="input-icon" />
+              <font-awesome-icon icon="calendar-days" class="input-icon" />
               <input v-model="newIp.expiresUtc" type="datetime-local" required />
             </div>
           </div>
@@ -83,7 +83,7 @@
           <tr v-if="blockedIps.length === 0">
             <td colspan="5" class="no-data">
               <div class="empty-state">
-                <font-awesome-icon icon="check-circle" />
+                <font-awesome-icon icon="circle-check" />
                 <p>No IPs are currently blocked. Your system is clean!</p>
               </div>
             </td>

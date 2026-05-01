@@ -15,7 +15,7 @@
           <input v-model.number="statusFilter" type="number" placeholder="All" @change="fetchLogs" />
         </div>
         <button @click="fetchLogs" class="refresh-btn" :disabled="isLoading">
-          <font-awesome-icon icon="sync" :spin="isLoading" />
+          <font-awesome-icon icon="arrows-rotate" :spin="isLoading" />
           Refresh
         </button>
       </div>

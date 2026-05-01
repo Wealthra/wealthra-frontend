@@ -2,7 +2,7 @@
   <div class="admin-announcements">
     <div class="actions">
       <button class="add-btn" @click="showForm = !showForm">
-        <font-awesome-icon :icon="showForm ? 'times' : 'plus'" />
+        <font-awesome-icon :icon="showForm ? 'xmark' : 'plus'" />
         {{ showForm ? 'Cancel' : 'New Announcement' }}
       </button>
     </div>

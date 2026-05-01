@@ -134,6 +134,14 @@
               <button
                 type="button"
                 class="row-action-btn"
+                :aria-label="t('viewGoalDetails')"
+                @click="$emit('viewGoal', goal.id)"
+              >
+                <font-awesome-icon :icon="actionIcons.view" class="action-icon" />
+              </button>
+              <button
+                type="button"
+                class="row-action-btn"
                 :aria-label="t('editGoal')"
                 @click="openEditModal(goal)"
               >
@@ -799,7 +807,7 @@ export default {
 
   .table-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 5rem minmax(6rem, 1fr) 5.5rem;
+    grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 5rem minmax(5rem, 1fr) minmax(7.75rem, auto);
     gap: 1rem;
     padding: 0.6rem 1rem;
     border-bottom: 1px solid var(--border-color);
@@ -818,7 +826,7 @@ export default {
 
   .table-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 5rem minmax(6rem, 1fr) 5.5rem;
+    grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 5rem minmax(5rem, 1fr) minmax(7.75rem, auto);
     gap: 1rem;
     padding: 0.7rem 1rem;
     align-items: center;
@@ -931,15 +939,42 @@ export default {
     min-width: 0;
   }
 
+  .col-name,
+  .col-target,
+  .col-current,
+  .col-percent,
+  .col-status {
+    display: flex;
+    align-items: center;
+    min-height: 2rem;
+  }
+
+  .col-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    min-width: 0;
+
+    .row-action-btn {
+      flex-shrink: 0;
+    }
+  }
+
   .col-mobile-label,
   .col-mobile-label-skeleton {
     display: none;
   }
 
   .goal-name {
+    min-width: 0;
     font-weight: 600;
     color: var(--header-text-color);
     font-size: 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .col-value {
@@ -1257,6 +1292,16 @@ export default {
         padding-top: 0.75rem;
         border-top: 1px solid var(--border-color);
         width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.35rem;
+
+        .row-action-btn {
+          flex-shrink: 0;
+        }
       }
     }
   }

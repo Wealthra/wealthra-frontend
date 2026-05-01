@@ -96,6 +96,7 @@ export const leftSidebarIconMap: Record<string, IconDefinition> = {
   Admin: faCrown,
   Settings: faGear,
   Overview: faChartPie,
+  Analytics: faChartLine,
   'Users & Reports': faUsers,
   'Support & Ops': faHeadset,
   'System & Security': faShieldHalved,
@@ -153,6 +154,7 @@ export const trendIcons = {
 export const actionIcons = {
   delete: faTrash,
   edit: faPen,
+  view: faEye,
 }
 
 export const paginationIcons = {

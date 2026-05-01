@@ -7,6 +7,7 @@
       :totalGoals="totalGoalsCount || goals.length"
       :achievedGoals="achievedGoalsCount"
       :loading="isLoading"
+      @showAnalysis="openGoalsOverview"
     />
 
     <div class="goals-table-wrap">
@@ -23,8 +24,25 @@
         @createGoal="handleCreateGoal"
         @updateGoal="handleUpdateGoal"
         @deleteGoal="handleDeleteGoal"
+        @viewGoal="handleViewGoal"
       />
     </div>
+
+    <UIGoalsOverviewPanel
+      :is-open="isGoalsOverviewOpen"
+      :loading="goalsOverviewLoading"
+      :goals="goalsOverviewList"
+      :selected-language="selectedLanguage"
+      @close="closeGoalsOverview"
+    />
+
+    <UIGoalDetailPanel
+      :is-open="isGoalDetailOpen"
+      :loading="goalDetailLoading"
+      :goal="goalDetail"
+      :selected-language="selectedLanguage"
+      @close="closeGoalDetail"
+    />
   </div>
 </template>
 
@@ -39,6 +57,8 @@ import { useCurrency } from '@/composables/useCurrency'
 // Goals Components
 import GoalsOverviewComponent from '@/modules/goals/components/GoalsOverviewComponent.vue'
 import UIGoalsTableComponent from '@/modules/goals/components/UIGoalsTableComponent.vue'
+import UIGoalsOverviewPanel from '@/modules/goals/components/UIGoalsOverviewPanel.vue'
+import UIGoalDetailPanel from '@/modules/goals/components/UIGoalDetailPanel.vue'
 
 export default {
   name: 'GoalsView',
@@ -46,6 +66,8 @@ export default {
   components: {
     GoalsOverviewComponent,
     UIGoalsTableComponent,
+    UIGoalsOverviewPanel,
+    UIGoalDetailPanel,
   },
   setup() {
     const { currency } = useCurrency()
@@ -72,6 +94,12 @@ export default {
       pageSize: 10,
       achievedGoalsCountFromApi: 0,
       totalGoalsCount: 0,
+      isGoalsOverviewOpen: false,
+      goalsOverviewLoading: false,
+      goalsOverviewList: [] as Goal[],
+      isGoalDetailOpen: false,
+      goalDetailLoading: false,
+      goalDetail: null as Goal | null,
     }
   },
 
@@ -171,6 +199,45 @@ export default {
       }
     },
 
+    openGoalsOverview() {
+      this.isGoalsOverviewOpen = true
+      void this.fetchGoalsOverviewList()
+    },
+
+    closeGoalsOverview() {
+      this.isGoalsOverviewOpen = false
+    },
+
+    async fetchGoalsOverviewList() {
+      this.goalsOverviewLoading = true
+      try {
+        const list = await goalService.getGoals()
+        this.goalsOverviewList = Array.isArray(list) ? list : []
+      } catch {
+        this.goalsOverviewList = []
+      } finally {
+        this.goalsOverviewLoading = false
+      }
+    },
+
+    async handleViewGoal(id: number) {
+      this.isGoalDetailOpen = true
+      this.goalDetailLoading = true
+      this.goalDetail = null
+      try {
+        this.goalDetail = await goalService.getGoalById(id)
+      } catch {
+        this.goalDetail = null
+      } finally {
+        this.goalDetailLoading = false
+      }
+    },
+
+    closeGoalDetail() {
+      this.isGoalDetailOpen = false
+      this.goalDetail = null
+    },
+
     async loadAppropriateData() {
       this.isLoading = true
       try {
@@ -200,7 +267,7 @@ export default {
   flex-direction: column;
   width: 100%;
   min-height: 0;
-  gap: 2rem;
+  gap: 1rem;
   flex: 1 1 auto;
 }
 

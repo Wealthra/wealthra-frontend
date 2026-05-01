@@ -41,7 +41,7 @@
 
         <div class="bottom-icons">
           <div class="forgot-password-text">
-            <router-link to="/forgetpassword">
+            <router-link to="/forget-password">
               {{ loginTexts[selectedLanguage].forgotPassword }}
             </router-link>
           </div>
@@ -52,7 +52,7 @@
       </form>
       <div class="no-account-wrapper">
         <div class="no-account-text">{{ loginTexts[selectedLanguage].noAccount }}</div>
-        <router-link to="/signup" class="no-underline">
+        <router-link to="/sign-up" class="no-underline">
           <div class="register-text">{{ loginTexts[selectedLanguage].signUp }}</div>
         </router-link>
       </div>

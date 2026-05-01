@@ -155,6 +155,14 @@
             <button
               type="button"
               class="row-action-btn"
+              :aria-label="t('viewBudgetDetails')"
+              @click="$emit('viewBudget', budget.id)"
+            >
+              <font-awesome-icon :icon="actionIcons.view" class="action-icon" />
+            </button>
+            <button
+              type="button"
+              class="row-action-btn"
               :aria-label="t('editBudget')"
               @click="openEditModal(budget)"
             >
@@ -541,7 +549,7 @@ export default {
   }
   .table-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 6rem 6rem 5rem minmax(5rem, 1fr) 5.5rem;
+    grid-template-columns: minmax(0, 1fr) 6rem 6rem 5rem minmax(5rem, 1fr) minmax(7.75rem, auto);
     gap: 1rem;
     padding: 0.6rem 1rem;
     border-bottom: 1px solid var(--border-color);
@@ -559,7 +567,7 @@ export default {
   }
   .table-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 6rem 6rem 5rem minmax(5rem, 1fr) 5.5rem;
+    grid-template-columns: minmax(0, 1fr) 6rem 6rem 5rem minmax(5rem, 1fr) minmax(7.75rem, auto);
     gap: 1rem;
     padding: 0.7rem 1rem;
     align-items: center;
@@ -571,6 +579,19 @@ export default {
 
   .col {
     min-width: 0;
+  }
+
+  .col-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    min-width: 7.25rem;
+
+    .row-action-btn {
+      flex-shrink: 0;
+    }
   }
   .col-mobile-label,
   .col-mobile-label-skeleton {

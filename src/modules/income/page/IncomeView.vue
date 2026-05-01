@@ -66,18 +66,31 @@
         @addIncomeSource="handleAddIncome"
         @updateIncomeSource="handleUpdateIncomeSource"
         @deleteSource="handleDeleteIncome"
+        @open-summary="openIncomeSummary"
       />
     </div>
+
+    <UIIncomeSummaryPanel
+      :is-open="isIncomeSummaryOpen"
+      :loading="incomeSummaryLoading"
+      :items="incomeSummaryItems"
+      :selected-language="selectedLanguage"
+      :period="incomeSummaryPeriod"
+      @close="closeIncomeSummary"
+      @update:period="handleIncomeSummaryPeriod"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import UIInformationBox from '@/modules/dashboard/components/UIInformationBox.vue'
 import UIIncomeSourcesComponent from '@/modules/income/components/UIIncomeSourcesComponent.vue'
+import UIIncomeSummaryPanel from '@/modules/income/components/UIIncomeSummaryPanel.vue'
 
 import { incomeTexts } from '@/data/incomeTexts'
 import type { FinancialData } from '@/interfaces/FinancialData'
 import { incomeService } from '@/services/api/income/income.service'
+import type { IncomeSummaryItem } from '@/services/api/income/income.models'
 import { useCurrency } from '@/composables/useCurrency'
 
 function toYmd(d: Date): string {
@@ -102,6 +115,7 @@ export default {
   components: {
     UIInformationBox,
     UIIncomeSourcesComponent,
+    UIIncomeSummaryPanel,
   },
   data() {
     const { start, end } = getDefaultIncomeDateRange()
@@ -115,7 +129,18 @@ export default {
       startDateIncome: start as string | null,
       endDateIncome: end as string | null,
       currencyHelper: useCurrency(),
+      isIncomeSummaryOpen: false,
+      incomeSummaryLoading: false,
+      incomeSummaryItems: [] as IncomeSummaryItem[],
+      incomeSummaryPeriod: 'Monthly',
     }
+  },
+  watch: {
+    'currencyHelper.currency'() {
+      if (this.isIncomeSummaryOpen) {
+        void this.fetchIncomeSummary()
+      }
+    },
   },
   methods: {
     getIncomeById(id: number) {
@@ -273,6 +298,35 @@ export default {
       this.pageSizeIncome = size
       this.page = 1
       this.loadAppropriateData()
+    },
+
+    openIncomeSummary() {
+      this.isIncomeSummaryOpen = true
+      void this.fetchIncomeSummary()
+    },
+
+    closeIncomeSummary() {
+      this.isIncomeSummaryOpen = false
+    },
+
+    handleIncomeSummaryPeriod(period: string) {
+      this.incomeSummaryPeriod = period
+      void this.fetchIncomeSummary()
+    },
+
+    async fetchIncomeSummary() {
+      this.incomeSummaryLoading = true
+      try {
+        const rows = await incomeService.getIncomeSummary(
+          this.incomeSummaryPeriod,
+          this.currencyHelper.currency,
+        )
+        this.incomeSummaryItems = Array.isArray(rows) ? rows : []
+      } catch {
+        this.incomeSummaryItems = []
+      } finally {
+        this.incomeSummaryLoading = false
+      }
     },
 
     async loadAppropriateData() {

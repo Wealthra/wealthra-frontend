@@ -78,6 +78,20 @@
                   <button class="action-btn delete" @click="promptResetPassword(user)" title="Reset Password">
                     <font-awesome-icon icon="key" />
                   </button>
+                  <button
+                    class="action-btn"
+                    @click="openUsageModal(user)"
+                    :title="t.usageDetailsTitle"
+                  >
+                    <font-awesome-icon icon="chart-line" />
+                  </button>
+                  <button
+                    class="action-btn"
+                    @click="promptChangeTier(user)"
+                    :title="t.changeTierTitle"
+                  >
+                    <font-awesome-icon icon="award" />
+                  </button>
                 </div>
               </td>
             </tr>
@@ -118,6 +132,44 @@
         </div>
       </div>
     </div>
+
+    <div v-if="usageModalOpen" class="modal-overlay" @click.self="closeUsageModal">
+      <div class="modal-content glass-card usage-modal">
+        <div class="modal-header">
+          <h3>{{ t.usageModalTitle }}</h3>
+          <button class="close-btn" type="button" @click="closeUsageModal">
+            <font-awesome-icon icon="xmark" />
+          </button>
+        </div>
+        <div class="modal-body usage-modal-body">
+          <p v-if="usageTargetUser" class="usage-user-email">{{ usageTargetUser.email }}</p>
+          <div v-if="usageLoading" class="usage-loading">{{ t.usageLoading }}</div>
+          <template v-else-if="usageRows.length === 0">
+            <p class="usage-empty">{{ t.usageEmpty }}</p>
+          </template>
+          <table v-else class="usage-table">
+            <thead>
+              <tr>
+                <th>{{ t.usagePlan }}</th>
+                <th>{{ t.usageTier }}</th>
+                <th>OCR</th>
+                <th>STT</th>
+                <th>{{ t.usageLastActivity }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in usageRows" :key="row.id">
+                <td>{{ row.subscriptionPlanName }}</td>
+                <td>T{{ row.subscriptionTier }}</td>
+                <td>{{ row.ocrRequestsThisMonth }}</td>
+                <td>{{ row.sttRequestsThisMonth }}</td>
+                <td>{{ row.lastUsageActivityDate ? formatDate(row.lastUsageActivityDate) : '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -127,6 +179,8 @@ import type { PropType } from 'vue'
 import { adminService } from '@/services/api/admin/admin.service'
 import type { AdminUser } from '@/services/api/admin/admin.models'
 import type { AdminPlan } from '@/services/api/adminPlans/adminPlans.models'
+import { accountService } from '@/services/api/account/account.service'
+import type { AccountUserUsageResponse } from '@/services/api/account/account.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import AdminUserAssignment from './AdminUserAssignment.vue'
 
@@ -156,6 +210,11 @@ export default defineComponent({
     
     const isAssignmentModalOpen = ref(false)
 
+    const usageModalOpen = ref(false)
+    const usageLoading = ref(false)
+    const usageRows = ref<AccountUserUsageResponse[]>([])
+    const usageTargetUser = ref<AdminUser | null>(null)
+
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
       return {
@@ -167,7 +226,17 @@ export default defineComponent({
         assign: isTr ? 'Ata' : 'Assign',
         noUsersFound: isTr ? 'Kullanıcı bulunamadı.' : 'No users found.',
         assignPlan: isTr ? 'Plan Ata' : 'Assign Plan',
-        assignPlanTitle: isTr ? 'Kullanıcıya Plan Ata' : 'Assign Plan to User'
+        assignPlanTitle: isTr ? 'Kullanıcıya Plan Ata' : 'Assign Plan to User',
+        usageDetailsTitle: isTr ? 'Hesap kullanımı' : 'Account usage',
+        changeTierTitle: isTr ? 'Katman güncelle' : 'Update tier',
+        usageModalTitle: isTr ? 'Kullanım detayı' : 'Usage details',
+        usageLoading: isTr ? 'Yükleniyor...' : 'Loading...',
+        usageEmpty: isTr ? 'Kayıt bulunamadı.' : 'No usage rows returned.',
+        usagePlan: isTr ? 'Plan' : 'Plan',
+        usageTier: isTr ? 'Katman' : 'Tier',
+        usageLastActivity: isTr ? 'Son aktivite' : 'Last activity',
+        tierUpdated: isTr ? 'Katman güncellendi.' : 'Tier updated.',
+        tierUpdateFailed: isTr ? 'Katman güncellenemedi.' : 'Failed to update tier.',
       }
     })
 
@@ -229,6 +298,44 @@ export default defineComponent({
       }
     }
 
+    const openUsageModal = async (user: AdminUser) => {
+      usageTargetUser.value = user
+      usageModalOpen.value = true
+      usageLoading.value = true
+      usageRows.value = []
+      try {
+        usageRows.value = await accountService.getAdminUsages(user.email)
+      } catch (e) {
+        console.error(e)
+        usageRows.value = []
+      } finally {
+        usageLoading.value = false
+      }
+    }
+
+    const closeUsageModal = () => {
+      usageModalOpen.value = false
+      usageTargetUser.value = null
+      usageRows.value = []
+    }
+
+    const promptChangeTier = async (user: AdminUser) => {
+      const tier = prompt(
+        props.selectedLanguage === 'Turkish'
+          ? `${user.email} için yeni katman (tier) string değeri:`
+          : `New tier string for ${user.email}:`
+      )
+      if (tier === null || tier.trim() === '') return
+      try {
+        await accountService.updateTier({ email: user.email, tier: tier.trim() })
+        alert(t.value.tierUpdated)
+        await fetchUsers()
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        alert(`${t.value.tierUpdateFailed} ${msg}`)
+      }
+    }
+
     onMounted(fetchUsers)
 
     return {
@@ -238,6 +345,10 @@ export default defineComponent({
       currentPage,
       totalPages,
       isAssignmentModalOpen,
+      usageModalOpen,
+      usageLoading,
+      usageRows,
+      usageTargetUser,
       t,
       handleSearch,
       changePage,
@@ -245,7 +356,10 @@ export default defineComponent({
       formatDate,
       promptEditRoles,
       promptLockUser,
-      promptResetPassword
+      promptResetPassword,
+      openUsageModal,
+      closeUsageModal,
+      promptChangeTier,
     }
   }
 })
@@ -389,6 +503,7 @@ export default defineComponent({
 
   .action-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
@@ -459,4 +574,44 @@ export default defineComponent({
 }
 
 .modal-body { padding: 24px; }
+
+.usage-modal {
+  max-width: 640px;
+}
+
+.usage-modal-body {
+  min-height: 80px;
+}
+
+.usage-user-email {
+  font-size: 13px;
+  color: var(--normal-text-color);
+  margin: 0 0 12px;
+}
+
+.usage-loading,
+.usage-empty {
+  margin: 0;
+  color: var(--normal-text-color);
+  font-size: 14px;
+}
+
+.usage-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  th {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--normal-text-color);
+  }
+}
 </style>

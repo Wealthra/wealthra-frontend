@@ -2,6 +2,9 @@
 const LoginView = () => import('../auth/login/page/LoginView.vue')
 const ForgetPasswordView = () => import('../auth/forget-password/page/ForgetPasswordView.vue')
 const SignUpView = () => import('../auth/sign-up/page/SignUpView.vue')
+const ConfirmEmailView = () => import('../auth/confirm-email/page/ConfirmEmailView.vue')
+const PasswordResetSuccessView = () =>
+  import('../auth/password-reset-success/page/PasswordResetSuccessView.vue')
 
 // Layout wrapper (layout mounted once; only child content swaps)
 const ModuleLayoutWrapper = () => import('../layouts/ModuleLayoutWrapper.vue')
@@ -9,6 +12,8 @@ const ModuleLayoutWrapper = () => import('../layouts/ModuleLayoutWrapper.vue')
 // Lazy Loading Authenticated Module Views (content only, under layout)
 const DashboardView = () => import('../modules/dashboard/page/DashboardView.vue')
 const AdminView = () => import('../auth/admin/page/AdminView.vue')
+const AdminAnalyticsView = () => import('../auth/admin/page/AdminAnalyticsView.vue')
+const AdminSystemHubView = () => import('../auth/admin/page/AdminSystemHubView.vue')
 const BudgetView = () => import('../modules/budget/page/BudgetView.vue')
 const ExpensesView = () => import('../modules/expenses/page/ExpensesView.vue')
 const IncomeView = () => import('../modules/income/page/IncomeView.vue')
@@ -19,7 +24,27 @@ const RecommendationsView = () => import('../modules/recommendations/page/Recomm
 const NotificationsView = () => import('../modules/notifications/page/NotificationsView.vue')
 
 import { isAuthenticated, isAdmin } from '../utils/auth'
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocation } from 'vue-router'
+
+/** Legacy `/admin` + optional `?tab=` → path-based admin URLs */
+function redirectAdminLegacy(to: RouteLocation) {
+  const raw = to.query.tab
+  const tab: string =
+    typeof raw === 'string'
+      ? raw
+      : Array.isArray(raw) && raw.length > 0 && raw[0] != null
+        ? String(raw[0])
+        : 'overview'
+  const paths: Record<string, string> = {
+    overview: '/admin/overview',
+    users: '/admin/users',
+    support: '/admin/support',
+    system: '/admin/system',
+    settings: '/admin/settings',
+    analytics: '/admin/analytics',
+  }
+  return paths[tab] ?? '/admin/overview'
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,14 +59,26 @@ const router = createRouter({
       component: LoginView,
     },
     {
-      path: '/forgetpassword',
-      name: 'forgetpassword',
+      path: '/forget-password',
+      name: 'forget-password',
       component: ForgetPasswordView,
     },
+    { path: '/forgetpassword', redirect: '/forget-password' },
     {
-      path: '/signup',
-      name: 'signup',
+      path: '/sign-up',
+      name: 'sign-up',
       component: SignUpView,
+    },
+    { path: '/signup', redirect: '/sign-up' },
+    {
+      path: '/confirm-email',
+      name: 'confirmemail',
+      component: ConfirmEmailView,
+    },
+    {
+      path: '/password-reset/success',
+      name: 'passwordResetSuccess',
+      component: PasswordResetSuccessView,
     },
     // Redirects from old paths to top-level paths
     { path: '/app/dashboard', redirect: '/dashboard' },
@@ -68,7 +105,46 @@ const router = createRouter({
         { path: 'settings', name: 'settings', component: SettingsView },
         { path: 'recommendations', name: 'recommendations', component: RecommendationsView },
         { path: 'notifications', name: 'notifications', component: NotificationsView },
-        { path: 'admin', name: 'admin', component: AdminView, meta: { requiresAdmin: true } },
+        {
+          path: 'admin',
+          redirect: (to) => redirectAdminLegacy(to),
+        },
+        {
+          path: 'admin/overview',
+          name: 'admin-overview',
+          component: AdminView,
+          meta: { requiresAdmin: true },
+        },
+        {
+          path: 'admin/analytics',
+          name: 'admin-analytics',
+          component: AdminAnalyticsView,
+          meta: { requiresAdmin: true },
+        },
+        {
+          path: 'admin/users',
+          name: 'admin-users',
+          component: AdminView,
+          meta: { requiresAdmin: true },
+        },
+        {
+          path: 'admin/support',
+          name: 'admin-support',
+          component: AdminView,
+          meta: { requiresAdmin: true },
+        },
+        {
+          path: 'admin/system',
+          name: 'admin-system',
+          component: AdminSystemHubView,
+          meta: { requiresAdmin: true },
+        },
+        {
+          path: 'admin/settings',
+          name: 'admin-settings',
+          component: AdminView,
+          meta: { requiresAdmin: true },
+        },
       ],
     },
   ],
@@ -79,7 +155,13 @@ router.beforeEach((to, from, next) => {
   const isAdm = isAdmin()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
-  const isPublicRoute = ['login', 'signup', 'forgetpassword'].includes(to.name as string)
+  const isPublicRoute = [
+    'login',
+    'sign-up',
+    'forget-password',
+    'confirmemail',
+    'passwordResetSuccess',
+  ].includes(to.name as string)
 
   if (!isAuth) {
     // Not logged in: only allow public routes
@@ -91,12 +173,11 @@ router.beforeEach((to, from, next) => {
   } else {
     // Logged in
     if (isAdm) {
-      // Admin: ONLY allow /admin route
-      if (to.name === 'admin') {
+      const isAdminAppRoute = to.matched.some(r => r.meta.requiresAdmin === true)
+      if (isAdminAppRoute) {
         next()
       } else {
-        // If they try to go anywhere else, force them back to /admin
-        next({ name: 'admin' })
+        next({ name: 'admin-overview' })
       }
     } else {
       // Regular User

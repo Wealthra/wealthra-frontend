@@ -69,20 +69,33 @@
         @addExpense="handleAddExpense"
         @updateExpense="handleUpdateExpense"
         @deleteExpense="handleDeleteExpense"
+        @open-summary="openExpenseSummary"
       />
     </div>
+
+    <UIExpenseSummaryPanel
+      :is-open="isExpenseSummaryOpen"
+      :loading="expenseSummaryLoading"
+      :items="expenseSummaryItems"
+      :selected-language="selectedLanguage"
+      :period="expenseSummaryPeriod"
+      @close="closeExpenseSummary"
+      @update:period="handleExpenseSummaryPeriod"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import UIInformationBox from '@/modules/dashboard/components/UIInformationBox.vue'
 import UIExpenseHistoryComponent from '@/modules/expenses/components/UIExpenseHistoryComponent.vue'
+import UIExpenseSummaryPanel from '@/modules/expenses/components/UIExpenseSummaryPanel.vue'
 
 import { expensesTexts } from '@/data/expensesTexts'
 import type { FinancialData } from '@/interfaces/FinancialData'
 import type { Category } from '@/services/api/category/category.models'
 import { categoryService } from '@/services/api/category/category.service'
 import { expenseService } from '@/services/api/expense/expense.service'
+import type { ExpenseSummaryItem } from '@/services/api/expense/expense.models'
 import { useCurrency } from '@/composables/useCurrency'
 
 function toYmd(d: Date): string {
@@ -107,6 +120,7 @@ export default {
   components: {
     UIInformationBox,
     UIExpenseHistoryComponent,
+    UIExpenseSummaryPanel,
   },
   data() {
     const { start, end } = getDefaultExpenseDateRange()
@@ -122,11 +136,18 @@ export default {
       categoryIdFilter: null as number | null,
       categories: [] as Category[],
       currencyHelper: useCurrency(),
+      isExpenseSummaryOpen: false,
+      expenseSummaryLoading: false,
+      expenseSummaryItems: [] as ExpenseSummaryItem[],
+      expenseSummaryPeriod: 'Monthly',
     }
   },
   watch: {
     'currencyHelper.currency'() {
       this.loadAppropriateData()
+      if (this.isExpenseSummaryOpen) {
+        void this.fetchExpenseSummary()
+      }
     },
   },
   methods: {
@@ -160,6 +181,35 @@ export default {
       this.pageSizeExpense = size
       this.page = 1
       this.loadAppropriateData()
+    },
+
+    openExpenseSummary() {
+      this.isExpenseSummaryOpen = true
+      void this.fetchExpenseSummary()
+    },
+
+    closeExpenseSummary() {
+      this.isExpenseSummaryOpen = false
+    },
+
+    handleExpenseSummaryPeriod(period: string) {
+      this.expenseSummaryPeriod = period
+      void this.fetchExpenseSummary()
+    },
+
+    async fetchExpenseSummary() {
+      this.expenseSummaryLoading = true
+      try {
+        const rows = await expenseService.getExpenseSummary(
+          this.expenseSummaryPeriod,
+          this.currencyHelper.currency,
+        )
+        this.expenseSummaryItems = Array.isArray(rows) ? rows : []
+      } catch {
+        this.expenseSummaryItems = []
+      } finally {
+        this.expenseSummaryLoading = false
+      }
     },
 
     async handleAddExpense(payload: {

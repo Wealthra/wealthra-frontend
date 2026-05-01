@@ -7,9 +7,17 @@
           <div class="skeleton-box stats-skeleton"></div>
         </template>
         <template v-else>
-          <div class="goals-overview-component-title">{{ goalsOverviewText }}</div>
-          <div v-if="totalGoals != null && totalGoals > 0" class="goals-overview-stats">
-            {{ t('totalGoals') }}: {{ totalGoals }} · {{ t('achievedGoals') }}: {{ achievedGoals }}
+          <div class="goals-overview-header-inner">
+            <div class="goals-overview-titles">
+              <div class="goals-overview-component-title">{{ goalsOverviewText }}</div>
+              <div v-if="totalGoals != null && totalGoals > 0" class="goals-overview-stats">
+                {{ t('totalGoals') }}: {{ totalGoals }} · {{ t('achievedGoals') }}: {{ achievedGoals }}
+              </div>
+            </div>
+            <button type="button" class="analysis-btn" @click="$emit('showAnalysis')">
+              <font-awesome-icon icon="chart-simple" />
+              <span>{{ t('analysis') }}</span>
+            </button>
           </div>
         </template>
       </div>
@@ -63,6 +71,7 @@ import {
 } from 'chart.js'
 import { goalsTexts } from '@/data/goalsTexts'
 import { useCurrency } from '@/composables/useCurrency'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, Tooltip)
 
@@ -73,6 +82,7 @@ export default {
 
   components: {
     Doughnut,
+    FontAwesomeIcon,
   },
 
   props: {
@@ -231,7 +241,7 @@ export default {
   min-height: 0;
   background-color: var(--background-color);
   border-radius: var(--border-radius);
-  padding: 1.5rem 1.25rem;
+  padding: 0.75rem 1rem;
   box-sizing: border-box;
 
   .goals-overview-component {
@@ -240,7 +250,7 @@ export default {
     width: 100%;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.5rem;
 
     .goals-overview-component-title-row {
       display: flex;
@@ -252,42 +262,85 @@ export default {
       flex-shrink: 0;
     }
 
+    .goals-overview-header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .goals-overview-titles {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .analysis-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--primary-yellow-color, #f0ad4e);
+      color: #1a1a1a;
+      border: none;
+      padding: 0.35rem 0.65rem;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter 0.2s;
+      flex-shrink: 0;
+
+      &:hover {
+        filter: brightness(1.08);
+      }
+
+      @media (max-width: 768px) {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+      }
+    }
+
     .goals-overview-component-title {
-      font-size: 1.25rem;
+      font-size: 1rem;
       font-weight: 700;
       margin: 0;
+      line-height: 1.25;
       color: var(--header-text-color);
       flex-shrink: 0;
       min-width: 150px;
     }
 
     .title-skeleton {
-      width: 150px;
-      height: 1.25rem;
-      border-radius: 4px;
-    }
-
-    .stats-skeleton {
-      width: 200px;
+      width: 140px;
       height: 1rem;
       border-radius: 4px;
     }
 
-    .amount-skeleton {
+    .stats-skeleton {
       width: 180px;
-      height: 1.5rem;
+      height: 0.8rem;
+      border-radius: 4px;
+    }
+
+    .amount-skeleton {
+      width: 160px;
+      height: 1.15rem;
       border-radius: 4px;
     }
 
     .progress-skeleton {
       flex: 1;
-      height: 18px;
+      height: 14px;
       border-radius: 999px;
     }
 
     .percent-skeleton {
-      width: 60px;
-      height: 1.5rem;
+      width: 52px;
+      height: 1.15rem;
       border-radius: 4px;
     }
 
@@ -295,7 +348,7 @@ export default {
       display: flex;
       align-items: center;
       width: 100%;
-      gap: 1.5rem;
+      gap: 1rem;
     }
 
     .doughnut-skeleton {
@@ -309,7 +362,7 @@ export default {
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      gap: 1.5rem;
+      gap: 1rem;
       flex-wrap: wrap;
 
       .goals-overview-component-amount {
@@ -319,10 +372,11 @@ export default {
         height: 100%;
         width: auto;
         font-weight: 700;
-        font-size: 1.35rem;
+        font-size: 1rem;
         color: var(--header-text-color);
         flex-shrink: 0;
         letter-spacing: -0.02em;
+        line-height: 1.2;
       }
 
       .goals-overview-component-progress-bar {
@@ -331,7 +385,7 @@ export default {
         align-items: center;
         flex-grow: 1;
         min-width: 0;
-        height: 18px;
+        height: 14px;
         border-radius: 999px;
         background-color: var(--background-color-soft);
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -352,14 +406,18 @@ export default {
         height: 100%;
         width: auto;
         font-weight: 700;
-        font-size: 1.35rem;
+        font-size: 1rem;
         color: var(--primary-green-color);
         flex-shrink: 0;
+        line-height: 1.2;
+        min-width: 3.25rem;
+        text-align: right;
       }
     }
 
     .goals-overview-stats {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
+      line-height: 1.3;
       color: var(--normal-text-color);
       flex-shrink: 0;
     }
@@ -368,14 +426,14 @@ export default {
 
 @media (max-width: 768px) {
   .goals-overview-component-c {
-    padding: 0.875rem 1rem;
+    padding: 0.65rem 0.875rem;
     border-radius: var(--border-radius);
   }
 
   .goals-overview-component {
     width: 100%;
     min-width: 0;
-    gap: 0.75rem;
+    gap: 0.5rem;
 
     .goals-overview-component-title-row {
       width: 100%;
@@ -391,13 +449,13 @@ export default {
       align-items: stretch;
       width: 100%;
       min-width: 0;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .goals-overview-component-amount {
       width: 100%;
       min-width: 0;
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--header-text-color);
       text-align: left;

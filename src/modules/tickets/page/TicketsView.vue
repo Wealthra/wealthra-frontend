@@ -119,8 +119,8 @@
               <div class="interaction-card">
                 <div class="interaction-header">
                   <div class="interaction-title">
-                    <font-awesome-icon icon="fa-comment-dots" class="icon-message" />
-                    <span>TICKET SUMMARY</span>
+                    <font-awesome-icon icon="comment-dots" class="icon-message" />
+                    <span>{{ t('ticketSummary') }}</span>
                   </div>
                 </div>
                 <div class="interaction-content">
@@ -129,8 +129,8 @@
                   </div>
                   <div class="interaction-reply" v-if="ticket.adminReply || ticket.status === 3 || ticket.status === 2">
                     <div class="reply-header">
-                      <font-awesome-icon icon="fa-circle-exclamation" class="icon-alert" />
-                      <span>ADMIN REPLY</span>
+                      <font-awesome-icon icon="circle-exclamation" class="icon-alert" />
+                      <span>{{ t('adminReplyHeading') }}</span>
                     </div>
                     <ul class="reply-list">
                       <li>{{ ticket.adminReply || t('noAdminReply') }}</li>
@@ -145,7 +145,7 @@
         <!-- Empty State -->
         <div v-if="!isLoading && isTableEmpty" class="empty-state">
           <div class="empty-state__icon-wrap">
-            <font-awesome-icon icon="fa-headset" class="empty-state__icon" aria-hidden="true" />
+            <font-awesome-icon icon="headset" class="empty-state__icon" aria-hidden="true" />
           </div>
           <h2 class="empty-state__heading">{{ t('noTicketsYet') }}</h2>
           <p class="empty-state__text">{{ t('noTicketsYetText') }}</p>
@@ -239,6 +239,13 @@ export default defineComponent({
         message: 'Message',
         noMessageProvided: 'No message provided.',
         noAdminReply: 'No admin reply yet.',
+        ticketSummary: 'Ticket summary',
+        adminReplyHeading: 'Admin reply',
+        statusOpen: 'Open',
+        statusInProgress: 'In Progress',
+        statusResolved: 'Resolved',
+        statusClosed: 'Closed',
+        statusAdminReplied: 'Admin replied',
       },
       Turkish: {
         ticketsHistory: 'Destek Biletleri',
@@ -256,7 +263,14 @@ export default defineComponent({
         message: 'Mesaj',
         noMessageProvided: 'Mesaj sağlanmadı.',
         noAdminReply: 'Henüz admin yanıtı yok.',
-      }
+        ticketSummary: 'Bilet özeti',
+        adminReplyHeading: 'Admin yanıtı',
+        statusOpen: 'Açık',
+        statusInProgress: 'İşlemde',
+        statusResolved: 'Çözüldü',
+        statusClosed: 'Kapalı',
+        statusAdminReplied: 'Yanıtlandı',
+      },
     }
 
     const t = (key: keyof typeof texts.English) => {
@@ -298,15 +312,19 @@ export default defineComponent({
 
     const isTableEmpty = computed(() => filteredTickets.value.length === 0)
 
-    const statusMap: Record<number, string> = {
-      0: 'Open',
-      1: 'In Progress',
-      2: 'Resolved',
-      3: 'Closed',
-      4: 'Admin Replied'
+    const statusLabelKeys: Record<number, keyof typeof texts.English> = {
+      0: 'statusOpen',
+      1: 'statusInProgress',
+      2: 'statusResolved',
+      3: 'statusClosed',
+      4: 'statusAdminReplied',
     }
 
-    const getStatusLabel = (status: number) => statusMap[status] || `Status ${status}`
+    const getStatusLabel = (status: number) => {
+      const key = statusLabelKeys[status]
+      if (key) return t(key)
+      return props.selectedLanguage === 'Turkish' ? `Durum ${status}` : `Status ${status}`
+    }
 
     const statusClass = (status: number) => {
       if (status === undefined || status === null) return ''

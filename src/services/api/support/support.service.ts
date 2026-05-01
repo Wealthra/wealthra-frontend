@@ -27,13 +27,17 @@ export const supportService = {
   },
 
   // --- Admin Facing ---
-  async getAdminTickets(status?: string, limit?: number): Promise<SupportTicket[]> {
-    let url = 'support/tickets/admin?';
-    if (status) url += `status=${status}&`;
-    if (limit) url += `limit=${limit}`;
-    return apiRequest<SupportTicket[]>(url, { 
-      method: 'GET' 
-    });
+  /** Query: `take` page size, optional `status` = 0 | 1 | 2. */
+  async getAdminTickets(take: number, status?: number): Promise<SupportTicket[]> {
+    const params = new URLSearchParams()
+    if (status !== undefined && status !== null) {
+      params.set('status', String(status))
+    }
+    params.set('take', String(take))
+    const q = params.toString()
+    return apiRequest<SupportTicket[]>(`support/tickets/admin?${q}`, {
+      method: 'GET',
+    })
   },
 
   async replyTicket(id: number, data: ReplySupportTicketRequest): Promise<void> {

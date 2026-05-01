@@ -50,7 +50,7 @@
     </div>
 
     <div v-else-if="alerts.length === 0" class="empty-state">
-      <font-awesome-icon icon="fas fa-check-circle" class="empty-icon success" />
+      <font-awesome-icon icon="circle-check" class="empty-icon success" />
       <p>{{ emptyText }}</p>
     </div>
 

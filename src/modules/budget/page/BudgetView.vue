@@ -18,6 +18,7 @@
             @createBudget="handleCreateBudget"
             @updateBudget="handleUpdateBudget"
             @deleteBudget="handleDeleteBudget"
+            @viewBudget="handleViewBudget"
             @categoriesUpdated="fetchCategories"
           />
         </div>
@@ -29,6 +30,14 @@
         :breakdown="monthlyBreakdown"
         :selectedLanguage="selectedLanguage"
         @close="isBreakdownOpen = false"
+      />
+
+      <UIBudgetDetailPanel
+        :is-open="isBudgetDetailOpen"
+        :loading="budgetDetailLoading"
+        :budget="budgetDetail"
+        :selected-language="selectedLanguage"
+        @close="closeBudgetDetail"
       />
   </div>
 </template>
@@ -50,6 +59,7 @@ import { useCurrency } from '@/composables/useCurrency'
 import BudgetOverviewComponent from '@/modules/budget/components/BudgetOverviewComponent.vue'
 import UIBudgetTableComponent from '@/modules/budget/components/UIBudgetTableComponent.vue'
 import UIBudgetMonthlyBreakdown from '@/modules/budget/components/UIBudgetMonthlyBreakdown.vue'
+import UIBudgetDetailPanel from '@/modules/budget/components/UIBudgetDetailPanel.vue'
 
 export default {
   name: 'BudgetView',
@@ -63,6 +73,7 @@ export default {
     BudgetOverviewComponent,
     UIBudgetTableComponent,
     UIBudgetMonthlyBreakdown,
+    UIBudgetDetailPanel,
   },
   setup() {
     const { currency } = useCurrency()
@@ -80,6 +91,10 @@ export default {
       budgets: [] as BudgetApiModel[],
       monthlyBreakdown: [] as BudgetMonthlyCategoryBreakdownItem[],
       categories: [] as Category[],
+      isBudgetDetailOpen: false,
+      budgetDetailLoading: false,
+      budgetDetail: null as BudgetApiModel | null,
+      selectedBudgetId: null as number | null,
     }
   },
   methods: {
@@ -151,7 +166,25 @@ export default {
       }
     },
 
+    closeBudgetDetail() {
+      this.isBudgetDetailOpen = false
+      this.budgetDetail = null
+      this.selectedBudgetId = null
+    },
 
+    async handleViewBudget(id: number) {
+      this.selectedBudgetId = id
+      this.isBudgetDetailOpen = true
+      this.budgetDetailLoading = true
+      this.budgetDetail = null
+      try {
+        this.budgetDetail = await budgetService.getBudgetById(id)
+      } catch {
+        this.budgetDetail = null
+      } finally {
+        this.budgetDetailLoading = false
+      }
+    },
 
     async loadAppropriateData() {
       this.isLoading = true
@@ -184,7 +217,7 @@ export default {
   flex-direction: column;
   width: 100%;
   min-height: 0;
-  gap: 2rem;
+  gap: 1rem;
   flex: 1 1 auto;
 }
 

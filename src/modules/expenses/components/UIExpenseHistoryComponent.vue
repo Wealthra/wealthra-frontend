@@ -7,10 +7,17 @@
       </h1>
       <div class="header__toolbar">
         <div class="toolbar-actions">
+          <div v-if="loading" class="skeleton-box summary-btn-skeleton"></div>
           <div v-if="loading" class="skeleton-box btn-skeleton"></div>
-          <button v-else type="button" class="btn btn--primary" @click="showAddModal">
-            {{ t('addExpense') }}
-          </button>
+          <template v-else>
+            <button type="button" class="summary-trigger-btn" @click="$emit('openSummary')">
+              <font-awesome-icon icon="chart-simple" />
+              {{ t('openSummary') }}
+            </button>
+            <button type="button" class="btn btn--primary" @click="showAddModal">
+              {{ t('addExpense') }}
+            </button>
+          </template>
         </div>
         <div class="toolbar-filters">
           <template v-if="loading">
@@ -367,6 +374,16 @@ type ExpenseItem = {
 
 export default {
   name: 'UIExpenseHistoryComponent',
+  emits: [
+    'openSummary',
+    'updateCategory',
+    'updatePageSize',
+    'changePage',
+    'updateDateRange',
+    'deleteExpense',
+    'updateExpense',
+    'addExpense',
+  ],
   components: { Datepicker, UISelect },
   props: {
     loading: { type: Boolean, default: false },
@@ -667,6 +684,39 @@ export default {
   .toolbar-actions {
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+  }
+
+  .summary-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    background: var(--primary-green-color);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+  }
+
+  .summary-btn-skeleton {
+    width: 100px;
+    height: 2.25rem;
+    border-radius: 12px;
+    flex-shrink: 0;
+    @media (max-width: 1024px) {
+      width: 100%;
+    }
   }
 
   .btn {
@@ -1199,14 +1249,17 @@ export default {
     .toolbar-actions {
       display: grid;
       grid-template-columns: 1fr;
+      gap: 0.75rem;
     }
+    .summary-trigger-btn,
+    .summary-btn-skeleton,
     .btn,
     .btn-skeleton {
+      width: 100%;
       min-height: 2.75rem;
       font-size: 0.875rem;
     }
     .btn-skeleton {
-      width: 100%;
       height: auto;
     }
     .toolbar-filters {
@@ -1295,14 +1348,17 @@ export default {
     .toolbar-actions {
       display: grid;
       grid-template-columns: 1fr;
+      gap: 0.75rem;
     }
+    .summary-trigger-btn,
+    .summary-btn-skeleton,
     .btn,
     .btn-skeleton {
+      width: 100%;
       min-height: 2.75rem;
       font-size: 0.875rem;
     }
     .btn-skeleton {
-      width: 100%;
       height: auto;
     }
     .toolbar-filters {

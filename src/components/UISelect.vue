@@ -4,7 +4,7 @@
       <SelectTrigger class="select-trigger" :aria-label="label">
         <SelectValue :placeholder="placeholder" />
         <SelectIcon class="select-icon">
-          <font-awesome-icon icon="fas fa-chevron-down" />
+          <font-awesome-icon icon="chevron-down" />
         </SelectIcon>
       </SelectTrigger>
 
@@ -17,7 +17,7 @@
         >
           <!-- Search Input -->
           <div v-if="searchable" class="select-search-wrap">
-            <font-awesome-icon icon="fas fa-search" class="search-icon" />
+            <font-awesome-icon icon="magnifying-glass" class="search-icon" />
             <input 
               v-model="searchTerm" 
               class="select-search-input" 
@@ -27,7 +27,7 @@
           </div>
 
           <SelectScrollUpButton class="scroll-button">
-            <font-awesome-icon icon="fas fa-chevron-up" />
+            <font-awesome-icon icon="chevron-up" />
           </SelectScrollUpButton>
 
           <SelectViewport class="select-viewport">
@@ -40,7 +40,7 @@
               >
                 <SelectItemText>{{ getOptionLabel(option) }}</SelectItemText>
                 <SelectItemIndicator class="item-indicator">
-                  <font-awesome-icon icon="fas fa-check" />
+                  <font-awesome-icon icon="check" />
                 </SelectItemIndicator>
               </SelectItem>
               
@@ -51,7 +51,7 @@
           </SelectViewport>
 
           <SelectScrollDownButton class="scroll-button">
-            <font-awesome-icon icon="fas fa-chevron-down" />
+            <font-awesome-icon icon="chevron-down" />
           </SelectScrollDownButton>
         </SelectContent>
       </SelectPortal>
@@ -137,7 +137,7 @@ const filteredOptions = computed(() => {
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.2), 0 10px 20px -15px rgba(0, 0, 0, 0.1);
-  z-index: 9999;
+  z-index: var(--z-portal-above-side-panel, 10050);
   min-width: var(--radix-select-trigger-width);
   max-height: 300px;
   backdrop-filter: blur(8px);
