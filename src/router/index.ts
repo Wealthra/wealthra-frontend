@@ -1,5 +1,4 @@
 // Lazy Loading Public Views
-const LandingView = () => import('../landing/LandingView.vue')
 const LoginView = () => import('../auth/login/page/LoginView.vue')
 const ForgetPasswordView = () => import('../auth/forget-password/page/ForgetPasswordView.vue')
 const SignUpView = () => import('../auth/sign-up/page/SignUpView.vue')
@@ -25,9 +24,8 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/landing',
-      name: 'landingpage',
-      component: LandingView,
+      path: '/',
+      redirect: '/dashboard',
     },
     {
       path: '/login',
@@ -79,12 +77,12 @@ router.beforeEach((to, from, next) => {
   const isAdm = isAdmin()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
-  const isPublicRoute = ['landingpage', 'login', 'signup', 'forgetpassword'].includes(to.name as string)
+  const isPublicRoute = ['login', 'signup', 'forgetpassword'].includes(to.name as string)
 
   if (!isAuth) {
     // Not logged in: only allow public routes
     if (requiresAuth) {
-      next({ name: 'landingpage' })
+      next({ name: 'login' })
     } else {
       next()
     }

@@ -145,7 +145,7 @@ async function initApp() {
 
   // If the user is authenticated and admin, go to admin; otherwise go to dashboard.
   // If not authenticated, stay on landing page.
-  const initialRoute = isUserAuthenticated ? (isUserAdmin ? '/admin' : '/dashboard') : '/landing'
+  const initialRoute = isUserAuthenticated ? (isUserAdmin ? '/admin' : '/dashboard') : '/login'
 
   app.mount('#app')
 
