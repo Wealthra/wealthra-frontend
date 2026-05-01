@@ -43,18 +43,18 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   color: var(--normal-text-color);
-  font-size: 16px;
-  border: 1px solid rgba(119, 119, 119, 0.2);
-  background-color: rgba(119, 119, 119, 0.05);
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  font-size: 13px;
+  border: 1px solid rgba(119, 119, 119, 0.3);
+  background-color: rgba(119, 119, 119, 0.08);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background-color: rgba(119, 119, 119, 0.1);
-    border-color: rgba(119, 119, 119, 0.4);
+    background-color: rgba(119, 119, 119, 0.25);
+    border-color: rgba(119, 119, 119, 0.6);
     color: var(--header-text-color);
   }
 
@@ -63,7 +63,7 @@ export default defineComponent({
   }
 
   .theme-icon {
-    font-size: 16px;
+    font-size: 13px;
   }
 }
 </style>

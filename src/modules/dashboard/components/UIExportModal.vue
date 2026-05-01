@@ -152,7 +152,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 200;
   backdrop-filter: blur(4px);
 }
 
@@ -171,10 +171,30 @@ export default defineComponent({
   align-items: center;
   border-bottom: 1px solid var(--border-color);
 
-  h3 { margin: 0; font-size: 20px; font-weight: 700; }
+  h3 { margin: 0; font-size: 18px; font-weight: 700; color: var(--header-text-color); }
   .close-btn { 
-    background: transparent; border: none; font-size: 20px; 
-    color: var(--normal-text-color); cursor: pointer; 
+    background: transparent; 
+    border: none; 
+    font-size: 12px; 
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: var(--normal-text-color); 
+    cursor: pointer; 
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background-color: var(--background-color-soft);
+      color: var(--header-text-color);
+      transform: scale(0.92);
+    }
+
+    &:active {
+      transform: scale(0.85);
+    }
   }
 }
 
@@ -212,17 +232,37 @@ export default defineComponent({
 }
 
 /* DatePicker Overrides */
+:deep(.mx-datepicker) {
+  width: 100%;
+}
+
 :deep(.mx-input) {
-  height: 40px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  height: 38px;
+  padding: 0 1rem;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
-  background: var(--background-color-soft);
+  background: var(--background-color);
   color: var(--header-text-color);
   box-shadow: none;
-  font-size: 14px;
+  font-size: 0.9rem;
+  font-family: var(--main-font);
 
-  &:focus { border-color: var(--primary-green-color); background: var(--background-color); }
+  &:focus { 
+    border-color: var(--primary-green-color); 
+    background: var(--background-color); 
+    box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--normal-text-color);
+    opacity: 0.5;
+  }
+}
+
+/* Ensure the calendar icon color matches */
+:deep(.mx-icon-calendar), :deep(.mx-icon-clear) {
+  color: var(--normal-text-color);
+  font-size: 14px;
 }
 
 .modal-footer {

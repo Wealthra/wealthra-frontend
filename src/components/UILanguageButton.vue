@@ -70,17 +70,17 @@ export default defineComponent({
   font-weight: 600;
   border: 1px solid rgba(119, 119, 119, 0.3);
   background-color: rgba(119, 119, 119, 0.08);
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 10px;
+  padding: 0 12px;
+  height: 32px;
+  border-radius: 8px;
   text-decoration: none;
   width: max-content;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background-color: rgba(119, 119, 119, 0.1);
-    border-color: rgba(119, 119, 119, 0.4);
+    background-color: rgba(119, 119, 119, 0.25);
+    border-color: rgba(119, 119, 119, 0.6);
     color: var(--header-text-color);
   }
 

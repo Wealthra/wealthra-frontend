@@ -649,24 +649,25 @@ export default defineComponent({
     gap: var(--spacing-md);
 
     .refetch-btn {
-      background: rgba(119, 119, 119, 0.12);
-      border: 1px solid rgba(119, 119, 119, 0.45);
+      background: rgba(119, 119, 119, 0.1);
+      border: 1px solid rgba(119, 119, 119, 0.3);
       color: var(--normal-text-color);
-      font-size: 16px;
+      font-size: 11px;
       cursor: pointer;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: none;
 
       &:hover {
         color: var(--header-text-color);
-        border-color: rgba(119, 119, 119, 0.5);
-        background-color: rgba(119, 119, 119, 0.15);
+        border-color: rgba(119, 119, 119, 0.6);
+        background-color: rgba(119, 119, 119, 0.25);
+        transform: scale(0.9);
       }
 
       &:active {
@@ -793,7 +794,6 @@ export default defineComponent({
   display: flex;
   background-color: var(--background-color);
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
-  z-index: 1000;
   transition: width 0.25s ease;
 
   &.navbar-c--collapsed {
@@ -1164,9 +1164,9 @@ export default defineComponent({
       }
 
       .refetch-btn {
-        font-size: 16px;
-        width: 36px;
-        height: 36px;
+        font-size: 11px;
+        width: 32px;
+        height: 32px;
       }
 
       .profile-section {

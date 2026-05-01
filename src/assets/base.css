@@ -298,6 +298,11 @@
   border-color: var(--border-color);
   color: var(--header-text-color);
 }
+
+/* Global DatePicker Popup Z-Index */
+.mx-datepicker-popup {
+  z-index: 300 !important;
+}
 :root[data-theme='dark'] .mx-datepicker-popup {
   --mx-calendar-bg: var(--background-color);
   --mx-calendar-border: var(--border-color);

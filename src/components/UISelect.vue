@@ -137,7 +137,7 @@ const filteredOptions = computed(() => {
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.2), 0 10px 20px -15px rgba(0, 0, 0, 0.1);
-  z-index: 9999;
+  z-index: 300;
   min-width: var(--radix-select-trigger-width);
   max-height: 300px;
   backdrop-filter: blur(8px);

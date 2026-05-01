@@ -963,7 +963,7 @@ export default defineComponent({
   position: fixed;
   bottom: 80px;
   right: 24px;
-  z-index: 9000;
+  z-index: 100;
   font-family: var(--main-font);
 }
 
