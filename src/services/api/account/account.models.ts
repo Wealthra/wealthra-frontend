@@ -84,11 +84,14 @@ export interface AccountUpdateUserTierRequest {
 }
 
 export interface AccountUserUsageResponse {
+  id: string
   email: string
-  name: string
-  tier: string
-  aiChatUsage: number
-  aiChatLimit: number
-  receiptScanUsage: number
-  receiptScanLimit: number
+  firstName: string
+  lastName: string
+  subscriptionTier: number
+  subscriptionPlanId: number
+  subscriptionPlanName: string
+  ocrRequestsThisMonth: number
+  sttRequestsThisMonth: number
+  lastUsageActivityDate: string | null
 }

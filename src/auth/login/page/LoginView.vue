@@ -141,7 +141,7 @@ export default {
       }
 
       try {
-        const data = await accountService.apiLogin({ email, password })
+        const data = await accountService.login({ email, password })
 
         if (!data.token) {
           throw new Error('No token received from server')
@@ -309,12 +309,12 @@ export default {
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
-      gap: 0.8rem;
+      gap: 0.6rem;
       width: 100%;
       height: auto;
       border: 1px solid var(--border-color);
-      border-radius: var(--border-radius);
-      padding: 1.2rem 1.5rem;
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
 
       @media (max-width: 768px) {
         padding: 1rem;
@@ -415,13 +415,13 @@ export default {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 2.5rem;
-        border-radius: var(--border-radius);
+        height: 2.2rem;
+        border-radius: 10px;
         background-color: var(--primary-green-color);
         width: 100%;
-        max-width: 200px;
+        max-width: 180px;
         cursor: pointer;
-        margin-top: 0.3rem;
+        margin-top: 0.2rem;
         border: none;
 
         .login-button-text {
@@ -458,12 +458,12 @@ export default {
 
         .register-text {
           color: var(--primary-blue-color);
-          font-weight: bold;
+          font-weight: 500;
           cursor: pointer;
+          transition: all 0.2s ease;
 
           &:hover {
-            text-decoration: underline;
-            transition: text-decoration 0.3s ease;
+            opacity: 0.8;
           }
         }
       }

@@ -133,7 +133,7 @@ export default defineComponent({
       selectedIds.value = []
       try {
         const langCode = props.selectedLanguage === 'Turkish' ? 'tr' : 'en'
-        notifications.value = await notificationService.apiGetNotifications(
+        notifications.value = await notificationService.getNotifications(
           unreadOnly.value,
           langCode
         )
@@ -192,7 +192,7 @@ export default defineComponent({
       if (selectedIds.value.length === 0) return
       isActionLoading.value = true
       try {
-        await notificationService.apiMarkNotificationsRead({
+        await notificationService.markNotificationsRead({
           notificationIds: selectedIds.value,
           markAll: false,
         })
@@ -208,7 +208,7 @@ export default defineComponent({
       if (selectedIds.value.length === 0) return
       isActionLoading.value = true
       try {
-        await notificationService.apiDeleteNotifications({
+        await notificationService.deleteNotifications({
           notificationIds: selectedIds.value,
           clearAll: false,
         })

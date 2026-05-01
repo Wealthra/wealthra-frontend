@@ -38,6 +38,11 @@ export const budgetTexts = {
     noCategories: 'No categories',
     noNotificationsHeading: 'No notifications',
     noNotificationsDescription: 'Budget alerts and updates will appear here when there’s something to show.',
+    monthlyBreakdown: 'Monthly Breakdown',
+    spent: 'Spent',
+    limit: 'Limit',
+    remaining: 'Remaining',
+    noMonthlyData: 'No monthly budget data available.',
   },
   Turkish: {
     budget: 'Bütçe Yönetimi',
@@ -78,5 +83,10 @@ export const budgetTexts = {
     noCategories: 'Kategori yok',
     noNotificationsHeading: 'Bildirim yok',
     noNotificationsDescription: 'Bütçe uyarıları ve güncellemeler burada görünecek.',
+    monthlyBreakdown: 'Aylık Dağılım',
+    spent: 'Harcanan',
+    limit: 'Limit',
+    remaining: 'Kalan',
+    noMonthlyData: 'Aylık bütçe verisi bulunamadı.',
   },
 }

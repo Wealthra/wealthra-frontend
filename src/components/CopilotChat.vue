@@ -527,7 +527,7 @@ export default defineComponent({
 
     const loadCategories = async () => {
       try {
-        categories.value = await categoryService.apiGetCategories()
+        categories.value = await categoryService.getCategories()
       } catch {
         // Fallback: categories will be empty, user can still see items
       }

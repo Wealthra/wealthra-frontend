@@ -14,6 +14,12 @@
         :goals="goals"
         :selectedLanguage="selectedLanguage"
         :loading="isLoading"
+        :pageNumber="pageNumber"
+        :pageSize="pageSize"
+        :totalCount="totalCount"
+        :totalPages="totalPages"
+        @changePage="handleChangePage"
+        @updatePageSize="handlePageSizeUpdate"
         @createGoal="handleCreateGoal"
         @updateGoal="handleUpdateGoal"
         @deleteGoal="handleDeleteGoal"
@@ -60,8 +66,12 @@ export default {
       overviewTotalCurrent: 0,
       overviewTotalTarget: 0,
       goals: [] as Goal[],
-      totalGoalsCount: 0,
+      totalCount: 0,
+      totalPages: 0,
+      pageNumber: 1,
+      pageSize: 10,
       achievedGoalsCountFromApi: 0,
+      totalGoalsCount: 0,
     }
   },
 
@@ -74,11 +84,24 @@ export default {
   methods: {
     async fetchGoals() {
       try {
-        const data = await goalService.getGoals()
-        this.goals = data ?? []
+        const data = await goalService.getGoalsUser(this.pageNumber, this.pageSize)
+        this.goals = data.items ?? []
+        this.totalCount = data.totalCount ?? 0
+        this.totalPages = data.totalPages ?? 0
       } catch (error) {
         console.error('Error fetching goals:', error)
       }
+    },
+
+    handleChangePage(page: number) {
+      this.pageNumber = page
+      this.loadAppropriateData()
+    },
+
+    handlePageSizeUpdate(size: number) {
+      this.pageSize = size
+      this.pageNumber = 1
+      this.loadAppropriateData()
     },
 
     async fetchGoalsTotal() {

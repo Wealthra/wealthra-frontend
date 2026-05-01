@@ -12,19 +12,38 @@
         <div class="form-grid">
           <div class="form-group full-width">
             <label>{{ t.name }}</label>
-            <input v-model="form.name" type="text" />
+            <input v-model="form.name" type="text" placeholder="e.g. Pro Plan" required />
           </div>
           <div class="form-group full-width">
             <label>{{ t.description }}</label>
-            <textarea v-model="form.description" rows="2"></textarea>
+            <textarea v-model="form.description" rows="2" placeholder="Describe the plan benefits..."></textarea>
+          </div>
+          
+          <!-- Price and Currency -->
+          <div class="form-group">
+            <label>{{ t.monthlyPrice }}</label>
+            <input v-model.number="form.monthlyPrice" type="number" step="0.01" required />
           </div>
           <div class="form-group">
+            <label>{{ t.priceCurrency }}</label>
+            <UISelect 
+              v-model="form.priceCurrency" 
+              :options="[
+                { label: 'USD ($)', value: 'USD' },
+                { label: 'EUR (€)', value: 'EUR' },
+                { label: 'TRY (₺)', value: 'TRY' },
+                { label: 'GBP (£)', value: 'GBP' }
+              ]"
+            />
+          </div>
+
+          <div class="form-group">
             <label>{{ t.ocrLimit }}</label>
-            <input v-model.number="form.monthlyOcrLimit" type="number" />
+            <input v-model.number="form.monthlyOcrLimit" type="number" required />
           </div>
           <div class="form-group">
             <label>{{ t.sttLimit }}</label>
-            <input v-model.number="form.monthlySttLimit" type="number" />
+            <input v-model.number="form.monthlySttLimit" type="number" required />
           </div>
         </div>
 
@@ -37,6 +56,7 @@
       <div class="modal-footer">
         <button class="cancel-btn" @click="$emit('close')">{{ t.cancel }}</button>
         <button class="save-btn" @click="handleSave" :disabled="isSubmitting">
+          <font-awesome-icon v-if="isSubmitting" icon="spinner" spin />
           {{ isSubmitting ? t.saving : t.save }}
         </button>
       </div>
@@ -49,9 +69,11 @@ import { defineComponent, ref, computed, onMounted } from 'vue'
 import type { PropType } from 'vue'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
 import type { AdminPlan } from '@/services/api/adminPlans/adminPlans.models'
+import UISelect from '@/components/UISelect.vue'
 
 export default defineComponent({
   name: 'UIPlanModal',
+  components: { UISelect },
   props: {
     plan: {
       type: Object as PropType<AdminPlan | null>,
@@ -72,6 +94,8 @@ export default defineComponent({
       description: '',
       monthlyOcrLimit: 0,
       monthlySttLimit: 0,
+      monthlyPrice: 0,
+      priceCurrency: 'USD',
       isActive: true
     })
 
@@ -82,6 +106,8 @@ export default defineComponent({
         editPlan: isTr ? 'Planı Düzenle' : 'Edit Plan',
         name: isTr ? 'İsim' : 'Name',
         description: isTr ? 'Açıklama' : 'Description',
+        monthlyPrice: isTr ? 'Aylık Fiyat' : 'Monthly Price',
+        priceCurrency: isTr ? 'Para Birimi' : 'Currency',
         ocrLimit: isTr ? 'Aylık OCR Limiti' : 'Monthly OCR Limit',
         sttLimit: isTr ? 'Aylık STT Limiti' : 'Monthly STT Limit',
         isActive: isTr ? 'Aktif Plan' : 'Is Active Plan',
@@ -98,6 +124,8 @@ export default defineComponent({
           description: props.plan.description,
           monthlyOcrLimit: props.plan.monthlyOcrLimit,
           monthlySttLimit: props.plan.monthlySttLimit,
+          monthlyPrice: props.plan.monthlyPrice,
+          priceCurrency: props.plan.priceCurrency,
           isActive: props.plan.isActive
         }
       }
@@ -133,10 +161,7 @@ export default defineComponent({
 <style scoped lang="scss">
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
@@ -146,25 +171,23 @@ export default defineComponent({
 }
 
 .modal-content {
-  width: 100%;
-  max-width: 500px;
+  width: 90%;
+  max-width: 550px;
   background: var(--background-color);
-  padding: 0;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .modal-header {
-  padding: 20px 24px;
+  padding: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
 
-  h3 { margin: 0; font-size: 20px; font-weight: 700; }
-  .close-btn { 
-    background: transparent; border: none; font-size: 20px; 
-    color: var(--normal-text-color); cursor: pointer; 
-  }
+  h3 { margin: 0; font-size: 20px; font-weight: 800; color: var(--header-text-color); }
+  .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--normal-text-color); }
 }
 
 .modal-body {
@@ -186,20 +209,27 @@ export default defineComponent({
   gap: 8px;
 
   &.full-width { grid-column: span 2; }
-  &.checkbox-group { flex-direction: row; align-items: center; gap: 12px; }
-
-  label { font-size: 13px; font-weight: 600; color: var(--normal-text-color); }
   
-  input[type="text"], input[type="number"], select, textarea {
-    padding: 10px 12px;
-    border-radius: 8px;
+  label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--normal-text-color); opacity: 0.7; }
+  
+  input[type="text"], input[type="number"], textarea {
+    padding: 12px;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
     background: var(--background-color-soft);
     color: var(--header-text-color);
-    outline: none;
-    font-size: 14px;
+    font-size: 15px;
+    transition: border-color 0.2s;
+    
+    &:focus { border-color: var(--primary-green-color); outline: none; }
+  }
 
-    &:focus { border-color: var(--primary-green-color); background: var(--background-color); }
+  &.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    input { width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-green-color); }
+    label { text-transform: none; font-size: 14px; opacity: 1; cursor: pointer; }
   }
 }
 
@@ -208,18 +238,28 @@ export default defineComponent({
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  border-top: 1px solid var(--border-color);
   background: var(--background-color-soft);
+  border-top: 1px solid var(--border-color);
 
   button {
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
   }
 
   .cancel-btn { background: transparent; border: 1px solid var(--border-color); color: var(--header-text-color); }
-  .save-btn { background: var(--primary-green-color); border: none; color: white; }
+  .save-btn {
+    background: var(--primary-green-color);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
 }
 </style>

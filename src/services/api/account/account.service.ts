@@ -15,13 +15,6 @@ import type {
 } from './account.models'
 
 export const accountService = {
-  async register(userData: RegisterRequest): Promise<void> {
-    return apiRequest<void>('Account/register', {
-      method: 'POST',
-      body: userData,
-      requiresAuth: false,
-    })
-  },
 
   async confirmEmail(userId: string, code: string): Promise<void> {
     return apiRequest<void>(`Account/confirm-email?userId=${userId}&code=${code}`, {
@@ -47,15 +40,16 @@ export const accountService = {
   },
 
   async verifyResetCode(email: string, code: string): Promise<void> {
-    return apiRequest<void>(`Account/verify-reset-code?email=${email}&code=${code}`, {
+    return apiRequest<void>('Account/verify-reset-code', {
       method: 'POST',
+      body: { email, code },
       requiresAuth: false,
     })
   },
 
   // New API endpoints based on /api/Account spec
 
-  async apiRegister(data: AccountRegisterRequest): Promise<string> {
+  async register(data: AccountRegisterRequest): Promise<string> {
     return apiRequest<string>('Account/register', {
       method: 'POST',
       body: data,
@@ -63,7 +57,7 @@ export const accountService = {
     })
   },
 
-  async apiLogin(credentials: AccountLoginRequest): Promise<AccountAuthResponse> {
+  async login(credentials: AccountLoginRequest): Promise<AccountAuthResponse> {
     return apiRequest<AccountAuthResponse>('Account/login', {
       method: 'POST',
       body: credentials,

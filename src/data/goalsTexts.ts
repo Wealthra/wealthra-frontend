@@ -33,6 +33,7 @@ export const goalsTexts = {
     goalsSummaryTitle: 'Goals at a glance',
     totalGoals: 'Total goals',
     achievedGoals: 'Achieved',
+    resultsPerPage: 'Results per page',
   },
   Turkish: {
     goals: 'Birikim Yönetimi',
@@ -68,5 +69,6 @@ export const goalsTexts = {
     goalsSummaryTitle: 'Hedef özeti',
     totalGoals: 'Toplam hedef',
     achievedGoals: 'Tamamlanan',
+    resultsPerPage: 'Sayfa başına sonuç',
   },
 }

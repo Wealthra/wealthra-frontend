@@ -19,8 +19,8 @@
       <div v-for="ticket in tickets" :key="ticket.id" class="ticket-card glass-card">
         <div class="ticket-header">
           <span class="ticket-id">#{{ ticket.id }}</span>
-          <span :class="['status-badge', ticket.status.toLowerCase()]">{{ ticket.status }}</span>
-          <span class="date">{{ new Date(ticket.createdAt).toLocaleString() }}</span>
+          <span :class="['status-badge', getStatusText(ticket.status).toLowerCase()]">{{ getStatusText(ticket.status) }}</span>
+          <span class="date">{{ new Date(ticket.createdOn).toLocaleString() }}</span>
         </div>
         <div class="ticket-body">
           <div class="user">{{ ticket.userEmail }}</div>
@@ -69,8 +69,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue'
-import { adminService } from '@/services/api/admin/admin.service'
-import type { SupportTicket } from '@/services/api/admin/admin.models'
+import { supportService } from '@/services/api/support/support.service'
+import type { SupportTicket } from '@/services/api/support/support.models'
 import UISelect from '@/components/UISelect.vue'
 
 export default defineComponent({
@@ -93,7 +93,7 @@ export default defineComponent({
       isLoading.value = true
       try {
         const status = filterStatus.value === 'all' ? undefined : (filterStatus.value || undefined)
-        tickets.value = await adminService.getTickets(status)
+        tickets.value = await supportService.getAdminTickets(status)
       } catch (err) {
         console.error(err)
       } finally {
@@ -104,7 +104,7 @@ export default defineComponent({
     const openReplyModal = (ticket: SupportTicket) => {
       activeTicket.value = ticket
       replyMessage.value = ''
-      replyStatus.value = ticket.status
+      replyStatus.value = getStatusText(ticket.status)
       replyModalOpen.value = true
     }
 
@@ -117,7 +117,10 @@ export default defineComponent({
       if (!activeTicket.value || !replyMessage.value) return
       isSubmitting.value = true
       try {
-        await adminService.replyTicket(activeTicket.value.id, replyMessage.value, replyStatus.value)
+        await supportService.replyTicket(activeTicket.value.id, { 
+          body: replyMessage.value, 
+          newStatus: replyStatus.value 
+        })
         closeReplyModal()
         await fetchTickets()
       } catch (err) {
@@ -128,6 +131,15 @@ export default defineComponent({
     }
 
     onMounted(fetchTickets)
+
+    const getStatusText = (status: number): string => {
+      const map: Record<number, string> = {
+        0: 'Open',
+        1: 'Pending',
+        2: 'Closed'
+      }
+      return map[status] || 'Open'
+    }
 
     return {
       tickets,
@@ -141,7 +153,8 @@ export default defineComponent({
       isSubmitting,
       openReplyModal,
       closeReplyModal,
-      handleReply
+      handleReply,
+      getStatusText
     }
   }
 })
@@ -207,7 +220,7 @@ export default defineComponent({
       padding: 8px 16px;
       border-radius: 6px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 500;
     }
   }
 }
@@ -257,7 +270,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     gap: 8px;
-    label { font-weight: 600; font-size: 14px; }
+    label { font-weight: 500; font-size: 14px; }
     textarea, select {
       padding: 10px;
       border-radius: 8px;
@@ -277,7 +290,7 @@ export default defineComponent({
   button {
     padding: 10px 20px;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
   }
   .cancel-btn {

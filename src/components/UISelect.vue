@@ -105,7 +105,7 @@ watch(() => props.modelValue, () => {
 
 const internalValue = computed({
   get: () => props.modelValue?.toString(),
-  set: (val) => {
+  set: (val: string) => {
     const originalOption = props.options.find(opt => getOptionValue(opt).toString() === val)
     const originalValue = originalOption ? getOptionValue(originalOption) : val
     emit('update:modelValue', originalValue)

@@ -10,14 +10,33 @@
       </div>
 
       <div class="text-content">
-        <div class="forgot-header">{{ forgotTexts[selectedLanguage].header }}</div>
+        <div class="forgot-header">
+          {{
+            currentStep === 'email'
+              ? forgotTexts[selectedLanguage].header
+              : currentStep === 'verify'
+                ? forgotTexts[selectedLanguage].verifyHeader
+                : currentStep === 'reset'
+                  ? forgotTexts[selectedLanguage].newPasswordHeader
+                  : forgotTexts[selectedLanguage].successHeader
+          }}
+        </div>
         <div class="forgot-subtext">
-          {{ forgotTexts[selectedLanguage].subtext }}
+          {{
+            currentStep === 'email'
+              ? forgotTexts[selectedLanguage].subtext
+              : currentStep === 'verify'
+                ? forgotTexts[selectedLanguage].verifySubtext
+                : currentStep === 'reset'
+                  ? forgotTexts[selectedLanguage].newPasswordSubtext
+                  : forgotTexts[selectedLanguage].successText
+          }}
         </div>
       </div>
 
-      <form class="forgot-wrapper" @submit.prevent="handleResetPassword">
-        <div v-if="!emailSent">
+      <div class="forgot-wrapper">
+        <!-- Step 1: Email -->
+        <form v-if="currentStep === 'email'" @submit.prevent="handleSendCode" class="step-form">
           <div class="forgot-text">{{ forgotTexts[selectedLanguage].forgotText }}</div>
 
           <UIFormSection
@@ -26,7 +45,7 @@
             icon="email"
             field-type="email"
             required
-            @update-user-data="handleUserDataUpdate"
+            @update-user-data="(val: string) => (userData.email = val)"
           />
 
           <button type="submit" class="reset-button" :disabled="isSubmitting">
@@ -35,30 +54,79 @@
               forgotTexts[selectedLanguage].resetButton
             }}</span>
           </button>
-        </div>
+        </form>
 
-        <div v-else class="success-message">
-          <div class="success-icon">
-            <font-awesome-icon icon="envelope" />
-          </div>
-          <div class="success-text">{{ forgotTexts[selectedLanguage].emailSentHeader }}</div>
-          <div class="success-subtext">{{ forgotTexts[selectedLanguage].emailSentText }}</div>
-          <div class="email-highlight">{{ userData.email }}</div>
+        <!-- Step 2: Verify Code -->
+        <form v-else-if="currentStep === 'verify'" @submit.prevent="handleVerifyCode" class="step-form">
+          <div class="email-display">{{ userData.email }}</div>
+
+          <UIFormSection
+            title="Verification Code"
+            :description="forgotTexts[selectedLanguage].codePlaceholder"
+            icon="password"
+            field-type="text"
+            required
+            @update-user-data="(val: string) => (userData.code = val)"
+          />
+
+          <button type="submit" class="reset-button" :disabled="isSubmitting">
+            <div v-if="isSubmitting" class="spinner"></div>
+            <span v-else class="reset-button-text">{{
+              forgotTexts[selectedLanguage].verifyButton
+            }}</span>
+          </button>
+
           <div class="resend-wrapper">
             <div class="resend-text">{{ forgotTexts[selectedLanguage].noEmailText }}</div>
-            <div class="resend-link" @click="resetForm">
+            <div class="resend-link" @click="currentStep = 'email'">
               {{ forgotTexts[selectedLanguage].tryAgain }}
             </div>
           </div>
-        </div>
-      </form>
+        </form>
 
-      <div class="back-to-login">
-        <router-link to="/login" class="no-underline">
-          <div class="back-icon">
-            <font-awesome-icon icon="arrow-left" />
+        <!-- Step 3: Reset Password -->
+        <form v-else-if="currentStep === 'reset'" @submit.prevent="handleResetPassword" class="step-form">
+          <UIFormSection
+            title="New Password"
+            :description="forgotTexts[selectedLanguage].newPasswordPlaceholder"
+            icon="password"
+            field-type="password"
+            required
+            @update-user-data="(val: string) => (userData.newPassword = val)"
+          />
+
+          <UIFormSection
+            title="Confirm Password"
+            :description="forgotTexts[selectedLanguage].confirmPasswordPlaceholder"
+            icon="password"
+            field-type="password"
+            required
+            @update-user-data="(val: string) => (userData.confirmPassword = val)"
+          />
+
+          <button type="submit" class="reset-button" :disabled="isSubmitting">
+            <div v-if="isSubmitting" class="spinner"></div>
+            <span v-else class="reset-button-text">{{
+              forgotTexts[selectedLanguage].completeButton
+            }}</span>
+          </button>
+        </form>
+
+        <!-- Step 4: Success -->
+        <div v-else-if="currentStep === 'success'" class="success-message">
+          <div class="success-icon">
+            <font-awesome-icon icon="check-circle" />
           </div>
-          <div class="back-text">{{ forgotTexts[selectedLanguage].backToLogin }}</div>
+          <button @click="goLogin" class="reset-button">
+            <span class="reset-button-text">{{ forgotTexts[selectedLanguage].goToLogin }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="back-to-login" v-if="currentStep !== 'success'">
+        <router-link to="/login" class="no-underline">
+          <font-awesome-icon icon="arrow-left" class="back-icon" />
+          <span class="back-text">{{ forgotTexts[selectedLanguage].backToLogin }}</span>
         </router-link>
       </div>
     </div>
@@ -99,8 +167,12 @@ export default {
   data() {
     return {
       selectedLanguage: 'English' as 'English' | 'Turkish',
+      currentStep: 'email' as 'email' | 'verify' | 'reset' | 'success',
       userData: {
         email: '',
+        code: '',
+        newPassword: '',
+        confirmPassword: '',
       },
       errorMessage: {
         show: false,
@@ -109,7 +181,6 @@ export default {
         type: 'error',
       },
       isSubmitting: false,
-      emailSent: false,
       forgotTexts: forgotTexts,
     }
   },
@@ -117,11 +188,6 @@ export default {
     handleLanguageUpdate(language: string) {
       this.selectedLanguage = language as 'English' | 'Turkish'
       localStorage.setItem('selectedLanguage', this.selectedLanguage)
-    },
-    handleUserDataUpdate(value: string, fieldType: string) {
-      if (fieldType === 'email') {
-        this.userData.email = value
-      }
     },
 
     showError(message: string, title = 'Error', type = 'error') {
@@ -146,26 +212,13 @@ export default {
       this.errorMessage.show = value
     },
 
-    async handleResetPassword() {
+    async handleSendCode() {
       const email = this.userData.email
       if (!email) {
         this.showError(
           this.selectedLanguage === 'English'
             ? 'Please enter your email address'
-            : 'Lütfen e-posta adresinizi girin',
-          this.selectedLanguage === 'English' ? 'Missing Email' : 'Eksik E-posta'
-        )
-        return
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(email)) {
-        this.showError(
-          this.selectedLanguage === 'English'
-            ? 'Please enter a valid email address'
-            : 'Lütfen geçerli bir e-posta adresi girin',
-          this.selectedLanguage === 'English' ? 'Invalid Email' : 'Geçersiz E-posta'
+            : 'Lütfen e-posta adresinizi girin'
         )
         return
       }
@@ -173,37 +226,93 @@ export default {
       try {
         this.isSubmitting = true
         await accountService.forgotPassword(email)
-
-        this.showSuccess(
-          this.selectedLanguage === 'English'
-            ? 'Password reset link sent successfully'
-            : 'Şifre sıfırlama bağlantısı başarıyla gönderildi',
-          this.selectedLanguage === 'English' ? 'Email Sent' : 'E-posta Gönderildi'
-        )
-        this.emailSent = true
+        this.currentStep = 'verify'
       } catch (error) {
         console.error('Error:', error)
         this.showError(
           this.selectedLanguage === 'English'
-            ? 'Failed to send reset link. Please try again.'
-            : 'Sıfırlama bağlantısı gönderilirken hata oluştu. Lütfen tekrar deneyin.',
-          this.selectedLanguage === 'English' ? 'Request Failed' : 'İstek Başarısız'
+            ? 'Failed to send verification code. Please try again.'
+            : 'Doğrulama kodu gönderilirken hata oluştu. Lütfen tekrar deneyin.'
         )
       } finally {
         this.isSubmitting = false
       }
     },
 
-    resetForm() {
-      this.emailSent = false
-      this.userData.email = ''
+    async handleVerifyCode() {
+      const { email, code } = this.userData
+      if (!code) {
+        this.showError(
+          this.selectedLanguage === 'English'
+            ? 'Please enter the verification code'
+            : 'Lütfen doğrulama kodunu girin'
+        )
+        return
+      }
+
+      try {
+        this.isSubmitting = true
+        await accountService.verifyResetCode(email, code)
+        this.currentStep = 'reset'
+      } catch (error) {
+        console.error('Error:', error)
+        this.showError(
+          this.selectedLanguage === 'English'
+            ? 'Invalid verification code'
+            : 'Geçersiz doğrulama kodu'
+        )
+      } finally {
+        this.isSubmitting = false
+      }
     },
+
+    async handleResetPassword() {
+      const { email, code, newPassword, confirmPassword } = this.userData
+
+      if (!newPassword || !confirmPassword) {
+        this.showError(
+          this.selectedLanguage === 'English' ? 'Please fill all fields' : 'Lütfen tüm alanları doldurun'
+        )
+        return
+      }
+
+      if (newPassword !== confirmPassword) {
+        this.showError(
+          this.selectedLanguage === 'English' ? 'Passwords do not match' : 'Şifreler eşleşmiyor'
+        )
+        return
+      }
+
+      try {
+        this.isSubmitting = true
+        await accountService.resetPassword({ email, code, newPassword })
+        this.currentStep = 'success'
+        this.showSuccess(
+          this.selectedLanguage === 'English'
+            ? 'Password updated successfully'
+            : 'Şifreniz başarıyla güncellendi'
+        )
+      } catch (error) {
+        console.error('Error:', error)
+        this.showError(
+          this.selectedLanguage === 'English'
+            ? 'Failed to update password'
+            : 'Şifre güncellenirken hata oluştu'
+        )
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+
+    goLogin() {
+      this.$router.push('/login')
+    },
+
     goLandingPage() {
       this.$router.push('/')
     },
   },
   mounted() {
-    // Check for saved language preference
     const savedLanguage = localStorage.getItem('selectedLanguage')
     if (savedLanguage) {
       this.selectedLanguage = savedLanguage as 'English' | 'Turkish'
@@ -307,15 +416,34 @@ export default {
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 1.2rem;
+      gap: 1rem;
       width: 100%;
       height: auto;
       border: 1px solid var(--border-color);
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
+      border-radius: 12px;
+      padding: 1.2rem;
 
       @media (max-width: 768px) {
         padding: 1.2rem;
+      }
+
+      .step-form {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 0.8rem;
+      }
+
+      .email-display {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--primary-blue-color);
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: rgba(var(--primary-blue-rgb), 0.1);
+        border-radius: var(--border-radius);
+        text-align: center;
+        width: 100%;
       }
 
       .forgot-text {
@@ -334,12 +462,12 @@ export default {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 2.7rem;
-        border-radius: var(--border-radius);
+        height: 2.2rem;
+        border-radius: 10px;
         background-color: var(--primary-green-color);
         width: 100%;
         cursor: pointer;
-        margin-top: 1.2rem;
+        margin-top: 0.8rem;
         border: none;
         transition: all 0.2s ease;
         position: relative;
@@ -384,16 +512,16 @@ export default {
         padding: 0.8rem;
 
         .success-icon {
-          width: 70px;
-          height: 70px;
-          margin-bottom: 1.2rem;
+          width: 80px;
+          height: 80px;
+          margin-bottom: 1.5rem;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: 50%;
-          background-color: rgba(var(--primary-blue-rgb), 0.1);
-          color: var(--primary-blue-color);
-          font-size: 2rem;
+          background-color: rgba(var(--primary-green-rgb), 0.1);
+          color: var(--primary-green-color);
+          font-size: 3rem;
         }
 
         .success-text {
@@ -446,36 +574,67 @@ export default {
       }
     }
 
+    .resend-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .resend-text {
+        color: var(--normal-text-color);
+        font-size: 0.9rem;
+      }
+
+      .resend-link {
+        color: var(--primary-blue-color);
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+          opacity: 0.8;
+          text-decoration: none;
+        }
+      }
+    }
+
     .back-to-login {
       display: flex;
       align-items: center;
       width: 100%;
-      margin-top: 0.8rem;
+      margin-top: 1rem;
 
       .no-underline {
         display: flex;
         align-items: center;
         text-decoration: none;
-        gap: 0.4rem;
-        transition: transform 0.2s ease;
+        gap: 0.6rem;
+        color: var(--normal-text-color);
+        transition: all 0.3s ease;
+        padding: 0.4rem 0.6rem;
+        border-radius: 8px;
+        margin-left: -0.6rem;
 
         &:hover {
-          opacity: 0.8;
-          transition: opacity 0.2s ease;
+          background-color: var(--input-background-color);
+          color: var(--primary-blue-color);
+          
+          .back-icon {
+            transform: translateX(-3px);
+          }
         }
 
         .back-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: rgba(var(--primary-blue-rgb), 0.1);
-          transform: rotate(180deg);
+          font-size: 0.85rem;
+          transition: transform 0.3s ease;
         }
 
         .back-text {
-          color: var(--primary-blue-color);
-          font-weight: 600;
-          font-size: 0.9rem;
+          font-weight: 500;
+          font-size: 0.85rem;
         }
       }
     }

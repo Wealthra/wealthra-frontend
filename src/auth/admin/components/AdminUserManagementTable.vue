@@ -2,27 +2,34 @@
   <div class="admin-user-management-table-c">
     <div class="table-controls">
       <div class="search-box">
-        <input 
-          v-model="searchEmail" 
-          type="text" 
-          :placeholder="t.searchByEmail" 
-          @keyup.enter="handleSearch"
-        />
-        <button @click="handleSearch">
-          <font-awesome-icon icon="magnifying-glass" />
+        <div class="input-wrapper">
+          <font-awesome-icon icon="magnifying-glass" class="search-icon" />
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            :placeholder="t.searchByEmail" 
+            @keyup.enter="handleSearch"
+          />
+        </div>
+        <button class="search-btn" @click="handleSearch">
+          {{ t.search }}
+        </button>
+        <button class="assign-trigger-btn" @click="isAssignmentModalOpen = true" :title="t.assignPlan">
+          <font-awesome-icon icon="user-plus" />
+          {{ t.assign }}
         </button>
       </div>
     </div>
 
-    <div class="table-container">
+    <div class="table-container glass-card">
       <table class="user-table">
         <thead>
           <tr>
-            <th>{{ t.name }}</th>
-            <th>Email</th>
+            <th>User</th>
+            <th>Status</th>
             <th>{{ t.tier }}</th>
-            <th>{{ t.chatUsage }}</th>
-            <th>{{ t.ocrUsage }}</th>
+            <th>Email Verified</th>
+            <th>Last Login</th>
             <th>{{ t.actions }}</th>
           </tr>
         </thead>
@@ -35,18 +42,41 @@
             </tr>
           </template>
           <template v-else>
-            <tr v-for="user in users" :key="user.email">
-              <td>{{ user.name }}</td>
-              <td>{{ user.email }}</td>
-              <td>
-                <span class="tier-badge">{{ user.tier }}</span>
+            <tr v-for="user in users" :key="user.id">
+              <td class="user-cell">
+                <div class="user-info">
+                  <span class="full-name">{{ user.firstName }} {{ user.lastName }}</span>
+                  <span class="email">{{ user.email }}</span>
+                </div>
               </td>
-              <td>{{ user.aiChatUsage }} / {{ user.aiChatLimit }}</td>
-              <td>{{ user.receiptScanUsage }} / {{ user.receiptScanLimit }}</td>
+              <td>
+                <span :class="['status-badge', user.lockoutEnd ? 'locked' : 'active']">
+                  {{ user.lockoutEnd ? 'Locked' : 'Active' }}
+                </span>
+              </td>
+              <td>
+                <div class="tier-info">
+                  <span class="tier-tag">T{{ user.subscriptionTier }}</span>
+                  <span class="plan-name">{{ user.planName }}</span>
+                </div>
+              </td>
+              <td>
+                <font-awesome-icon 
+                  :icon="user.emailConfirmed ? 'circle-check' : 'circle-xmark'" 
+                  :class="user.emailConfirmed ? 'confirmed' : 'pending'"
+                />
+              </td>
+              <td class="date-cell">{{ user.lastLoginDate ? formatDate(user.lastLoginDate) : 'Never' }}</td>
               <td>
                 <div class="action-buttons">
-                  <button class="tier-btn" @click="promptUpdateTier(user)" :title="t.updateTier">
-                    <font-awesome-icon icon="user-gear" />
+                  <button class="action-btn" @click="promptEditRoles(user)" title="Manage Roles">
+                    <font-awesome-icon icon="shield-halved" />
+                  </button>
+                  <button class="action-btn" @click="promptLockUser(user)" :title="user.lockoutEnd ? 'Unlock' : 'Lock'">
+                    <font-awesome-icon :icon="user.lockoutEnd ? 'lock-open' : 'lock'" />
+                  </button>
+                  <button class="action-btn delete" @click="promptResetPassword(user)" title="Reset Password">
+                    <font-awesome-icon icon="key" />
                   </button>
                 </div>
               </td>
@@ -57,34 +87,34 @@
           </template>
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      <div class="pagination" v-if="totalPages > 1">
+        <button :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
+          <font-awesome-icon icon="chevron-left" />
+        </button>
+        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">
+          <font-awesome-icon icon="chevron-right" />
+        </button>
+      </div>
     </div>
 
-    <!-- Update Tier Modal -->
-    <div v-if="isTierModalOpen" class="modal-overlay" @click.self="isTierModalOpen = false">
-      <div class="modal-content glass-card">
+    <!-- Modals for Assignment, Roles, Locking etc. can be added here -->
+    <div v-if="isAssignmentModalOpen" class="modal-overlay" @click.self="isAssignmentModalOpen = false">
+      <div class="modal-content glass-card assignment-modal">
         <div class="modal-header">
-          <h3>{{ t.updateTierTitle }}</h3>
-          <button class="close-btn" @click="isTierModalOpen = false">
+          <h3>{{ t.assignPlanTitle }}</h3>
+          <button class="close-btn" @click="isAssignmentModalOpen = false">
             <font-awesome-icon icon="xmark" />
           </button>
         </div>
         <div class="modal-body">
-          <p><strong>{{ selectedUser?.email }}</strong></p>
-          <div class="form-group">
-            <label>{{ t.newTierLabel }}</label>
-            <select v-model="newTier">
-              <option v-for="plan in plans" :key="plan.id" :value="plan.id.toString()">
-                {{ plan.name }} (#{{ plan.id }})
-              </option>
-              <option value="1">Free / Basic (1)</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="cancel-btn" @click="isTierModalOpen = false">{{ t.cancel }}</button>
-          <button class="save-btn" @click="handleUpdateTier" :disabled="isUpdating">
-            {{ isUpdating ? t.updating : t.update }}
-          </button>
+          <AdminUserAssignment 
+            :plans="plans" 
+            :selectedLanguage="selectedLanguage"
+            @assigned="handleAssigned"
+          />
         </div>
       </div>
     </div>
@@ -94,15 +124,17 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue'
 import type { PropType } from 'vue'
-import { accountService } from '@/services/api/account/account.service'
-import type { AccountUserUsageResponse } from '@/services/api/account/account.models'
+import { adminService } from '@/services/api/admin/admin.service'
+import type { AdminUser } from '@/services/api/admin/admin.models'
 import type { AdminPlan } from '@/services/api/adminPlans/adminPlans.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
+import AdminUserAssignment from './AdminUserAssignment.vue'
 
 export default defineComponent({
   name: 'AdminUserManagementTable',
   components: {
-    UISkeletonLoader
+    UISkeletonLoader,
+    AdminUserAssignment
   },
   props: {
     selectedLanguage: {
@@ -115,88 +147,105 @@ export default defineComponent({
     }
   },
   setup(props) {
-    const users = ref<AccountUserUsageResponse[]>([])
-    const searchEmail = ref('')
-    const isTierModalOpen = ref(false)
-    const selectedUser = ref<AccountUserUsageResponse | null>(null)
-    const newTier = ref('')
-    const isUpdating = ref(false)
+    const users = ref<AdminUser[]>([])
+    const searchQuery = ref('')
     const isLoading = ref(true)
+    const currentPage = ref(1)
+    const totalPages = ref(1)
+    const pageSize = ref(20)
+    
+    const isAssignmentModalOpen = ref(false)
 
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
       return {
         name: isTr ? 'İsim' : 'Name',
-        tier: isTr ? 'Seviye' : 'Tier',
-        chatUsage: isTr ? 'Chat Kullanımı' : 'Chat Usage',
-        ocrUsage: isTr ? 'OCR Kullanımı' : 'OCR Usage',
+        tier: isTr ? 'Plan' : 'Plan',
         actions: isTr ? 'Aksiyonlar' : 'Actions',
-        searchByEmail: isTr ? 'Email ile ara...' : 'Search by email...',
+        searchByEmail: isTr ? 'Email veya isim...' : 'Search email or name...',
+        search: isTr ? 'Ara' : 'Search',
+        assign: isTr ? 'Ata' : 'Assign',
         noUsersFound: isTr ? 'Kullanıcı bulunamadı.' : 'No users found.',
-        updateTier: isTr ? 'Seviyeyi Güncelle' : 'Update Tier',
-        updateTierTitle: isTr ? 'Kullanıcı Seviyesini Güncelle' : 'Update User Tier',
-        newTierLabel: isTr ? 'Yeni Seviye (Plan)' : 'New Tier (Plan)',
-        cancel: isTr ? 'İptal' : 'Cancel',
-        update: isTr ? 'Güncelle' : 'Update',
-        updating: isTr ? 'Güncelleniyor...' : 'Updating...'
+        assignPlan: isTr ? 'Plan Ata' : 'Assign Plan',
+        assignPlanTitle: isTr ? 'Kullanıcıya Plan Ata' : 'Assign Plan to User'
       }
     })
 
     const fetchUsers = async () => {
       isLoading.value = true
       try {
-        users.value = await accountService.getAdminUsages(searchEmail.value)
+        const response = await adminService.getUsers(currentPage.value, pageSize.value, searchQuery.value)
+        users.value = response.items
+        totalPages.value = response.totalPages
       } catch (error) {
-        console.error('Error fetching admin usages:', error)
+        console.error('Error fetching admin users:', error)
       } finally {
         isLoading.value = false
       }
     }
 
     const handleSearch = () => {
+      currentPage.value = 1
       fetchUsers()
     }
 
-    const promptUpdateTier = (user: AccountUserUsageResponse) => {
-      selectedUser.value = user
-      // If the tier is already a number-like string, use it, otherwise default to "1"
-      newTier.value = /^\d+$/.test(user.tier) ? user.tier : '1'
-      isTierModalOpen.value = true
+    const changePage = (page: number) => {
+      currentPage.value = page
+      fetchUsers()
     }
 
-    const handleUpdateTier = async () => {
-      if (!selectedUser.value) return
-      isUpdating.value = true
-      try {
-        await accountService.updateTier({
-          email: selectedUser.value.email,
-          tier: newTier.value
-        })
-        isTierModalOpen.value = false
-        await fetchUsers()
-      } catch (error) {
-        console.error('Error updating tier:', error)
-      } finally {
-        isUpdating.value = false
+    const handleAssigned = () => {
+      isAssignmentModalOpen.value = false
+      fetchUsers()
+    }
+
+    const formatDate = (dateStr: string) => {
+      return new Date(dateStr).toLocaleDateString([], { dateStyle: 'medium' })
+    }
+
+    const promptEditRoles = (user: AdminUser) => {
+      // Implementation for roles management
+      console.log('Edit roles for', user.email)
+    }
+
+    const promptLockUser = async (user: AdminUser) => {
+       const isLocked = !!user.lockoutEnd
+       if (confirm(`Are you sure you want to ${isLocked ? 'unlock' : 'lock'} ${user.email}?`)) {
+         try {
+           await adminService.lockUser(user.id, !isLocked)
+           await fetchUsers()
+         } catch (err) {
+           console.error(err)
+         }
+       }
+    }
+
+    const promptResetPassword = (user: AdminUser) => {
+      const newPass = prompt(`Enter new password for ${user.email}:`)
+      if (newPass) {
+        adminService.setPassword(user.id, newPass)
+          .then(() => alert('Password updated'))
+          .catch(err => alert('Failed: ' + err.message))
       }
     }
 
-    onMounted(() => {
-      fetchUsers()
-    })
+    onMounted(fetchUsers)
 
     return {
       users,
-      searchEmail,
-      isTierModalOpen,
-      selectedUser,
-      newTier,
-      isUpdating,
+      searchQuery,
       isLoading,
+      currentPage,
+      totalPages,
+      isAssignmentModalOpen,
       t,
       handleSearch,
-      promptUpdateTier,
-      handleUpdateTier
+      changePage,
+      handleAssigned,
+      formatDate,
+      promptEditRoles,
+      promptLockUser,
+      promptResetPassword
     }
   }
 })
@@ -206,7 +255,7 @@ export default defineComponent({
 .admin-user-management-table-c {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .table-controls {
@@ -216,161 +265,198 @@ export default defineComponent({
 
 .search-box {
   display: flex;
-  gap: 8px;
-  input {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--background-color-soft);
-    color: var(--header-text-color);
-    width: 250px;
+  gap: 12px;
+  align-items: center;
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--normal-text-color);
+      opacity: 0.6;
+    }
+
+    input {
+      padding: 10px 12px 10px 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--background-color-soft);
+      color: var(--header-text-color);
+      width: 280px;
+      font-size: 14px;
+      
+      &:focus { border-color: var(--primary-green-color); outline: none; }
+    }
   }
-  button {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
+
+  .search-btn {
+    padding: 10px 20px;
     background: var(--primary-green-color);
     color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 500;
     cursor: pointer;
+  }
+
+  .assign-trigger-btn {
+    padding: 10px 20px;
+    background: var(--background-color-soft);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--primary-green-color);
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &:hover { background: var(--primary-green-color); color: white; }
   }
 }
 
 .table-container {
-  overflow-x: auto;
+  padding: 0;
+  overflow: hidden;
 }
 
 .user-table {
   width: 100%;
   border-collapse: collapse;
-  text-align: left;
+
+  th, td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
 
   th {
-    padding: 12px 16px;
+    background: var(--background-color-soft);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
     color: var(--normal-text-color);
-    border-bottom: 1px solid var(--border-color);
+    letter-spacing: 0.05em;
   }
 
-  td {
-    padding: 12px 16px;
-    font-size: 14px;
+  .user-cell {
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .full-name { font-weight: 500; color: var(--header-text-color); }
+      .email { font-size: 12px; color: var(--normal-text-color); opacity: 0.8; }
+    }
+  }
+
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+
+    &.active { background: rgba(16, 185, 129, 0.1); color: var(--primary-green-color); }
+    &.locked { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+  }
+
+  .tier-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .tier-tag {
+      background: var(--primary-green-color);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .plan-name { font-size: 13px; color: var(--header-text-color); font-weight: 500; }
+  }
+
+  .confirmed { color: var(--primary-green-color); }
+  .pending { color: var(--normal-text-color); opacity: 0.3; }
+
+  .date-cell { font-size: 13px; color: var(--normal-text-color); }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-color-soft);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
     color: var(--header-text-color);
-    border-bottom: 1px solid var(--border-color);
-  }
+    cursor: pointer;
+    transition: all 0.2s;
 
-  .no-data {
-    text-align: center;
-    padding: 40px;
-    color: var(--normal-text-color);
+    &:hover { color: var(--primary-green-color); border-color: var(--primary-green-color); }
+    &.delete:hover { color: #ef4444; border-color: #ef4444; }
   }
 }
 
-.tier-badge {
-  background: var(--primary-green-color);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.action-buttons {
+.pagination {
+  padding: 16px;
   display: flex;
-  gap: 8px;
-}
-
-.tier-btn {
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
   background: var(--background-color-soft);
-  border: 1px solid var(--border-color);
-  color: var(--header-text-color);
-  padding: 6px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
 
-  &:hover {
-    background: var(--hover-color);
-    color: var(--primary-green-color);
+  button {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
   }
+
+  .page-info { font-size: 13px; font-weight: 500; color: var(--normal-text-color); }
 }
 
-/* Modal Styles */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  width: 100%;
-  max-width: 400px;
-  background: var(--background-color);
-  overflow: hidden;
+  width: 90%;
+  max-width: 450px;
+  &.assignment-modal { max-width: 600px; }
 }
 
 .modal-header {
-  padding: 16px 20px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
   h3 { margin: 0; font-size: 18px; }
-  .close-btn { background: transparent; border: none; font-size: 18px; cursor: pointer; color: var(--normal-text-color); }
+  .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--normal-text-color); }
 }
 
-.modal-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    label { font-size: 13px; font-weight: 600; }
-    select {
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      background: var(--background-color-soft);
-      color: var(--header-text-color);
-    }
-  }
-}
-
-.modal-footer {
-  padding: 16px 20px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  background: var(--background-color-soft);
-
-  button {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .cancel-btn { background: transparent; border: 1px solid var(--border-color); color: var(--header-text-color); }
-  .save-btn { background: var(--primary-green-color); border: none; color: white; }
-}
-
-.glass-card {
-  background: var(--background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
+.modal-body { padding: 24px; }
 </style>

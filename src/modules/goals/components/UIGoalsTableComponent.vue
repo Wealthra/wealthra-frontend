@@ -161,6 +161,79 @@
       </div>
     </div>
 
+    <!-- Pagination Bar -->
+    <div v-if="loading" class="pagination-bar">
+      <div class="pagination-results">
+        <div class="skeleton-box results-skeleton"></div>
+      </div>
+      <div class="pagination-nav">
+        <div class="skeleton-box nav-skeleton"></div>
+      </div>
+    </div>
+    <div
+      v-else-if="goals && goals.length > 0 && totalPages > 0"
+      class="pagination-bar"
+    >
+      <div class="pagination-results">
+        <font-awesome-icon
+          :icon="paginationIcons.results"
+          class="pagination-results-icon"
+          aria-hidden="true"
+        />
+        <UISelect
+          :model-value="pageSize"
+          class="page-size-select-premium"
+          :label="t('resultsPerPage')"
+          :options="pageSizeOptions"
+          @update:model-value="val => $emit('updatePageSize', Number(val))"
+          compact
+        />
+        <span class="pagination-results-label">
+          {{ selectedLanguage === 'English' ? 'of' : '/' }}
+          <span class="pagination-total">{{ totalCount }}</span>
+          {{ selectedLanguage === 'English' ? 'results' : 'sonuç' }}
+        </span>
+      </div>
+      <div class="pagination-nav">
+        <button
+          type="button"
+          :disabled="pageNumber === 1"
+          class="pagination-btn"
+          aria-label="Previous page"
+          @click="changePage(pageNumber - 1)"
+        >
+          <font-awesome-icon :icon="arrowIcons.left" class="arrow-icon" />
+        </button>
+        <template v-for="page in displayedPages" :key="page">
+          <button
+            type="button"
+            :class="['pagination-num', { active: page === pageNumber }]"
+            @click="changePage(page)"
+          >
+            {{ page }}
+          </button>
+        </template>
+        <span v-if="showEllipsis" class="pagination-ellipsis">—</span>
+        <button
+          v-if="showLastPage"
+          type="button"
+          :class="['pagination-num', { active: totalPages === pageNumber }]"
+          @click="changePage(totalPages)"
+        >
+          {{ totalPages }}
+        </button>
+        <button
+          type="button"
+          :disabled="pageNumber === totalPages || totalPages === 0"
+          class="pagination-btn"
+          aria-label="Next page"
+          @click="changePage(pageNumber + 1)"
+        >
+          <font-awesome-icon :icon="arrowIcons.right" class="arrow-icon" />
+        </button>
+      </div>
+    </div>
+
     <!-- Create goal modal -->
     <div v-if="showCreateModal" class="modal-overlay" @click.self="hideCreateModal">
       <div class="modal-content">
@@ -303,7 +376,7 @@
 
 <script lang="ts">
 import { goalsTexts } from '@/data/goalsTexts'
-import { actionIcons } from '@/icons/fontawesome-icons'
+import { actionIcons, arrowIcons, paginationIcons } from '@/icons/fontawesome-icons'
 import { faBullseye } from '@fortawesome/free-solid-svg-icons'
 import type { Goal } from '@/services/api/goal/goal.models'
 import { useCurrency } from '@/composables/useCurrency'
@@ -334,6 +407,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    pageNumber: { type: Number, default: 1 },
+    pageSize: { type: Number, default: 10 },
+    totalCount: { type: Number, default: 0 },
+    totalPages: { type: Number, default: 0 },
   },
 
   setup() {
@@ -343,9 +420,12 @@ export default {
   data() {
     return {
       actionIcons,
+      arrowIcons,
+      paginationIcons,
       emptyStateIcon: faBullseye,
       searchQuery: '' as string,
       statusFilter: '' as string,
+      pageSizeOptions: [5, 10, 25, 50, 100],
       newGoal: {
         name: '' as string,
         targetAmount: 0 as number,
@@ -385,12 +465,39 @@ export default {
     isTableEmpty(): boolean {
       return this.filteredGoals.length === 0
     },
+    displayedPages(): number[] {
+      const maxVisiblePages = 5
+      const halfVisible = Math.floor(maxVisiblePages / 2)
+      let startPage = Math.max(1, this.pageNumber - halfVisible)
+      const endPage = Math.min(startPage + maxVisiblePages - 1, this.totalPages)
+      if (this.totalPages - endPage < halfVisible) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1)
+      }
+      const pages = []
+      for (let i = startPage; i <= endPage; i++) pages.push(i)
+      return pages
+    },
+    showEllipsis(): boolean {
+      return (
+        this.displayedPages.length > 0 &&
+        this.displayedPages[this.displayedPages.length - 1] < this.totalPages - 1
+      )
+    },
+    showLastPage(): boolean {
+      return (
+        this.displayedPages.length > 0 &&
+        this.displayedPages[this.displayedPages.length - 1] < this.totalPages
+      )
+    },
   },
 
   methods: {
     t(key: keyof typeof goalsTexts.English) {
       const texts = goalsTexts[this.selectedLanguage as 'English' | 'Turkish']
       return (texts as Record<string, string>)[key] ?? key
+    },
+    changePage(p: number) {
+      if (p >= 1 && p <= this.totalPages) this.$emit('changePage', p)
     },
     formatAmount(val: number): string {
       if (val == null || Number.isNaN(val)) return '0.00'
@@ -692,7 +799,7 @@ export default {
 
   .table-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 6rem 6rem 5rem minmax(5rem, 1fr) 5.5rem;
+    grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 5rem minmax(6rem, 1fr) 5.5rem;
     gap: 1rem;
     padding: 0.6rem 1rem;
     border-bottom: 1px solid var(--border-color);
@@ -711,11 +818,113 @@ export default {
 
   .table-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 6rem 6rem 5rem minmax(5rem, 1fr) 5.5rem;
+    grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 5rem minmax(6rem, 1fr) 5.5rem;
     gap: 1rem;
     padding: 0.7rem 1rem;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
+  }
+
+  .pagination-bar {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 1rem 0 0;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+
+    .pagination-results {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--normal-text-color);
+      white-space: nowrap;
+    }
+    .pagination-results-icon {
+      color: var(--header-text-color);
+      font-size: 0.875rem;
+    }
+    .page-size-select-premium {
+      :deep(.select-trigger) {
+        padding: 0;
+        border: none;
+        background: transparent;
+        height: auto;
+        min-width: 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--header-text-color);
+        gap: 0.25rem;
+
+        &:hover {
+          background: transparent;
+          color: var(--primary-green-color);
+        }
+
+        .select-icon {
+          font-size: 0.65rem;
+        }
+      }
+    }
+    .pagination-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .pagination-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      border: 1px solid var(--primary-green-color);
+      border-radius: var(--border-radius);
+      background-color: var(--primary-green-color);
+      color: white;
+      cursor: pointer;
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .arrow-icon {
+        font-size: 0.65rem;
+      }
+    }
+    .pagination-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.75rem;
+      height: 1.75rem;
+      padding: 0 0.4rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background-color: var(--background-color);
+      color: var(--header-text-color);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      &.active {
+        background-color: var(--primary-green-color);
+        border-color: var(--primary-green-color);
+        color: white;
+      }
+    }
+  }
+
+  .results-skeleton {
+    width: 120px;
+    height: 1.25rem;
+    border-radius: 4px;
+  }
+
+  .nav-skeleton {
+    width: 180px;
+    height: 1.75rem;
+    border-radius: var(--border-radius);
   }
 
   .col {

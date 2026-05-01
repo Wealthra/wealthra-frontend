@@ -283,7 +283,7 @@ export default {
       confirmPassword: string
     ) {
       try {
-        await accountService.apiRegister({
+        await accountService.register({
           firstName,
           lastName,
           email,

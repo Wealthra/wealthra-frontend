@@ -3,55 +3,78 @@
     <div class="split-layout">
       <!-- Manual Rates -->
       <div class="panel glass-card">
-        <h3>Manual FX Rates</h3>
+        <div class="panel-header">
+          <font-awesome-icon icon="money-bill-transfer" />
+          <h3>Manual FX Rates</h3>
+        </div>
         <form @submit.prevent="handleSaveManualRate" class="inline-form">
           <div class="form-group">
-            <input v-model="newRate.currencyPair" placeholder="Pair (e.g. USD-EUR)" required />
+            <input v-model="newRate.fromCurrency" placeholder="From (USD)" required />
+          </div>
+          <div class="form-group">
+            <input v-model="newRate.toCurrency" placeholder="To (EUR)" required />
           </div>
           <div class="form-group">
             <input v-model.number="newRate.rate" type="number" step="0.0001" placeholder="Rate" required />
           </div>
-          <button type="submit" class="save-btn" :disabled="isSavingRate">Save</button>
+          <button type="submit" class="save-btn" :disabled="isSavingRate">
+            <font-awesome-icon v-if="isSavingRate" icon="spinner" spin />
+            <font-awesome-icon v-else icon="plus" />
+          </button>
         </form>
 
-        <div v-if="isLoadingRates" class="loading">Loading...</div>
-        <table v-else class="data-table">
-          <thead>
-            <tr>
-              <th>Pair</th>
-              <th>Rate</th>
-              <th>Last Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="rate in manualRates" :key="rate.currencyPair">
-              <td>{{ rate.currencyPair }}</td>
-              <td>{{ rate.rate }}</td>
-              <td>{{ new Date(rate.lastUpdated).toLocaleString() }}</td>
-            </tr>
-            <tr v-if="manualRates.length === 0">
-              <td colspan="3" class="no-data">No manual rates configured.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-if="isLoadingRates" class="loading">
+          <UISkeletonLoader v-for="i in 5" :key="i" height="40px" style="margin-bottom: 8px" />
+        </div>
+        <div v-else class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>From</th>
+                <th>To</th>
+                <th>Rate</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="rate in manualRates" :key="rate.id">
+                <td><span class="currency-tag">{{ rate.fromCurrency }}</span></td>
+                <td><span class="currency-tag">{{ rate.toCurrency }}</span></td>
+                <td class="rate-value">{{ rate.rate.toFixed(4) }}</td>
+                <td class="date-cell">{{ formatDate(rate.updatedOn) }}</td>
+              </tr>
+              <tr v-if="manualRates.length === 0">
+                <td colspan="4" class="no-data">No manual rates configured.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Provider Priority -->
       <div class="panel glass-card">
-        <h3>Provider Priority Order</h3>
-        <p class="desc">Drag to reorder or update as comma-separated list.</p>
+        <div class="panel-header">
+          <font-awesome-icon icon="server" />
+          <h3>Provider Priority Order</h3>
+        </div>
+        <p class="desc">JSON configuration for FX provider fallback sequence.</p>
         
         <form @submit.prevent="handleUpdateProviders" class="full-form">
           <div class="form-group">
-            <textarea 
-              v-model="providerOrderStr" 
-              rows="4" 
-              placeholder="e.g. OpenExchangeRates, Fixer, Manual"
-            ></textarea>
+            <div class="editor-wrapper">
+              <textarea 
+                v-model="providerOrderJson" 
+                rows="8" 
+                placeholder='["OpenExchangeRates", "Fixer", "Manual"]'
+                spellcheck="false"
+              ></textarea>
+            </div>
           </div>
           <div class="actions">
             <button type="submit" class="save-btn" :disabled="isSavingProviders">
-              {{ isSavingProviders ? 'Saving...' : 'Update Order' }}
+              <font-awesome-icon v-if="isSavingProviders" icon="spinner" spin />
+              <font-awesome-icon v-else icon="save" />
+              {{ isSavingProviders ? 'Saving...' : 'Update Config' }}
             </button>
           </div>
         </form>
@@ -63,17 +86,19 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue'
 import { adminService } from '@/services/api/admin/admin.service'
-import type { FxRate } from '@/services/api/admin/admin.models'
+import type { FxRate, CreateFxRateRequest } from '@/services/api/admin/admin.models'
+import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 
 export default defineComponent({
   name: 'AdminFxControls',
+  components: { UISkeletonLoader },
   setup() {
     const manualRates = ref<FxRate[]>([])
     const isLoadingRates = ref(true)
     const isSavingRate = ref(false)
-    const newRate = ref<Partial<FxRate>>({ currencyPair: '', rate: 1 })
+    const newRate = ref<CreateFxRateRequest>({ fromCurrency: '', toCurrency: '', rate: 1.0 })
 
-    const providerOrderStr = ref('')
+    const providerOrderJson = ref('')
     const isSavingProviders = ref(false)
 
     const fetchRates = async () => {
@@ -89,22 +114,22 @@ export default defineComponent({
     const fetchProviders = async () => {
       try {
         const order = await adminService.getProviderOrder()
-        providerOrderStr.value = order.join(', ')
+        providerOrderJson.value = order
       } catch (err) {
         console.error(err)
       }
     }
 
     const handleSaveManualRate = async () => {
-      if (!newRate.value.currencyPair || !newRate.value.rate) return
+      if (!newRate.value.fromCurrency || !newRate.value.toCurrency || !newRate.value.rate) return
       isSavingRate.value = true
       try {
         await adminService.setManualRate({
-          currencyPair: newRate.value.currencyPair.toUpperCase(),
-          rate: newRate.value.rate,
-          lastUpdated: new Date().toISOString()
+          fromCurrency: newRate.value.fromCurrency.toUpperCase(),
+          toCurrency: newRate.value.toCurrency.toUpperCase(),
+          rate: newRate.value.rate
         })
-        newRate.value = { currencyPair: '', rate: 1 }
+        newRate.value = { fromCurrency: '', toCurrency: '', rate: 1.0 }
         await fetchRates()
       } catch (err) {
         alert('Failed to save manual rate')
@@ -116,15 +141,18 @@ export default defineComponent({
     const handleUpdateProviders = async () => {
       isSavingProviders.value = true
       try {
-        const orderArray = providerOrderStr.value.split(',').map(s => s.trim()).filter(Boolean)
-        await adminService.updateProviderOrder(orderArray)
+        await adminService.updateProviderOrder(providerOrderJson.value)
         await fetchProviders()
         alert('Provider order updated successfully')
       } catch (err) {
-        alert('Failed to update provider order')
+        alert('Failed to update provider order. Ensure valid JSON.')
       } finally {
         isSavingProviders.value = false
       }
+    }
+
+    const formatDate = (dateStr: string) => {
+      return new Date(dateStr).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
     }
 
     onMounted(() => {
@@ -137,10 +165,11 @@ export default defineComponent({
       isLoadingRates,
       isSavingRate,
       newRate,
-      providerOrderStr,
+      providerOrderJson,
       isSavingProviders,
       handleSaveManualRate,
-      handleUpdateProviders
+      handleUpdateProviders,
+      formatDate
     }
   }
 })
@@ -153,81 +182,85 @@ export default defineComponent({
   gap: 24px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .split-layout {
     grid-template-columns: 1fr;
   }
 }
 
 .panel {
-  padding: 24px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
   
-  h3 {
-    margin-top: 0;
-    margin-bottom: 16px;
-    font-size: 18px;
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    color: var(--primary-green-color);
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--header-text-color);
+    }
   }
 
   .desc {
     font-size: 13px;
     color: var(--normal-text-color);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    opacity: 0.8;
   }
 }
 
 .inline-form {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 
   .form-group {
-    flex-grow: 1;
+    flex: 1;
     input {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: var(--background-color-soft);
       color: var(--header-text-color);
+      font-size: 14px;
+      
+      &:focus {
+        border-color: var(--primary-green-color);
+        outline: none;
+      }
     }
   }
-}
 
-.full-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  textarea {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--background-color-soft);
-    color: var(--header-text-color);
-    font-family: monospace;
-    resize: vertical;
-  }
-
-  .actions {
+  .save-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-green-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+
+    &:hover { transform: scale(1.05); }
+    &:disabled { opacity: 0.7; cursor: not-allowed; }
   }
 }
 
-.save-btn {
-  background: var(--primary-green-color);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
+.table-wrapper {
+  overflow-x: auto;
 }
 
 .data-table {
@@ -241,19 +274,97 @@ export default defineComponent({
   }
 
   th {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
+    font-weight: 800;
     color: var(--normal-text-color);
+    letter-spacing: 0.05em;
   }
 
   td {
     font-size: 14px;
+    color: var(--header-text-color);
   }
+
+  .currency-tag {
+    background: var(--background-color-soft);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  .rate-value {
+    font-family: monospace;
+    font-weight: 500;
+    color: var(--primary-green-color);
+  }
+
+  .date-cell {
+    font-size: 12px;
+    color: var(--normal-text-color);
+    opacity: 0.8;
+  }
+}
+
+.full-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+
+  .editor-wrapper {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+  }
+
+  textarea {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    color: #e0e0e0;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    border: none;
+    resize: none;
+    line-height: 1.6;
+    
+    &:focus { outline: none; }
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    
+    .save-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+      background: var(--primary-green-color);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      
+      &:hover { transform: translateY(-1px); }
+      &:disabled { opacity: 0.7; }
+    }
+  }
+}
+
+.loading {
+  padding: 20px 0;
 }
 
 .no-data {
   text-align: center;
   color: var(--normal-text-color);
-  padding: 24px !important;
+  padding: 40px !important;
+  font-style: italic;
 }
 </style>

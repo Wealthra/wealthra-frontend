@@ -13,6 +13,7 @@ const BudgetView = () => import('../modules/budget/page/BudgetView.vue')
 const ExpensesView = () => import('../modules/expenses/page/ExpensesView.vue')
 const IncomeView = () => import('../modules/income/page/IncomeView.vue')
 const GoalsView = () => import('../modules/goals/page/GoalsView.vue')
+const TicketsView = () => import('../modules/tickets/page/TicketsView.vue')
 const SettingsView = () => import('../modules/settings/page/SettingsView.vue')
 const RecommendationsView = () => import('../modules/recommendations/page/RecommendationsView.vue')
 const NotificationsView = () => import('../modules/notifications/page/NotificationsView.vue')
@@ -63,6 +64,7 @@ const router = createRouter({
         { path: 'expenses', name: 'expenses', component: ExpensesView },
         { path: 'income', name: 'income', component: IncomeView },
         { path: 'goals', name: 'goals', component: GoalsView },
+        { path: 'tickets', name: 'tickets', component: TicketsView },
         { path: 'settings', name: 'settings', component: SettingsView },
         { path: 'recommendations', name: 'recommendations', component: RecommendationsView },
         { path: 'notifications', name: 'notifications', component: NotificationsView },

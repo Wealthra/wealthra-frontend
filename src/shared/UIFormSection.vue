@@ -85,29 +85,35 @@ export default defineComponent({
   .ui-input {
     display: flex;
     width: 100%;
-    height: 2.5rem;
+    height: 2.2rem;
     background-color: var(--input-background-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: var(--reverse-border-color);
+    }
 
     &.border-state-true {
-      border-color: var(--reverse-border-color);
-      transition: border-color 0.3s ease-in-out;
+      border-color: var(--primary-blue-color);
+      box-shadow: 0 0 0 3px rgba(var(--primary-blue-rgb), 0.1);
     }
+
     .ui-logo-wrapper {
       display: flex;
       justify-content: center;
       align-items: center;
-      min-width: 2.5rem;
+      min-width: 2.2rem;
 
       .ui-logo {
-        padding: 0 0.4rem;
-        border-right: 1px solid var(--border-color);
-        height: 1.2rem;
+        height: 0.9rem;
+        opacity: 0.6;
+        transition: all 0.2s ease;
+
         &.border-state-true {
-          border-right: 1px solid var(--reverse-border-color);
-          filter: invert(var(--filter));
-          transition: all 0.3s ease-in-out;
+          opacity: 1;
+          color: var(--primary-blue-color);
         }
       }
     }
@@ -121,11 +127,16 @@ export default defineComponent({
       .ui-input-field {
         width: 100%;
         height: 100%;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: var(--header-text-color);
         background-color: transparent;
         border: none;
-        padding: 0 0.4rem;
+        padding: 0 0.2rem;
+
+        &::placeholder {
+          font-size: 0.8rem;
+          opacity: 0.5;
+        }
 
         &:focus {
           outline: none;
@@ -136,14 +147,21 @@ export default defineComponent({
         display: flex;
         justify-content: center;
         align-items: center;
-        min-width: 2.5rem;
+        min-width: 2.2rem;
         cursor: pointer;
 
         .eye-icon {
-          height: 1.2rem;
+          height: 0.9rem;
+          opacity: 0.6;
+          transition: all 0.2s ease;
+
+          &:hover {
+            opacity: 1;
+          }
+
           &.border-state-true {
-            filter: invert(var(--filter));
-            transition: all 0.3s ease-in-out;
+            opacity: 1;
+            color: var(--primary-blue-color);
           }
         }
       }
@@ -153,27 +171,25 @@ export default defineComponent({
 
 @media (max-width: 768px) {
   .ui-form-c .ui-input {
-    height: 2.2rem;
+    height: 2rem;
 
     .ui-logo-wrapper {
-      min-width: 2.2rem;
+      min-width: 2rem;
 
       .ui-logo {
-        height: 1rem;
+        height: 0.8rem;
       }
     }
 
     .ui-input-wrapper .ui-input-field {
       font-size: 0.8rem;
-      padding: 0 0.2rem;
     }
 
     .ui-input-wrapper .eye-icon-wrapper {
-      padding: 0.2rem;
-      min-width: 2.2rem;
+      min-width: 2rem;
 
       .eye-icon {
-        height: 1rem;
+        height: 0.8rem;
       }
     }
   }

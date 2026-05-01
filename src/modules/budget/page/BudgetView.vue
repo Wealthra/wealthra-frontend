@@ -1,33 +1,42 @@
 <template>
   <div class="budget-content">
-    <BudgetOverviewComponent
-      :selectedLanguage="selectedLanguage"
-      :loading="isLoading"
-      :currentAmount="overviewTotalSpent"
-      :limitAmount="overviewTotalLimit"
-    />
+      <BudgetOverviewComponent
+        :selectedLanguage="selectedLanguage"
+        :loading="isLoading"
+        :currentAmount="overviewTotalSpent"
+        :limitAmount="overviewTotalLimit"
+        @showAnalysis="isBreakdownOpen = true"
+      />
 
-    <div class="budget-categories-notifications">
-      <div class="budget-table-wrap">
-        <UIBudgetTableComponent
-          :loading="isLoading"
-          :budgets="budgets"
-          :categories="categories"
-          :selectedLanguage="selectedLanguage"
-          @createBudget="handleCreateBudget"
-          @updateBudget="handleUpdateBudget"
-          @deleteBudget="handleDeleteBudget"
-          @categoriesUpdated="fetchCategories"
-        />
+      <div class="budget-categories-notifications">
+        <div class="budget-table-wrap">
+          <UIBudgetTableComponent
+            :loading="isLoading"
+            :budgets="budgets"
+            :categories="categories"
+            :selectedLanguage="selectedLanguage"
+            @createBudget="handleCreateBudget"
+            @updateBudget="handleUpdateBudget"
+            @deleteBudget="handleDeleteBudget"
+            @categoriesUpdated="fetchCategories"
+          />
+        </div>
       </div>
-    </div>
+
+      <UIBudgetMonthlyBreakdown
+        :isOpen="isBreakdownOpen"
+        :loading="isLoading"
+        :breakdown="monthlyBreakdown"
+        :selectedLanguage="selectedLanguage"
+        @close="isBreakdownOpen = false"
+      />
   </div>
 </template>
 
 <script lang="ts">
 // Types
 import type { FinancialData } from '@/interfaces/FinancialData'
-import type { BudgetApiModel } from '@/services/api/budget/budget.models'
+import type { BudgetApiModel, BudgetMonthlyCategoryBreakdownItem } from '@/services/api/budget/budget.models'
 import type { Category } from '@/services/api/category/category.models'
 
 // Utilities
@@ -40,6 +49,7 @@ import { useCurrency } from '@/composables/useCurrency'
 // Budget Components
 import BudgetOverviewComponent from '@/modules/budget/components/BudgetOverviewComponent.vue'
 import UIBudgetTableComponent from '@/modules/budget/components/UIBudgetTableComponent.vue'
+import UIBudgetMonthlyBreakdown from '@/modules/budget/components/UIBudgetMonthlyBreakdown.vue'
 
 export default {
   name: 'BudgetView',
@@ -52,6 +62,7 @@ export default {
   components: {
     BudgetOverviewComponent,
     UIBudgetTableComponent,
+    UIBudgetMonthlyBreakdown,
   },
   setup() {
     const { currency } = useCurrency()
@@ -62,17 +73,19 @@ export default {
       financialData: {} as FinancialData,
       budgetTexts: budgetTexts,
       isLoading: false,
+      isBreakdownOpen: false,
       hasError: false,
       overviewTotalSpent: 0,
       overviewTotalLimit: 0,
       budgets: [] as BudgetApiModel[],
+      monthlyBreakdown: [] as BudgetMonthlyCategoryBreakdownItem[],
       categories: [] as Category[],
     }
   },
   methods: {
     async fetchOverview() {
       try {
-        const data = await budgetService.apiGetBudgetsOverview()
+        const data = await budgetService.getBudgetsOverview()
         this.overviewTotalSpent = data.totalSpent ?? 0
         this.overviewTotalLimit = data.totalLimit ?? 0
       } catch {
@@ -83,16 +96,25 @@ export default {
 
     async fetchBudgets() {
       try {
-        const data = await budgetService.apiGetBudgets()
+        const data = await budgetService.getBudgets()
         this.budgets = data ?? []
       } catch {
         console.error('Error fetching budgets')
       }
     },
 
+    async fetchMonthlyBreakdown() {
+      try {
+        const data = await budgetService.getBudgetsMonthly()
+        this.monthlyBreakdown = data.categoryBreakdown ?? []
+      } catch {
+        console.error('Error fetching monthly breakdown')
+      }
+    },
+
     async fetchCategories() {
       try {
-        const data = await categoryService.apiGetCategories()
+        const data = await categoryService.getCategories()
         this.categories = (data ?? []).map(c => ({
           id: c.id,
           name: c.categoryName,
@@ -104,7 +126,7 @@ export default {
 
     async handleCreateBudget(payload: { categoryId: number; limitAmount: number }) {
       try {
-        await budgetService.apiCreateBudget({ ...payload, currency: this.currency })
+        await budgetService.createBudget({ ...payload, currency: this.currency })
         this.loadAppropriateData()
       } catch (error) {
         console.error('Error creating budget:', error)
@@ -113,7 +135,7 @@ export default {
 
     async handleUpdateBudget(id: number, limitAmount: number) {
       try {
-        await budgetService.apiUpdateBudget(id, limitAmount, this.currency)
+        await budgetService.updateBudget(id, limitAmount, this.currency)
         this.loadAppropriateData()
       } catch (error) {
         console.error('Error updating budget:', error)
@@ -122,7 +144,7 @@ export default {
 
     async handleDeleteBudget(id: number) {
       try {
-        await budgetService.apiDeleteBudget(id)
+        await budgetService.deleteBudget(id)
         this.loadAppropriateData()
       } catch (error) {
         console.error('Error deleting budget:', error)
@@ -137,6 +159,7 @@ export default {
         await Promise.all([
           this.fetchOverview(),
           this.fetchBudgets(),
+          this.fetchMonthlyBreakdown(),
           this.fetchCategories(),
         ])
       } finally {

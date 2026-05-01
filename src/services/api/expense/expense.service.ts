@@ -11,55 +11,6 @@ import type {
 } from './expense.models'
 
 export const expenseService = {
-  async getExpenses(
-    pageNumber: number = 1,
-    pageSize: number = 10
-  ): Promise<PaginatedExpensesResponse> {
-    return apiRequest<PaginatedExpensesResponse>(
-      `Expenses?PageNumber=${pageNumber}&PageSize=${pageSize}`,
-      {
-        method: 'GET',
-      }
-    )
-  },
-
-  async createExpense(expenseData: CreateExpenseRequest): Promise<void> {
-    return apiRequest<void>('Expenses', {
-      method: 'POST',
-      body: expenseData,
-    })
-  },
-
-  async getExpenseById(id: number): Promise<Expense> {
-    return apiRequest<Expense>(`Expenses/${id}`, {
-      method: 'GET',
-    })
-  },
-
-  async updateExpense(id: number, expenseData: UpdateExpenseRequest): Promise<void> {
-    return apiRequest<void>(`Expenses/${id}`, {
-      method: 'PUT',
-      body: expenseData,
-    })
-  },
-
-  async deleteExpense(id: number): Promise<void> {
-    return apiRequest<void>(`Expenses/${id}`, {
-      method: 'DELETE',
-    })
-  },
-
-  async getUserExpenses(
-    pageNumber: number = 1,
-    pageSize: number = 10
-  ): Promise<PaginatedExpensesResponse> {
-    return apiRequest<PaginatedExpensesResponse>(
-      `Expenses/user?pageNumber=${pageNumber}&pageSize=${pageSize}`,
-      {
-        method: 'GET',
-      }
-    )
-  },
 
   async getExpenseGeneralInfo(currency?: string): Promise<ExpenseGeneralInfoApiResponse> {
     const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
@@ -68,22 +19,10 @@ export const expenseService = {
     })
   },
 
-  async getExpensesByCategory(
-    categoryId: number,
-    pageNumber: number = 1,
-    pageSize: number = 10
-  ): Promise<PaginatedExpensesResponse> {
-    return apiRequest<PaginatedExpensesResponse>(
-      `Expenses/category/${categoryId}/user?pageNumber=${pageNumber}&pageSize=${pageSize}`,
-      {
-        method: 'GET',
-      }
-    )
-  },
 
   // /api/Expenses endpoints (paginated list, CRUD, summary)
 
-  async apiGetExpenses(params: {
+  async getExpenses(params: {
     StartDate?: string
     EndDate?: string
     CategoryId?: number
@@ -105,33 +44,55 @@ export const expenseService = {
     })
   },
 
-  async apiCreateExpense(data: CreateExpenseRequest): Promise<number> {
+  async getExpensesUser(params: {
+    StartDate?: string
+    EndDate?: string
+    CategoryId?: number
+    PageNumber?: number
+    PageSize?: number
+  } = {}): Promise<ExpensesApiListResponse> {
+    const searchParams = new URLSearchParams()
+    if (params.StartDate) searchParams.append('startDate', params.StartDate)
+    if (params.EndDate) searchParams.append('endDate', params.EndDate)
+    if (params.CategoryId != null) searchParams.append('categoryId', String(params.CategoryId))
+    if (params.PageNumber != null) searchParams.append('pageNumber', String(params.PageNumber))
+    if (params.PageSize != null) searchParams.append('pageSize', String(params.PageSize))
+
+    const query = searchParams.toString()
+    const endpoint = query ? `Expenses/user?${query}` : 'Expenses/user'
+
+    return apiRequest<ExpensesApiListResponse>(endpoint, {
+      method: 'GET',
+    })
+  },
+
+  async createExpense(data: CreateExpenseRequest): Promise<number> {
     return apiRequest<number>('Expenses', {
       method: 'POST',
       body: data,
     })
   },
 
-  async apiGetExpenseById(id: number): Promise<ExpenseApiModel> {
+  async getExpenseById(id: number): Promise<ExpenseApiModel> {
     return apiRequest<ExpenseApiModel>(`Expenses/${id}`, {
       method: 'GET',
     })
   },
 
-  async apiUpdateExpense(id: number, data: Omit<ExpenseApiModel, 'id'>): Promise<void> {
+  async updateExpense(id: number, data: Omit<ExpenseApiModel, 'id'>): Promise<void> {
     return apiRequest<void>(`Expenses/${id}`, {
       method: 'PUT',
       body: { id, ...data },
     })
   },
 
-  async apiDeleteExpense(id: number): Promise<void> {
+  async deleteExpense(id: number): Promise<void> {
     return apiRequest<void>(`Expenses/${id}`, {
       method: 'DELETE',
     })
   },
 
-  async apiGetExpenseSummary(period: string = 'Monthly', currency?: string): Promise<ExpenseSummaryResponse> {
+  async getExpenseSummary(period: string = 'Monthly', currency?: string): Promise<ExpenseSummaryResponse> {
     const params = new URLSearchParams({ period })
     if (currency) params.append('currency', currency)
     return apiRequest<ExpenseSummaryResponse>(`Expenses/summary?${params.toString()}`, {

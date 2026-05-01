@@ -11,7 +11,9 @@ export interface ApiRequestOptions {
 }
 
 export interface ApiError {
-  message: string
+  message?: string
+  detail?: string
+  title?: string
   errors?: string[]
   status: number
 }
@@ -108,7 +110,7 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
     }
 
     throw new ApiErrorException(
-      errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+      errorData.detail || errorData.message || errorData.title || `HTTP ${response.status}: ${response.statusText}`,
       response.status,
       errorData.errors
     )

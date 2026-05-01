@@ -7,12 +7,12 @@
       </div>
       <div class="input-group">
         <label>{{ t.selectPlan }}</label>
-        <select v-model="selectedPlanId">
-          <option :value="0" disabled>{{ t.choosePlan }}</option>
-          <option v-for="plan in plans" :key="plan.id" :value="plan.id">
-            {{ plan.name }} (ID: {{ plan.id }})
-          </option>
-        </select>
+        <UISelect 
+          v-model="selectedPlanId" 
+          :options="planOptions" 
+          :placeholder="t.choosePlan"
+          :searchable="true"
+        />
       </div>
       <button class="assign-btn" @click="handleAssign" :disabled="!isValid || isSubmitting">
         <font-awesome-icon :icon="isSubmitting ? 'spinner' : 'check'" :spin="isSubmitting" />
@@ -25,12 +25,14 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue'
+import UISelect from '@/components/UISelect.vue'
 import type { PropType } from 'vue'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
 import type { AdminPlan } from '@/services/api/adminPlans/adminPlans.models'
 
 export default defineComponent({
   name: 'AdminUserAssignment',
+  components: { UISelect },
   props: {
     plans: {
       type: Array as PropType<AdminPlan[]>,
@@ -51,6 +53,13 @@ export default defineComponent({
 
     const isValid = computed(() => {
       return email.value.includes('@') && selectedPlanId.value !== 0
+    })
+
+    const planOptions = computed(() => {
+      return props.plans.map(plan => ({
+        label: `${plan.name} (ID: ${plan.id})`,
+        value: plan.id
+      }))
     })
 
     const t = computed(() => {
@@ -79,9 +88,9 @@ export default defineComponent({
         email.value = ''
         selectedPlanId.value = 0
         emit('assigned')
-      } catch (error) {
+      } catch (error: any) {
         isError.value = true
-        message.value = t.value.errorMsg
+        message.value = error.message || t.value.errorMsg
       } finally {
         isSubmitting.value = false
       }
@@ -94,6 +103,7 @@ export default defineComponent({
       message,
       isError,
       isValid,
+      planOptions,
       t,
       handleAssign
     }
@@ -119,7 +129,7 @@ export default defineComponent({
 
     label {
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--normal-text-color);
     }
 
@@ -146,7 +156,7 @@ export default defineComponent({
     border: none;
     background: var(--primary-green-color);
     color: white;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     display: flex;
     align-items: center;

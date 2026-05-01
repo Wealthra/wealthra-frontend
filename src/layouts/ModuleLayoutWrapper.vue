@@ -27,6 +27,7 @@ const ROUTE_NAME_TO_PAGE: Record<string, { en: string; tr: string }> = {
   recommendations: { en: 'Recommendations', tr: 'Öneriler' },
   admin: { en: 'Admin', tr: 'Yönetici' },
   notifications: { en: 'Notifications', tr: 'Bildirimler' },
+  tickets: { en: 'Tickets', tr: 'Destek' },
 }
 
 export default defineComponent({

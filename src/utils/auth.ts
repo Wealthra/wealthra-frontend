@@ -49,6 +49,17 @@ export function clearAuth(): void {
   localStorage.removeItem('is_admin')
 }
 
+export async function logout(): Promise<void> {
+  try {
+    const { accountService } = await import('../services/api/account/account.service')
+    await accountService.revokeToken()
+  } catch (err) {
+    console.error('Failed to revoke token during logout:', err)
+  } finally {
+    clearAuth()
+  }
+}
+
 export function getAuthenticatedURL(route: string = '/dashboard'): string {
   const token = getAuthToken()
   if (!token) return '/'

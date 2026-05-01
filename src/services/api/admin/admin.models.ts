@@ -3,100 +3,142 @@ export interface AdminUser {
   email: string;
   firstName: string;
   lastName: string;
-  isActive: boolean;
-  isLocked: boolean;
-  lockoutEnd?: string;
+  subscriptionTier: number;
+  subscriptionPlanId: number;
+  planName: string;
+  lastLoginDate: string;
+  lockoutEnabled: boolean;
+  lockoutEnd: string | null;
+  emailConfirmed: boolean;
+  accessFailedCount: number;
   roles: string[];
+}
+
+export interface AdminUserDetails extends AdminUser {
+  avatarUrl: string | null;
   createdAt: string;
+  preferredCurrency: string;
 }
 
 export interface AdminAnnouncement {
   id: number;
-  title: string;
-  message: string;
-  type: string;
-  isActive: boolean;
-  createdAt: string;
-  expiresAt?: string;
+  titleEn: string;
+  titleTr: string;
+  bodyEn: string;
+  bodyTr: string;
+  severity: number;
+  startsAt: string;
+  endsAt: string;
+  targetAllSubscribers: boolean;
+  targetPlanIdsJson: string | null;
+  targetTiersJson: string | null;
+  isPublished: boolean;
 }
 
 export interface CreateAnnouncementRequest {
-  title: string;
-  message: string;
-  type: string;
-  expiresAt?: string;
+  titleEn: string;
+  titleTr: string;
+  bodyEn: string;
+  bodyTr: string;
+  severity: number;
+  startsAt: string;
+  endsAt: string;
+  targetAllSubscribers: boolean;
+  targetPlanIdsJson: string | null;
+  targetTiersJson: string | null;
+  isPublished: boolean;
 }
 
 export interface AdminAiSettings {
-  modelName: string;
-  maxTokens: number;
-  temperature: number;
-  systemPrompt: string;
-  isEnabled: boolean;
+  enrichmentModel: string;
+  defaultChatModel: string;
 }
 
 export interface RevenueAnalytics {
-  totalRevenue: number;
-  monthlyRevenue: number;
-  activeSubscriptions: number;
+  monthlyRecurringRevenue: number;
+  mrrCurrency: string;
+  payingSubscribers: number;
+  averageRevenuePerUser: number;
 }
 
 export interface GrowthAnalytics {
-  newUsersToday: number;
-  newUsersThisWeek: number;
-  newUsersThisMonth: number;
-  churnRate: number;
+  dauYesterday: number;
+  mauLast30Days: number;
+  churnRatioLast30Days: number;
+  dailyActiveSeries: Array<{
+    date: string;
+    activeUsers: number;
+  }>;
+  featureTotalsLast30Days: {
+    totalOcr: number;
+    totalStt: number;
+    totalCopilot: number;
+  };
 }
 
 export interface ErrorLog {
   id: number;
-  message: string;
-  source: string;
-  endpoint: string;
-  timestamp: string;
+  statusCode: number;
+  path: string;
+  method: string;
   userId: string;
+  exceptionType: string;
+  message: string;
+  correlationId: string;
+  createdUtc: string;
 }
 
 export interface Paginated<T> {
   items: T[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
+  pageNumber: number;
   totalPages: number;
+  totalCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export interface AdminAuditLog {
   id: number;
-  actorEmail: string;
+  actorUserId: string;
   action: string;
-  resource: string;
-  timestamp: string;
-  details: string;
+  targetUserId: string;
+  detailsJson: string;
+  ipAddress: string;
+  createdUtc: string;
 }
 
 export interface AiUsageSummary {
-  date: string;
-  totalTokens: number;
-  totalCost: number;
-  requests: number;
+  totalPromptTokens: number;
+  totalCompletionTokens: number;
+  totalEstimatedCostUsd: number;
+  requestCount: number;
 }
 
 export interface FxRate {
-  currencyPair: string;
+  id: number;
+  fromCurrency: string;
+  toCurrency: string;
   rate: number;
-  lastUpdated: string;
+  updatedOn: string;
 }
 
-export interface SupportTicket {
-  id: number;
-  userEmail: string;
-  subject: string;
-  status: string;
-  createdAt: string;
+export interface CreateFxRateRequest {
+  fromCurrency: string;
+  toCurrency: string;
+  rate: number;
 }
 
 export interface BlockedIp {
-  ip: string;
+  id: number;
+  ipAddress: string;
   reason: string;
-  blockedAt: string;
+  createdUtc: string;
+  expiresUtc: string;
 }
+
+export interface CreateBlockedIpRequest {
+  ipAddress: string;
+  reason: string;
+  expiresUtc: string;
+}
+

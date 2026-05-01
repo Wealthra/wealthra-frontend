@@ -12,6 +12,7 @@
         <!-- Overview Tab -->
         <div v-if="activeTab === 'overview'" class="tab-pane overview-pane">
           <section id="usage-summary" class="admin-section full-height">
+
             <AdminUsageSummary 
               v-if="usageSummary"
               :summary="usageSummary" 
@@ -24,7 +25,7 @@
         <div v-if="activeTab === 'users'" class="tab-pane">
           <section id="users" class="admin-section">
             <div class="section-header">
-              <h2>{{ t.userManagement }}</h2>
+              <h2>{{ t.usageSummary }}</h2>
             </div>
             <div class="glass-card">
               <AdminUserManagementTable 
@@ -33,20 +34,6 @@
               />
             </div>
           </section>
-
-          <section id="assignments" class="admin-section mt-8">
-            <div class="section-header">
-              <h2>{{ t.assignments }}</h2>
-            </div>
-            <div class="glass-card">
-              <AdminUserAssignment 
-                :plans="plans" 
-                :selectedLanguage="selectedLanguage"
-                @assigned="fetchData"
-              />
-            </div>
-          </section>
-
           <section id="plans" class="admin-section mt-8">
             <div class="section-header">
               <h2>{{ t.plans }}</h2>
@@ -125,7 +112,6 @@
       </div>
     </template>
 
-    <!-- Plan Modal (for Create/Edit) -->
     <UIPlanModal 
       v-if="isPlanModalOpen" 
       :plan="selectedPlan" 
@@ -133,6 +119,28 @@
       @close="closePlanModal"
       @save="handleSavePlan"
     />
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="planToDelete !== null" class="modal-overlay" @click.self="planToDelete = null">
+      <div class="modal-content glass-card delete-confirm-modal">
+        <div class="modal-header">
+          <h3>{{ t.confirmDeleteTitle }}</h3>
+          <button class="close-btn" @click="planToDelete = null">
+            <font-awesome-icon icon="xmark" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>{{ t.confirmDeleteMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" @click="planToDelete = null">{{ t.cancel }}</button>
+          <button class="confirm-delete-btn" @click="confirmDeletePlan" :disabled="isDeleting">
+            <font-awesome-icon v-if="isDeleting" icon="spinner" spin />
+            {{ isDeleting ? t.deleting : t.delete }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -197,6 +205,8 @@ export default defineComponent({
     
     const isPlanModalOpen = ref(false)
     const selectedPlan = ref<AdminPlan | null>(null)
+    const planToDelete = ref<number | null>(null)
+    const isDeleting = ref(false)
 
     const t = computed<Record<string, string>>(() => {
       const isTr = selectedLanguage.value === 'Turkish'
@@ -208,10 +218,14 @@ export default defineComponent({
         settingsTab: isTr ? 'Ayarlar' : 'Settings',
         plans: isTr ? 'Abonelik Planları' : 'Subscription Plans',
         assignments: isTr ? 'Plan Atamaları' : 'Plan Assignments',
-        usageSummary: isTr ? 'Kullanım Özeti' : 'Usage Summary',
-        userManagement: isTr ? 'Kullanıcı Yönetimi' : 'User Management',
+        usageSummary: isTr ? 'Kullanım Tablosu' : 'Usage Tables',
         addNewPlan: isTr ? 'Yeni Plan Ekle' : 'Add New Plan',
-        logout: isTr ? 'Çıkış Yap' : 'Logout'
+        logout: isTr ? 'Çıkış Yap' : 'Logout',
+        confirmDeleteTitle: isTr ? 'Silme Onayı' : 'Confirm Delete',
+        confirmDeleteMessage: isTr ? 'Bu planı silmek istediğinizden emin misiniz?' : 'Are you sure you want to delete this plan?',
+        cancel: isTr ? 'İptal' : 'Cancel',
+        delete: isTr ? 'Sil' : 'Delete',
+        deleting: isTr ? 'Siliniyor...' : 'Deleting...'
       }
     })
 
@@ -223,8 +237,9 @@ export default defineComponent({
       { id: 'settings', name: t.value.settingsTab, icon: 'gear' },
     ])
 
-    const handleLogout = () => {
-      clearAuth()
+    const handleLogout = async () => {
+      const { logout } = await import('@/utils/auth')
+      await logout()
       router.push('/login')
     }
 
@@ -259,10 +274,21 @@ export default defineComponent({
       closePlanModal()
     }
 
-    const handleDeletePlan = async (id: number) => {
-      if (confirm('Are you sure you want to delete this plan?')) {
-        await adminPlansService.deletePlan(id)
+    const handleDeletePlan = (id: number) => {
+      planToDelete.value = id
+    }
+
+    const confirmDeletePlan = async () => {
+      if (planToDelete.value === null) return
+      isDeleting.value = true
+      try {
+        await adminPlansService.deletePlan(planToDelete.value)
         await fetchData()
+        planToDelete.value = null
+      } catch (error) {
+        console.error('Error deleting plan:', error)
+      } finally {
+        isDeleting.value = false
       }
     }
 
@@ -279,12 +305,15 @@ export default defineComponent({
       tabs,
       isPlanModalOpen,
       selectedPlan,
+      planToDelete,
+      isDeleting,
       t,
       handleLogout,
       openPlanModal,
       closePlanModal,
       handleSavePlan,
       handleDeletePlan,
+      confirmDeletePlan,
       fetchData
     }
   }
@@ -418,6 +447,111 @@ export default defineComponent({
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Modal Overlay & Base styles (consistent with other modals) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 450px;
+  background: var(--background-color);
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.modal-header {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--normal-text-color);
+    padding: 4px;
+    
+    &:hover {
+      color: var(--header-text-color);
+    }
+  }
+}
+
+.modal-body {
+  padding: 24px;
+  p {
+    margin: 0;
+    color: var(--normal-text-color);
+    line-height: 1.5;
+  }
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: var(--background-color-soft);
+  border-top: 1px solid var(--border-color);
+
+  button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cancel-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--header-text-color);
+    
+    &:hover {
+      background: var(--background-color);
+    }
+  }
+
+  .confirm-delete-btn {
+    background: #ef4444;
+    border: none;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
 }
 </style>
 

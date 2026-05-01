@@ -131,7 +131,7 @@ export default {
   },
   methods: {
     getExpenseById(id: number) {
-      return expenseService.apiGetExpenseById(id)
+      return expenseService.getExpenseById(id)
     },
 
     handleDeleteExpense(expenseId: number) {
@@ -171,7 +171,7 @@ export default {
       transactionDate: string
     }) {
       try {
-        await expenseService.apiCreateExpense({
+        await expenseService.createExpense({
           description: payload.description,
           amount: Number(payload.amount),
           paymentMethod: payload.paymentMethod,
@@ -198,7 +198,7 @@ export default {
       }
     ) {
       try {
-        await expenseService.apiUpdateExpense(id, {
+        await expenseService.updateExpense(id, {
           description: payload.description,
           amount: Number(payload.amount),
           paymentMethod: payload.paymentMethod,
@@ -215,7 +215,7 @@ export default {
 
     async deleteExpense(expenseId: number) {
       try {
-        await expenseService.apiDeleteExpense(expenseId)
+        await expenseService.deleteExpense(expenseId)
         await this.loadAppropriateData()
       } catch (error) {
         console.error('Error deleting expense:', error)
@@ -225,7 +225,7 @@ export default {
 
     async fetchCategories() {
       try {
-        const list = await categoryService.apiGetCategories()
+        const list = await categoryService.getCategories()
         this.categories = Array.isArray(list)
           ? list.map(c => ({
               id: c.id,
@@ -265,7 +265,7 @@ export default {
         if (this.endDateExpense) params.EndDate = this.endDateExpense
         if (this.categoryIdFilter != null) params.CategoryId = this.categoryIdFilter
 
-        const data = await expenseService.apiGetExpenses(params)
+        const data = await expenseService.getExpensesUser(params)
 
         this.financialData.expenseSources = data.items.map(item => ({
           id: item.id,

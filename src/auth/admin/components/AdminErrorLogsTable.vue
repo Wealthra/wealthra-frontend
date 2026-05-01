@@ -1,32 +1,40 @@
 <template>
   <div class="admin-error-logs-table-c">
-    <table class="error-table">
-      <thead>
-        <tr>
-          <th>{{ selectedLanguage == 'English' ? 'ID' : 'ID' }}</th>
-          <th>{{ selectedLanguage == 'English' ? 'Message' : 'Mesaj' }}</th>
-          <th>{{ selectedLanguage == 'English' ? 'Source' : 'Kaynak' }}</th>
-          <th>{{ selectedLanguage == 'English' ? 'Endpoint' : 'Endpoint' }}</th>
-          <th>{{ selectedLanguage == 'English' ? 'Timestamp' : 'Zaman' }}</th>
-          <th>{{ selectedLanguage == 'English' ? 'User ID' : 'Kullanıcı ID' }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(error, index) in dataError" :key="index">
-          <td>{{ error.id }}</td>
-          <td>{{ error.message }}</td>
-          <td>{{ error.source }}</td>
-          <td>{{ error.endpoint }}</td>
-          <td>{{ formatDate(error.timestamp) }}</td>
-          <td>{{ error.userId }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-wrapper">
+      <table class="error-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Message</th>
+            <th>Exception</th>
+            <th>User</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="error in dataError" :key="error.id" @click="selectedError = error" class="clickable-row">
+            <td>
+              <span :class="['status-badge', getStatusClass(error.statusCode)]">
+                {{ error.statusCode }}
+              </span>
+            </td>
+            <td><span class="method-tag">{{ error.method }}</span></td>
+            <td class="path-cell">{{ error.path }}</td>
+            <td class="message-cell">{{ error.message }}</td>
+            <td class="type-cell">{{ error.exceptionType }}</td>
+            <td class="user-cell">{{ error.userId || 'Anonymous' }}</td>
+            <td class="date-cell">{{ formatDate(error.createdUtc) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Pagination -->
-    <div class="pagination" v-if="dataError">
+    <div class="pagination" v-if="totalPagesError > 1">
       <button :disabled="page === 1" @click="$emit('changePage', page - 1)" class="pagination-btn">
-        <font-awesome-icon :icon="arrowIcons.left" class="arrow-left" />
+        <font-awesome-icon icon="chevron-left" />
       </button>
 
       <span
@@ -49,47 +57,57 @@
       </span>
 
       <button
-        :disabled="page === totalPagesError || totalPagesError === 0"
+        :disabled="page === totalPagesError"
         @click="$emit('changePage', page + 1)"
         class="pagination-btn"
       >
-        <font-awesome-icon :icon="arrowIcons.right" class="arrow-right" />
+        <font-awesome-icon icon="chevron-right" />
       </button>
+    </div>
+
+    <!-- Error Detail Modal -->
+    <div v-if="selectedError" class="modal-overlay" @click.self="selectedError = null">
+      <div class="modal-content glass-card detail-modal">
+        <div class="modal-header">
+          <h3>Error Details #{{ selectedError.id }}</h3>
+          <button class="close-btn" @click="selectedError = null">
+            <font-awesome-icon icon="xmark" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Status Code</label>
+              <span :class="['status-badge', getStatusClass(selectedError.statusCode)]">{{ selectedError.statusCode }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Correlation ID</label>
+              <code class="mono">{{ selectedError.correlationId }}</code>
+            </div>
+            <div class="detail-item full">
+              <label>Full Message</label>
+              <p class="full-message">{{ selectedError.message }}</p>
+            </div>
+            <div class="detail-item full">
+              <label>Exception Type</label>
+              <p class="exception-type">{{ selectedError.exceptionType }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { arrowIcons } from '@/icons/fontawesome-icons'
+import { defineComponent, ref, computed } from 'vue'
+import type { ErrorLog } from '@/services/api/admin/admin.models'
 
-export default {
+export default defineComponent({
   name: 'AdminErrorLogsTable',
   props: {
-    pageNumberError: {
-      type: Number,
-      required: true,
-    },
-    pageSizeError: {
-      type: Number,
-      required: true,
-    },
     dataError: {
-      type: Array as () => Array<{
-        id: number
-        message: string
-        source: string
-        endpoint: string
-        timestamp: string
-        userId: string
-      }>,
-      required: true,
-    },
-    hasMoreItemsError: {
-      type: Boolean,
-      required: true,
-    },
-    totalCountError: {
-      type: Number,
+      type: Array as () => ErrorLog[],
       required: true,
     },
     totalPagesError: {
@@ -105,22 +123,16 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      arrowIcons,
-    }
-  },
-  computed: {
-    displayedPages() {
-      // Display up to 5 page numbers around the current page
+  setup(props) {
+    const selectedError = ref<ErrorLog | null>(null)
+
+    const displayedPages = computed(() => {
       const maxVisiblePages = 5
       const halfVisible = Math.floor(maxVisiblePages / 2)
+      let startPage = Math.max(1, props.page - halfVisible)
+      const endPage = Math.min(startPage + maxVisiblePages - 1, props.totalPagesError)
 
-      let startPage = Math.max(1, this.page - halfVisible)
-      const endPage = Math.min(startPage + maxVisiblePages - 1, this.totalPagesError)
-
-      // Adjust start page if we're near the end
-      if (this.totalPagesError - endPage < halfVisible) {
+      if (props.totalPagesError - endPage < halfVisible) {
         startPage = Math.max(1, endPage - maxVisiblePages + 1)
       }
 
@@ -129,185 +141,180 @@ export default {
         pages.push(i)
       }
       return pages
-    },
-    showEllipsis() {
+    })
+
+    const showEllipsis = computed(() => {
       return (
-        this.displayedPages.length > 0 &&
-        this.displayedPages[this.displayedPages.length - 1] < this.totalPagesError - 1
+        displayedPages.value.length > 0 &&
+        displayedPages.value[displayedPages.value.length - 1] < props.totalPagesError - 1
       )
-    },
-    showLastPage() {
+    })
+
+    const showLastPage = computed(() => {
       return (
-        this.displayedPages.length > 0 &&
-        this.displayedPages[this.displayedPages.length - 1] < this.totalPagesError
+        displayedPages.value.length > 0 &&
+        displayedPages.value[displayedPages.value.length - 1] < props.totalPagesError
       )
-    },
-  },
-  methods: {
-    formatDate(dateString: string) {
-      try {
-        const date = new Date(dateString)
-        if (this.selectedLanguage === 'Turkish') {
-          return date.toLocaleDateString('tr-TR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-          })
-        }
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        })
-      } catch {
-        return dateString
-      }
-    },
-    changePage(pageNumber: number) {
-      if (pageNumber >= 1 && pageNumber <= this.totalPagesError) {
-        this.$emit('changePage', pageNumber)
-      }
-    },
-  },
-}
+    })
+
+    const getStatusClass = (code: number) => {
+      if (code >= 500) return 'status-500'
+      if (code >= 400) return 'status-400'
+      return 'status-other'
+    }
+
+    const formatDate = (dateString: string) => {
+      return new Date(dateString).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })
+    }
+
+    return {
+      selectedError,
+      displayedPages,
+      showEllipsis,
+      showLastPage,
+      getStatusClass,
+      formatDate
+    }
+  }
+})
 </script>
 
 <style scoped lang="scss">
 .admin-error-logs-table-c {
   width: 100%;
-  margin: 1rem 0;
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  border: 1px solid var(--border-color);
+}
 
-  .error-table {
-    width: 100%;
-    border-collapse: collapse;
+.table-wrapper {
+  overflow-x: auto;
+}
 
-    th,
-    td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid var(--border-color);
-      color: var(--header-text-color);
-    }
+.error-table {
+  width: 100%;
+  border-collapse: collapse;
 
-    thead {
-      background-color: var(--background-color-soft);
-      color: var(--header-text-color);
-    }
+  th, td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
   }
 
-  .pagination {
+  th {
+    background-color: var(--background-color-soft);
+    color: var(--normal-text-color);
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+  }
+
+  .clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+    &:hover { background-color: var(--background-color-soft); }
+  }
+
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 800;
+    font-family: monospace;
+    
+    &.status-500 { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    &.status-400 { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    &.status-other { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+  }
+
+  .method-tag {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--normal-text-color);
+    opacity: 0.8;
+  }
+
+  .path-cell { font-family: monospace; font-size: 13px; color: var(--header-text-color); }
+  .message-cell { font-size: 13px; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .type-cell { font-size: 12px; color: var(--normal-text-color); font-style: italic; }
+  .user-cell { font-size: 12px; color: var(--normal-text-color); }
+  .date-cell { font-size: 12px; color: var(--normal-text-color); opacity: 0.7; }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  gap: 8px;
+
+  .pagination-btn, .page-number {
     display: flex;
-    justify-content: center;
     align-items: center;
-    padding: 15px 0;
-    gap: 1rem;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--background-color);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
 
-    .pagination-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      background-color: var(--background-color-soft);
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      cursor: pointer;
-
-      &:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-
-      .arrow-left {
-        transform: rotate(180deg);
-        width: 16px;
-        height: 16px;
-      }
-
-      .arrow-right {
-        width: 16px;
-        height: 16px;
-      }
-    }
-
-    .page-number {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 4px;
-      cursor: pointer;
-      border: 1px solid var(--border-color);
-
-      &.active {
-        background-color: var(--primary-green-color);
-        border: transparent;
-        color: white;
-      }
-
-      &:hover:not(.active) {
-        background-color: var(--background-color-soft);
-      }
-    }
-
-    .ellipsis {
-      padding: 0 8px;
-    }
+    &:hover:not(:disabled):not(.active) { background: var(--background-color-soft); }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+    &.active { background: var(--primary-green-color); border-color: var(--primary-green-color); color: white; }
   }
 }
-@media (max-width: 768px) {
-  .admin-error-logs-table-c {
-    margin: 0.5rem 0;
-    border-radius: var(--border-radius);
 
-    .error-table {
-      display: block;
-      overflow-x: auto;
-      white-space: nowrap;
-      -webkit-overflow-scrolling: touch;
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
 
-      th,
-      td {
-        padding: 8px 10px;
-        font-size: 0.85rem;
-      }
-    }
+.detail-modal {
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 0;
+  
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    h3 { margin: 0; font-size: 18px; }
+    .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--normal-text-color); }
+  }
 
-    .pagination {
-      padding: 10px 0;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+  .modal-body {
+    padding: 24px;
+  }
 
-      .pagination-btn {
-        width: 35px;
-        height: 35px;
-
-        .arrow-left,
-        .arrow-right {
-          width: 14px;
-          height: 14px;
-        }
-      }
-
-      .page-number {
-        width: 35px;
-        height: 35px;
-        font-size: 0.9rem;
-      }
-
-      .ellipsis {
-        padding: 0 4px;
-      }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      &.full { grid-column: 1 / -1; }
+      
+      label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--normal-text-color); opacity: 0.6; }
+      .mono { font-family: monospace; font-size: 13px; color: var(--primary-green-color); }
+      .full-message { font-size: 14px; color: var(--header-text-color); line-height: 1.6; }
+      .exception-type { font-size: 13px; color: #ef4444; font-family: monospace; }
     }
   }
 }

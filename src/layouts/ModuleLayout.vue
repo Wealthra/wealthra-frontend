@@ -13,6 +13,8 @@
       </div>
     </transition>
 
+    <UIAnnouncementBanner :selectedLanguage="selectedLanguage" />
+
     <!-- Left Sidebar -->
     <div
       class="navbar-c"
@@ -182,6 +184,8 @@
                 'Bütçe',
                 'Goals',
                 'Hedefler',
+                'Tickets',
+                'Destek',
                 'Settings',
                 'Ayarlar',
                 'Notifications',
@@ -286,6 +290,7 @@ import UIThemeButton from '@/components/UIThemeButton.vue'
 import CopilotChat from '@/components/CopilotChat.vue'
 import UIExportModal from '@/modules/dashboard/components/UIExportModal.vue'
 import { clearAuth, getUserId, isAdmin, setAdminStatus } from '@/utils/auth'
+import UIAnnouncementBanner from '@/components/UIAnnouncementBanner.vue'
 import { arrowIcons, leftSidebarIconMap, profileIcon } from '@/icons/fontawesome-icons'
 import { accountService } from '@/services/api/account/account.service'
 import { useCurrency } from '@/composables/useCurrency'
@@ -298,12 +303,13 @@ export default defineComponent({
     UILanguageButton,
     UIThemeButton,
     CopilotChat,
+    UIAnnouncementBanner,
     UISkeletonLoader,
     UIExportModal,
   },
   props: {
     selectedLanguage: {
-      type: String,
+      type: String as () => 'English' | 'Turkish',
       required: true,
     },
     selectedPage: {
@@ -339,12 +345,13 @@ export default defineComponent({
       'Expenses',
       'Budget',
       'Goals',
+      'Tickets',
       'Settings',
     ] as const
 
     const leftBarContent: Record<Language, readonly string[]> = {
       English: leftBarContentEnglish as readonly string[],
-      Turkish: ['Kontrol Paneli', 'Öneriler', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Ayarlar'],
+      Turkish: ['Kontrol Paneli', 'Öneriler', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Destek', 'Ayarlar'],
     }
 
     const route = useRoute()
@@ -370,7 +377,7 @@ export default defineComponent({
 
     const fetchInitialUnreadCount = async () => {
       try {
-        const notifications = await notificationService.apiGetNotifications(true, props.selectedLanguage === 'Turkish' ? 'tr' : 'en')
+        const notifications = await notificationService.getNotifications(true, props.selectedLanguage === 'Turkish' ? 'tr' : 'en')
         unreadNotificationsCount.value = notifications.length
       } catch (err) {
         console.error('Failed to fetch initial unread count', err)
@@ -476,8 +483,9 @@ export default defineComponent({
       showLogoutTooltip.value = false
     }
 
-    const handleLogout = () => {
-      clearAuth()
+    const handleLogout = async () => {
+      const { logout } = await import('@/utils/auth')
+      await logout()
       router.push('/login')
     }
 

@@ -68,6 +68,7 @@ import {
   faChartPie,
   faHeadset,
   faShieldHalved,
+  faUserPlus,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -136,7 +137,8 @@ library.add(
   faEnvelopeOpen,
   faChartPie,
   faHeadset,
-  faShieldHalved
+  faShieldHalved,
+  faUserPlus
 )
 
 async function initApp() {

@@ -117,7 +117,7 @@ export default defineComponent({
 
   .stat-label {
     font-size: var(--font-size-xs);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--normal-text-color);
     text-transform: uppercase;
   }
@@ -153,7 +153,7 @@ export default defineComponent({
   th {
     padding: 16px 20px;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 500;
     text-transform: uppercase;
     color: var(--normal-text-color);
     border-bottom: 1px solid var(--border-color);
@@ -198,7 +198,7 @@ export default defineComponent({
 
       &::before {
         content: attr(data-label);
-        font-weight: 700;
+        font-weight: 500;
         font-size: 11px;
         text-transform: uppercase;
         color: var(--normal-text-color);
@@ -214,7 +214,7 @@ export default defineComponent({
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .glass-card {

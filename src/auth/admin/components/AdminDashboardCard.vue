@@ -62,7 +62,7 @@ export default {
 
   .admin-dashboard-card-value {
     font-size: 1.5rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--header-text-color);
   }
 }

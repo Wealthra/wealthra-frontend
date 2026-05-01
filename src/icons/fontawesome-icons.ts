@@ -10,6 +10,7 @@ import {
   faCalendarDay,
   faCalendarWeek,
   faChartLine,
+  faChartSimple,
   faChevronDown,
   faChevronLeft,
   faChevronRight,
@@ -19,6 +20,7 @@ import {
   faCircleInfo,
   faCreditCard,
   faEnvelope,
+  faFolderOpen,
   faGauge,
   faGear,
   faGlobe,
@@ -97,6 +99,7 @@ export const leftSidebarIconMap: Record<string, IconDefinition> = {
   'Users & Reports': faUsers,
   'Support & Ops': faHeadset,
   'System & Security': faShieldHalved,
+  Tickets: faHeadset,
 }
 
 /** Icons for empty-state placeholders (no data) */

@@ -2,8 +2,14 @@
   <div class="budget-overview-component-c">
     <div class="budget-overview-component">
       <div v-if="loading" class="skeleton-box title-skeleton"></div>
-      <div v-else class="budget-overview-component-title">
-        {{ budgetOverviewText }}
+      <div v-else class="budget-overview-header">
+        <div class="budget-overview-component-title">
+          {{ budgetOverviewText }}
+        </div>
+        <button class="analysis-btn" @click="$emit('showAnalysis')">
+          <font-awesome-icon icon="chart-simple" />
+          <span>{{ selectedLanguage === 'English' ? 'Analysis' : 'Analiz' }}</span>
+        </button>
       </div>
 
       <div class="budget-overview-component-content">
@@ -56,6 +62,7 @@ import {
 } from 'chart.js'
 import { budgetTexts } from '@/data/budgetTexts'
 import { useCurrency } from '@/composables/useCurrency'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, Tooltip)
 
@@ -66,6 +73,7 @@ export default {
 
   components: {
     Doughnut,
+    FontAwesomeIcon,
   },
 
   props: {
@@ -258,6 +266,38 @@ export default {
       gap: 1.5rem;
     }
 
+    .budget-overview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .analysis-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--primary-green-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        filter: brightness(1.1);
+      }
+
+      @media (max-width: 768px) {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+      }
+    }
+
     .budget-overview-component-title {
       font-size: 1.25rem;
       font-weight: 700;
@@ -304,7 +344,6 @@ export default {
         background: linear-gradient(90deg, var(--primary-yellow-color), var(--primary-green-color));
         border-radius: 999px;
         transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-        box-shadow: 0 0 10px rgba(92, 184, 92, 0.3);
       }
 
       .budget-overview-component-percentage {
