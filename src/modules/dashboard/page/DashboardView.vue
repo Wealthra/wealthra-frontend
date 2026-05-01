@@ -429,7 +429,7 @@ export default {
         this.isLoading = false
       }
     },
-    getRecIcon(severity: string) {
+    getRecIcon(severity: string | undefined) {
       const s = severity?.toLowerCase()
       if (s === 'high') return 'circle-exclamation'
       if (s === 'medium') return 'triangle-exclamation'
