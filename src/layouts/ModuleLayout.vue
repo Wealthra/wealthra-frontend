@@ -1,17 +1,6 @@
 <template>
   <div class="app-layout-container">
-    <!-- Splash Screen for Initial Load -->
-    <transition name="fade">
-      <div v-if="isLoadingUser && isFirstLoad" class="app-splash-screen">
-        <div class="splash-content">
-          <img src="../icons/logo.svg" alt="Wealthra Logo" class="splash-logo" />
-          <div class="splash-loading-bar">
-            <div class="bar-progress"></div>
-          </div>
-          <span class="splash-text">Smarter Wealth Management</span>
-        </div>
-      </div>
-    </transition>
+
 
     <UIAnnouncementBanner v-if="!isUserAdmin" :selectedLanguage="selectedLanguage" />
 
@@ -170,28 +159,6 @@
           </button>
 
           <button
-            v-if="
-              [
-                'Dashboard',
-                'Kontrol Paneli',
-                'Recommendations',
-                'Öneriler',
-                'Income',
-                'Gelir',
-                'Expenses',
-                'Giderler',
-                'Budget',
-                'Bütçe',
-                'Goals',
-                'Hedefler',
-                'Tickets',
-                'Destek',
-                'Settings',
-                'Ayarlar',
-                'Notifications',
-                'Bildirimler',
-              ].includes(selectedPage)
-            "
             class="refetch-btn"
             @click="handleRefetch"
             :title="texts.refetch"
@@ -328,7 +295,6 @@ export default defineComponent({
     const showLogoutTooltip = ref(false)
     const isExportModalOpen = ref(false)
     const isLoadingUser = ref(true)
-    const isFirstLoad = ref(true)
     const profileWrapperRef = ref<HTMLElement | null>(null)
     const unreadNotificationsCount = ref(0)
 
@@ -427,13 +393,13 @@ export default defineComponent({
         // Handle Admin tab switching
         const routeMap: Record<string, string> = {
           Overview: 'admin-overview',
-          Analytics: 'admin-analytics',
-          'Users & Reports': 'admin-users',
+          'Dashboard & Analytics': 'admin-analytics',
+          'Users & Plans': 'admin-users',
           'Support & Ops': 'admin-support',
           'System & Security': 'admin-system',
-          Settings: 'admin-settings',
+          'Admin Settings': 'admin-settings',
         }
-        router.push({ name: routeMap[englishPage] || 'admin-overview' })
+        router.push({ name: routeMap[englishPage] || 'admin-analytics' })
       } else {
         routeToPage(englishPage, props.selectedLanguage)
       }
@@ -468,10 +434,9 @@ export default defineComponent({
         }
       } finally {
         isLoadingUser.value = false
-        // Smooth transition for splash screen
-        setTimeout(() => {
-          isFirstLoad.value = false
-        }, 300)
+        if (typeof (window as any).removeInitialLoader === 'function') {
+          ;(window as any).removeInitialLoader()
+        }
       }
     }
 
@@ -508,20 +473,18 @@ export default defineComponent({
 
       if (admin) {
         const adminContentEnglish = [
-          'Overview',
-          'Analytics',
-          'Users & Reports',
+          'Dashboard & Analytics',
+          'Users & Plans',
           'Support & Ops',
           'System & Security',
-          'Settings',
+          'Admin Settings',
         ]
         const adminContentTurkish = [
-          'Özet',
-          'Analitik',
-          'Kullanıcılar ve Rapor',
-          'Destek & Ops',
+          'Genel Bakış',
+          'Kullanıcılar & Planlar',
+          'Destek & Operasyon',
           'Sistem ve Güvenlik',
-          'Ayarlar',
+          'Admin Ayarları',
         ]
         const content = lang === 'Turkish' ? adminContentTurkish : adminContentEnglish
         
@@ -605,7 +568,6 @@ export default defineComponent({
       greetingSubtitle,
       isPrivacyMode,
       isExportModalOpen,
-      isFirstLoad,
       unreadNotificationsCount,
       togglePrivacyMode,
       emitUpdateLanguage,
@@ -1152,95 +1114,7 @@ export default defineComponent({
   }
 }
 
-/* ============================
-   Splash Screen
-   ============================ */
-.app-splash-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--background-color);
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
-  .splash-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-
-    .splash-logo {
-      width: 200px;
-      height: auto;
-      filter: drop-shadow(0 0 20px rgba(92, 184, 92, 0.15));
-      animation: pulse-logo 2.5s infinite ease-in-out;
-    }
-
-    .splash-loading-bar {
-      width: 240px;
-      height: 3px;
-      background: rgba(92, 184, 92, 0.1);
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-
-      .bar-progress {
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, var(--primary-green-color), transparent);
-        animation: loading-flow 2s infinite linear;
-        box-shadow: 0 0 10px var(--primary-green-color);
-      }
-    }
-
-    .splash-text {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--normal-text-color);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      opacity: 0.6;
-      margin-top: 0.5rem;
-    }
-  }
-}
-
-@keyframes pulse-logo {
-  0%,
-  100% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 20px rgba(92, 184, 92, 0.15));
-  }
-  50% {
-    transform: scale(1.02);
-    filter: drop-shadow(0 0 35px rgba(92, 184, 92, 0.3));
-  }
-}
-
-@keyframes loading-flow {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
 
 /* ============================
    Media Queries

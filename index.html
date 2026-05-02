@@ -7,9 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wealthra</title>
     <style>
-      /* Hide the body until the theme is applied */
+      /* Body is visible immediately because initial-loader handles the splash */
       body {
-        display: none;
+        margin: 0;
       }
     </style>
     <script type="module">
@@ -21,6 +21,75 @@
     </script>
   </head>
   <body>
+    <div id="initial-loader" style="
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999999;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      transition: opacity 0.6s ease;
+    ">
+      <script>
+        (function() {
+          const theme = localStorage.getItem('theme-preference') || 
+                       (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          const isDark = theme === 'dark';
+          const bgColor = isDark ? '#1f1f1f' : '#ffffff';
+          const textColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+          const subTextColor = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+          
+          const loader = document.getElementById('initial-loader');
+          if (loader) {
+            loader.style.background = bgColor;
+            const statusText = loader.querySelector('.splash-status-js');
+            const taglineText = loader.querySelector('.splash-tagline-js');
+            if (statusText) {
+              statusText.style.color = textColor;
+              const lang = localStorage.getItem('selectedLanguage') || 'English';
+              statusText.innerText = lang === 'Turkish' ? 'Yükleniyor...' : 'Loading...';
+            }
+            if (taglineText) taglineText.style.color = subTextColor;
+          }
+
+          window.removeInitialLoader = function() {
+            const l = document.getElementById('initial-loader');
+            if (l) {
+              l.style.opacity = '0';
+              setTimeout(() => l.remove(), 600);
+            }
+          };
+        })();
+      </script>
+      <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.05) 100%); pointer-events: none;"></div>
+      <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 3rem; z-index: 2;">
+        <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+          <img src="/src/icons/logo.svg" alt="Wealthra" style="width: 240px; height: auto; position: relative; z-index: 2; animation: splashPulse 2s infinite ease-in-out;">
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+          <div style="width: 200px; height: 4px; background: rgba(119, 119, 119, 0.1); border-radius: 10px; overflow: hidden; position: relative;">
+            <div style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #22c55e, transparent); animation: splashLoading 1.5s infinite ease-in-out;"></div>
+          </div>
+          <span class="splash-status-js" style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: rgba(0,0,0,0.4);">Loading...</span>
+        </div>
+        <div style="margin-top: 1rem;">
+          <span class="splash-tagline-js" style="font-size: 12px; font-weight: 500; color: rgba(0,0,0,0.2); letter-spacing: 4px; text-transform: uppercase;">Smarter Wealth Management</span>
+        </div>
+      </div>
+      <style>
+        @keyframes splashPulse {
+          0%, 100% { transform: scale(1); opacity: 0.9; }
+          50% { transform: scale(1.03); opacity: 1; }
+        }
+        @keyframes splashLoading {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+      </style>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -33,15 +33,15 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .skeleton-loader {
-  background: var(--background-color-soft);
+  background: var(--skeleton-bg);
   background: linear-gradient(
     90deg,
-    var(--background-color-soft) 25%,
-    var(--hover-color) 50%,
-    var(--background-color-soft) 75%
+    var(--skeleton-bg) 25%,
+    var(--skeleton-shimmer) 50%,
+    var(--skeleton-bg) 75%
   );
   background-size: 200% 100%;
-  animation: loading 1.5s infinite;
+  animation: shimmer 1.5s infinite linear;
   
   &.circle {
     border-radius: 50% !important;

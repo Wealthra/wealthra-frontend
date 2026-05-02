@@ -8,6 +8,7 @@ export interface ApiRequestOptions {
   headers?: Record<string, string>
   requiresAuth?: boolean
   isFormData?: boolean
+  credentials?: RequestCredentials
 }
 
 export interface ApiError {
@@ -53,7 +54,7 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
   const baseRequestInit: RequestInit = {
     method,
     headers: requestHeaders,
-    credentials: requiresAuth ? 'include' : 'omit',
+    credentials: options.credentials || (requiresAuth ? 'include' : 'omit'),
   }
 
   const createRequestInit = (): RequestInit => {
@@ -93,8 +94,8 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
 
         if (authData && authData.token) {
           const authUtils = await import('../utils/auth')
-          // Map backend response (id, token) to internal setAuth (token, userId, roles)
-          authUtils.setAuth(authData.token, authData.id, [])
+          // Map backend response (id, email, token, refreshToken) to internal setAuth
+          authUtils.setAuth(authData.token, authData.id, [], authData.email, authData.refreshToken)
 
           // Retry the original request with the new token
           return await apiRequest<T>(endpoint, options)

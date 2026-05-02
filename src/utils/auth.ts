@@ -1,11 +1,17 @@
-// In-memory authentication state fallback, but mainly backed by localStorage now.
 let currentAccessToken: string | null = localStorage.getItem('access_token') || null
+let currentRefreshToken: string | null = localStorage.getItem('refresh_token') || null
 let currentRoles: string[] = JSON.parse(localStorage.getItem('user_roles') || '[]')
 let currentUserId: string | null = localStorage.getItem('user_id') || null
+let currentEmail: string | null = localStorage.getItem('user_email') || null
 let currentIsAdmin: boolean = localStorage.getItem('is_admin') === 'true'
+let isBootstrapping: boolean = false
 
 export function isAuthenticated(): boolean {
   return !!currentAccessToken
+}
+
+export function isAuthBootstrapping(): boolean {
+  return isBootstrapping
 }
 
 export function isAdmin(): boolean {
@@ -20,15 +26,37 @@ export function getUserId(): string | null {
   return currentUserId
 }
 
-export function setAuth(token: string, userId: string, roles: Array<string> = []): void {
+export function getRefreshToken(): string | null {
+  return currentRefreshToken
+}
+
+export function getUserEmail(): string | null {
+  return currentEmail
+}
+
+export function setAuth(
+  token: string,
+  userId: string,
+  roles: Array<string> = [],
+  email?: string,
+  refreshToken?: string
+): void {
   currentAccessToken = token
+  currentRefreshToken = refreshToken || currentRefreshToken
   currentRoles = roles
   currentUserId = userId || null
+  currentEmail = email || null
 
   localStorage.setItem('access_token', token)
   localStorage.setItem('user_roles', JSON.stringify(roles))
+  if (refreshToken) {
+    localStorage.setItem('refresh_token', refreshToken)
+  }
   if (userId) {
     localStorage.setItem('user_id', userId)
+  }
+  if (email) {
+    localStorage.setItem('user_email', email)
   }
 }
 
@@ -39,13 +67,17 @@ export function setAdminStatus(isAdmin: boolean): void {
 
 export function clearAuth(): void {
   currentAccessToken = null
+  currentRefreshToken = null
   currentRoles = []
   currentUserId = null
+  currentEmail = null
   currentIsAdmin = false
 
   localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
   localStorage.removeItem('user_roles')
   localStorage.removeItem('user_id')
+  localStorage.removeItem('user_email')
   localStorage.removeItem('is_admin')
 }
 
@@ -75,11 +107,12 @@ export function getUserRoles(): Array<string> {
 // bootstrapAuth attempts to retrieve a fresh access token using the
 // backend-managed refresh-token cookie on application startup.
 export async function bootstrapAuth(): Promise<void> {
+  isBootstrapping = true
   try {
     const { accountService } = await import('../services/api/account/account.service')
     const authData = await accountService.refreshToken()
     if (authData && authData.token) {
-      setAuth(authData.token, authData.id, [])
+      setAuth(authData.token, authData.id, [], authData.email, authData.refreshToken)
       
       // Fetch /me to ensure isAdmin is correct
       try {
@@ -91,5 +124,8 @@ export async function bootstrapAuth(): Promise<void> {
     }
   } catch (err) {
     // Failure simply means the user needs to log in manually.
+    clearAuth()
+  } finally {
+    isBootstrapping = false
   }
 }

@@ -66,13 +66,11 @@ export const accountService = {
   },
 
   async refreshToken(): Promise<AccountAuthResponse> {
-    // Refresh relies on the backend-managed refresh-token cookie, but the backend
-    // might also require the expired access token to pair them.
-    // We explicitly disable requiresAuth so that 401 handling does not recurse on this call,
-    // but we manually pass the current access token in the headers.
-    const headers: Record<string, string> = {}
-    const { getAuthToken } = await import('../../../utils/auth')
+    const { getAuthToken, getRefreshToken } = await import('../../../utils/auth')
     const currentToken = getAuthToken()
+    const currentRefreshToken = getRefreshToken()
+
+    const headers: Record<string, string> = {}
     if (currentToken) {
       headers['Authorization'] = `Bearer ${currentToken}`
     }
@@ -80,7 +78,12 @@ export const accountService = {
     return apiRequest<AccountAuthResponse>('Account/refresh-token', {
       method: 'POST',
       headers,
+      body: {
+        token: currentToken || '',
+        refreshToken: currentRefreshToken || '',
+      },
       requiresAuth: false,
+      credentials: 'include',
     })
   },
 

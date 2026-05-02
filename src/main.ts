@@ -86,11 +86,23 @@ import {
   faChartPie,
   faHeadset,
   faCheck,
+  faGaugeHigh,
+  faMoneyBillTrendUp,
+  faMoneyBillWave,
+  faBolt,
+  faUserSlash,
+  faUserMinus,
+  faPuzzlePiece,
+  faFileInvoice,
+  faLayerGroup,
+  faHandHoldingDollar,
+  faCoins,
+  faWaveSquare,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
 import router from './router'
-import { isAuthenticated, isAdmin } from './utils/auth'
+import { isAuthenticated, isAdmin, bootstrapAuth } from './utils/auth'
 
 library.add(
   faArrowDown,
@@ -173,9 +185,24 @@ library.add(
   faWallet,
   faAward,
   faXmark,
+  faGaugeHigh,
+  faMoneyBillTrendUp,
+  faMoneyBillWave,
+  faBolt,
+  faUserSlash,
+  faUserMinus,
+  faPuzzlePiece,
+  faFileInvoice,
+  faLayerGroup,
+  faHandHoldingDollar,
+  faCoins,
+  faWaveSquare,
 )
 
 async function initApp() {
+  // Try to restore session using refresh token cookie before mounting
+  await bootstrapAuth()
+
   const app = createApp(App)
   app.component('font-awesome-icon', FontAwesomeIcon)
   app.use(createPinia())
@@ -195,6 +222,11 @@ async function initApp() {
   // otherwise navigate to the determined initial route.
   if (window.location.pathname === '/' || window.location.pathname === '/login') {
     await router.push(initialRoute)
+  }
+
+  // If we are on the login page (not authenticated), remove the initial loader
+  if (!isUserAuthenticated && typeof (window as any).removeInitialLoader === 'function') {
+    ;(window as any).removeInitialLoader()
   }
 }
 

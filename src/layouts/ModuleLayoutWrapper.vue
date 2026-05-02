@@ -30,12 +30,12 @@ const ROUTE_NAME_TO_PAGE: Record<string, { en: string; tr: string }> = {
 }
 
 const ADMIN_ROUTE_LABELS: Record<string, { en: string; tr: string }> = {
-  'admin-overview': { en: 'Overview', tr: 'Özet' },
-  'admin-analytics': { en: 'Analytics', tr: 'Analitik' },
-  'admin-users': { en: 'Users & Reports', tr: 'Kullanıcılar ve Rapor' },
-  'admin-support': { en: 'Support & Ops', tr: 'Destek & Ops' },
+  'admin-analytics': { en: 'Dashboard & Analytics', tr: 'Genel Bakış' },
+  'admin-overview': { en: 'Dashboard & Analytics', tr: 'Genel Bakış' },
+  'admin-users': { en: 'Users & Plans', tr: 'Kullanıcılar & Planlar' },
+  'admin-support': { en: 'Support & Ops', tr: 'Destek & Operasyon' },
   'admin-system': { en: 'System & Security', tr: 'Sistem ve Güvenlik' },
-  'admin-settings': { en: 'Settings', tr: 'Ayarlar' },
+  'admin-settings': { en: 'Admin Settings', tr: 'Admin Ayarları' },
 }
 
 export default defineComponent({

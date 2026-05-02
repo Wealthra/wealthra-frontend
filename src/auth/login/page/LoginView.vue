@@ -149,7 +149,7 @@ export default {
 
         // Set auth immediately so subsequent calls like getMe() have the token
         const { setAuth, setAdminStatus } = await import('../../../utils/auth')
-        setAuth(data.token, data.id)
+        setAuth(data.token, data.id, [], data.email, data.refreshToken)
 
         // Fetch /me first as requested
         try {
@@ -211,6 +211,11 @@ export default {
     const savedLanguage = localStorage.getItem('selectedLanguage')
     if (savedLanguage) {
       this.selectedLanguage = savedLanguage as 'English' | 'Turkish'
+    }
+
+    // Ensure initial loader is removed when reaching login page
+    if (typeof (window as any).removeInitialLoader === 'function') {
+      ;(window as any).removeInitialLoader()
     }
   },
 }

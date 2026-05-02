@@ -97,9 +97,11 @@ export const leftSidebarIconMap: Record<string, IconDefinition> = {
   Settings: faGear,
   Overview: faChartPie,
   Analytics: faChartLine,
-  'Users & Reports': faUsers,
+  'Dashboard & Analytics': faChartPie,
+  'Users & Plans': faUsers,
   'Support & Ops': faHeadset,
   'System & Security': faShieldHalved,
+  'Admin Settings': faGear,
   Tickets: faHeadset,
 }
 
@@ -217,4 +219,3 @@ export const transactionCategoryIconMap: Record<string, IconDefinition> = {
   utilities: faLightbulb,
   default: faReceipt,
 }
-

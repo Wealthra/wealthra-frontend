@@ -36,14 +36,14 @@ function redirectAdminLegacy(to: RouteLocation) {
         ? String(raw[0])
         : 'overview'
   const paths: Record<string, string> = {
-    overview: '/admin/overview',
+    overview: '/admin/analytics',
     users: '/admin/users',
     support: '/admin/support',
     system: '/admin/system',
     settings: '/admin/settings',
     analytics: '/admin/analytics',
   }
-  return paths[tab] ?? '/admin/overview'
+  return paths[tab] ?? '/admin/analytics'
 }
 
 const router = createRouter({
@@ -111,9 +111,7 @@ const router = createRouter({
         },
         {
           path: 'admin/overview',
-          name: 'admin-overview',
-          component: AdminView,
-          meta: { requiresAdmin: true },
+          redirect: '/admin/analytics',
         },
         {
           path: 'admin/analytics',
@@ -177,7 +175,7 @@ router.beforeEach((to, from, next) => {
       if (isAdminAppRoute) {
         next()
       } else {
-        next({ name: 'admin-overview' })
+        next({ name: 'admin-analytics' })
       }
     } else {
       // Regular User

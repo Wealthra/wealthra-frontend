@@ -1,21 +1,24 @@
 <template>
   <div class="admin-view-content">
     <div v-if="isLoading" class="admin-loading-skeleton">
-      <div class="skeleton-section" v-for="i in 3" :key="i">
-        <UISkeletonLoader width="250px" height="32px" style="margin-bottom: 24px" />
-        <UISkeletonLoader height="300px" border-radius="16px" />
+      <div class="kpi-grid">
+        <UISkeletonLoader v-for="i in 4" :key="'kpi-' + i" height="120px" border-radius="16px" />
+      </div>
+      <div class="dashboard-grid mt-8">
+        <div class="col-span-12">
+          <UISkeletonLoader height="400px" border-radius="16px" />
+        </div>
       </div>
     </div>
-    
+
     <template v-else>
       <div class="tab-content">
         <!-- Overview Tab -->
         <div v-if="activeTab === 'overview'" class="tab-pane overview-pane">
           <section id="usage-summary" class="admin-section full-height">
-
-            <AdminUsageSummary 
+            <AdminUsageSummary
               v-if="usageSummary"
-              :summary="usageSummary" 
+              :summary="usageSummary"
               :selectedLanguage="selectedLanguage"
             />
           </section>
@@ -28,10 +31,7 @@
               <h2>{{ t.usageSummary }}</h2>
             </div>
             <div class="glass-card">
-              <AdminUserManagementTable 
-                :selectedLanguage="selectedLanguage"
-                :plans="plans"
-              />
+              <AdminUserManagementTable :selectedLanguage="selectedLanguage" :plans="plans" />
             </div>
           </section>
           <section id="plans" class="admin-section mt-8">
@@ -43,8 +43,8 @@
               </button>
             </div>
             <div class="glass-card">
-              <AdminPlanTable 
-                :plans="plans" 
+              <AdminPlanTable
+                :plans="plans"
                 :selectedLanguage="selectedLanguage"
                 @edit="openPlanModal"
                 @delete="handleDeletePlan"
@@ -85,9 +85,9 @@
       </div>
     </template>
 
-    <UIPlanModal 
-      v-if="isPlanModalOpen" 
-      :plan="selectedPlan" 
+    <UIPlanModal
+      v-if="isPlanModalOpen"
+      :plan="selectedPlan"
       :selectedLanguage="selectedLanguage"
       @close="closePlanModal"
       @save="handleSavePlan"
@@ -118,10 +118,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed } from 'vue'
+import { defineComponent, onMounted, onBeforeUnmount, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
-import type { AdminPlan, AdminUsageSummary as IUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
+import type {
+  AdminPlan,
+  AdminUsageSummary as IUsageSummary,
+} from '@/services/api/adminPlans/adminPlans.models'
 import { clearAuth } from '@/utils/auth'
 
 import AdminPlanTable from '../components/AdminPlanTable.vue'
@@ -148,7 +151,7 @@ export default defineComponent({
     AdminSupportTickets,
     AdminAnnouncements,
     AdminFxControls,
-    SettingsView
+    SettingsView,
   },
   setup() {
     const route = useRoute()
@@ -161,17 +164,17 @@ export default defineComponent({
       'admin-settings': 'settings',
     }
 
-    const activeTab = computed(
-      () => ROUTE_TO_TAB[route.name as string] ?? 'overview'
-    )
+    const activeTab = computed(() => ROUTE_TO_TAB[route.name as string] ?? 'overview')
     type Language = 'English' | 'Turkish'
     const selectedLanguage = ref<Language>(
       (localStorage.getItem('selectedLanguage') as Language) || 'English'
     )
-    
+
     const plans = ref<AdminPlan[]>([])
     const usageSummary = ref<IUsageSummary | null>(null)
     const isLoading = ref(true)
+    const isPlansLoading = ref(false)
+    const hasLoadedPlans = ref(false)
     const isPlanModalOpen = ref(false)
     const selectedPlan = ref<AdminPlan | null>(null)
     const planToDelete = ref<number | null>(null)
@@ -190,10 +193,12 @@ export default defineComponent({
         addNewPlan: isTr ? 'Yeni Plan Ekle' : 'Add New Plan',
         logout: isTr ? 'Çıkış Yap' : 'Logout',
         confirmDeleteTitle: isTr ? 'Silme Onayı' : 'Confirm Delete',
-        confirmDeleteMessage: isTr ? 'Bu planı silmek istediğinizden emin misiniz?' : 'Are you sure you want to delete this plan?',
+        confirmDeleteMessage: isTr
+          ? 'Bu planı silmek istediğinizden emin misiniz?'
+          : 'Are you sure you want to delete this plan?',
         cancel: isTr ? 'İptal' : 'Cancel',
         delete: isTr ? 'Sil' : 'Delete',
-        deleting: isTr ? 'Siliniyor...' : 'Deleting...'
+        deleting: isTr ? 'Siliniyor...' : 'Deleting...',
       }
     })
 
@@ -210,21 +215,69 @@ export default defineComponent({
       router.push('/login')
     }
 
-    const fetchData = async () => {
+
+
+    const fetchUsageData = async (force = false) => {
+      if (usageSummary.value && !force) return
       isLoading.value = true
       try {
-        const [plansRes, usageRes] = await Promise.all([
-          adminPlansService.getPlans(true), // Include inactive for admin management
-          adminPlansService.getUsageSummary()
-        ])
-        plans.value = plansRes
-        usageSummary.value = usageRes
+        usageSummary.value = await adminPlansService.getUsageSummary()
       } catch (error) {
-        console.error('Error fetching admin data:', error)
+        console.error('Error fetching admin usage summary:', error)
       } finally {
         isLoading.value = false
       }
     }
+
+    const fetchPlansData = async (force = false) => {
+      if (hasLoadedPlans.value && !force) return
+      // If we already have usageSummary, we don't want to show the global skeleton
+      // so we use a more local loading state if we had one, but for now let's just use isLoading
+      // only if it's the first load of the entire view.
+      if (!usageSummary.value && !hasLoadedPlans.value) {
+        isLoading.value = true
+      }
+      
+      isPlansLoading.value = true
+      try {
+        plans.value = await adminPlansService.getPlans(true)
+        hasLoadedPlans.value = true
+      } catch (error) {
+        console.error('Error fetching admin plans:', error)
+      } finally {
+        isPlansLoading.value = false
+        isLoading.value = false
+      }
+    }
+
+    const handleGlobalRefetch = () => {
+      fetchUsageData(true)
+      fetchPlansData(true)
+    }
+
+    onMounted(() => {
+      window.addEventListener('app:refetch', handleGlobalRefetch)
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('app:refetch', handleGlobalRefetch)
+    })
+
+    // Watch for tab changes to fetch data if needed
+    watch(
+      activeTab,
+      (newTab) => {
+        if (newTab === 'users') {
+          fetchPlansData()
+        } else if (newTab === 'overview') {
+          fetchUsageData()
+        } else {
+          // For other tabs (support, settings), we don't need global data
+          isLoading.value = false
+        }
+      },
+      { immediate: true }
+    )
 
     const openPlanModal = (plan?: AdminPlan) => {
       selectedPlan.value = plan || null
@@ -237,7 +290,7 @@ export default defineComponent({
     }
 
     const handleSavePlan = async () => {
-      await fetchData()
+      await fetchPlansData(true)
       closePlanModal()
     }
 
@@ -250,7 +303,7 @@ export default defineComponent({
       isDeleting.value = true
       try {
         await adminPlansService.deletePlan(planToDelete.value)
-        await fetchData()
+        await fetchPlansData(true)
         planToDelete.value = null
       } catch (error) {
         console.error('Error deleting plan:', error)
@@ -258,10 +311,6 @@ export default defineComponent({
         isDeleting.value = false
       }
     }
-
-    onMounted(() => {
-      fetchData()
-    })
 
     return {
       selectedLanguage,
@@ -281,9 +330,8 @@ export default defineComponent({
       handleSavePlan,
       handleDeletePlan,
       confirmDeletePlan,
-      fetchData
     }
-  }
+  },
 })
 </script>
 
@@ -341,13 +389,11 @@ export default defineComponent({
 }
 
 .tab-pane {
-  display: flex;
-  flex-direction: column;
   flex: 1;
   min-height: 0;
-  animation: fadeIn 0.3s ease-in-out;
 
   &.overview-pane {
+    display: flex;
     height: 100%;
   }
 }
@@ -357,11 +403,6 @@ export default defineComponent({
   flex-direction: column;
   flex: 1;
   min-height: 0;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .mt-8 {
@@ -408,6 +449,25 @@ export default defineComponent({
   }
 }
 
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+.col-span-12 {
+  grid-column: span 12;
+}
+
 .glass-card {
   background: var(--background-color);
   border: 1px solid var(--border-color);
@@ -445,7 +505,7 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
-  
+
   h3 {
     margin: 0;
     font-size: 18px;
@@ -459,7 +519,7 @@ export default defineComponent({
     cursor: pointer;
     color: var(--normal-text-color);
     padding: 4px;
-    
+
     &:hover {
       color: var(--header-text-color);
     }
@@ -498,7 +558,7 @@ export default defineComponent({
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--header-text-color);
-    
+
     &:hover {
       background: var(--background-color);
     }
@@ -508,7 +568,7 @@ export default defineComponent({
     background: #ef4444;
     border: none;
     color: white;
-    
+
     &:hover:not(:disabled) {
       background: #dc2626;
       transform: translateY(-1px);
@@ -521,4 +581,3 @@ export default defineComponent({
   }
 }
 </style>
-
