@@ -10,9 +10,9 @@ export const notificationService = {
 
   // New plural /api/Notifications endpoints
 
-  async getNotifications(unreadOnly: boolean = true, language: string = 'en'): Promise<UserNotification[]> {
+  async getNotifications(unreadOnly: boolean = true): Promise<UserNotification[]> {
     const flag = unreadOnly ? 'true' : 'false'
-    return apiRequest<UserNotification[]>(`Notifications?unreadOnly=${flag}&language=${language}`, {
+    return apiRequest<UserNotification[]>(`Notifications?unreadOnly=${flag}`, {
       method: 'GET',
     })
   },

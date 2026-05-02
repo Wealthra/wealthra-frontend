@@ -39,9 +39,7 @@
         <!-- Support Tab -->
         <div v-if="activeTab === 'support'" class="tab-pane">
           <section class="admin-section flex-column-fill">
-            <div class="glass-card full-height">
-              <AdminSupportTickets :selectedLanguage="selectedLanguage" />
-            </div>
+            <AdminSupportTickets :selectedLanguage="selectedLanguage" />
           </section>
         </div>
 
@@ -49,6 +47,13 @@
         <div v-if="activeTab === 'operations'" class="tab-pane">
           <section class="admin-section flex-column-fill">
             <AdminOperations :selectedLanguage="selectedLanguage" />
+          </section>
+        </div>
+
+        <!-- Security & Monitoring Tab -->
+        <div v-if="activeTab === 'security'" class="tab-pane">
+          <section class="admin-section flex-column-fill">
+            <AdminSecurityMonitoring :selectedLanguage="selectedLanguage" />
           </section>
         </div>
 
@@ -73,6 +78,7 @@ import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 
 import AdminSupportTickets from '../components/AdminSupportTickets.vue'
 import AdminOperations from '../components/AdminOperations.vue'
+import AdminSecurityMonitoring from '../components/AdminSecurityMonitoring.vue'
 import SettingsView from '@/modules/settings/page/SettingsView.vue'
 
 export default defineComponent({
@@ -84,18 +90,20 @@ export default defineComponent({
     UISkeletonLoader,
     AdminSupportTickets,
     AdminOperations,
+    AdminSecurityMonitoring,
     SettingsView,
   },
   setup() {
     const route = useRoute()
     const router = useRouter()
 
-    const ROUTE_TO_TAB: Record<string, 'overview' | 'users' | 'plans' | 'support' | 'operations' | 'settings'> = {
+    const ROUTE_TO_TAB: Record<string, 'overview' | 'users' | 'plans' | 'support' | 'operations' | 'security' | 'settings'> = {
       'admin-overview': 'overview',
       'admin-users': 'users',
       'admin-plans': 'plans',
       'admin-support': 'support',
       'admin-operations': 'operations',
+      'admin-security': 'security',
       'admin-settings': 'settings',
     }
 
@@ -117,6 +125,7 @@ export default defineComponent({
         userManagement: isTr ? 'Kullanıcı Yönetimi' : 'User Management',
         supportTab: isTr ? 'Destek' : 'Support',
         operationsTab: isTr ? 'Operasyonlar' : 'Operations',
+        securityTab: isTr ? 'Güvenlik ve İzleme' : 'Security & Monitoring',
         settingsTab: isTr ? 'Ayarlar' : 'Settings',
         usageSummary: isTr ? 'Kullanım Tablosu' : 'Usage Tables',
       }
@@ -177,11 +186,6 @@ export default defineComponent({
   flex-direction: column;
   flex: 1;
   min-height: 0;
-
-  @media (max-width: 1024px) {
-    flex: none;
-    min-height: auto;
-  }
 }
 
 .tab-content {
@@ -189,11 +193,6 @@ export default defineComponent({
   flex-direction: column;
   flex: 1;
   min-height: 0;
-
-  @media (max-width: 1024px) {
-    flex: none;
-    min-height: auto;
-  }
 }
 
 .tab-pane {
@@ -205,17 +204,6 @@ export default defineComponent({
     display: flex;
     height: 100%;
   }
-
-  @media (max-width: 1024px) {
-    flex: none;
-    min-height: auto;
-    display: block;
-    height: auto;
-
-    &.overview-pane {
-      height: auto;
-    }
-  }
 }
 
 .admin-section.full-height,
@@ -224,11 +212,6 @@ export default defineComponent({
   flex-direction: column;
   flex: 1;
   min-height: 0;
-
-  @media (max-width: 1024px) {
-    flex: none;
-    min-height: auto;
-  }
 }
 
 .mt-8 {
@@ -277,11 +260,22 @@ export default defineComponent({
   grid-column: span 12;
 }
 
+.full-height {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .glass-card {
   background: var(--background-color);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  &.full-height {
+    padding: 0; // Remove padding when full-height to maximize table area
+  }
 }
 </style>

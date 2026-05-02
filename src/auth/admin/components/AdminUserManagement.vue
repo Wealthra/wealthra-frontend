@@ -16,6 +16,7 @@
                 type="text"
                 class="filter-input"
                 :placeholder="t.searchPlaceholder"
+                :disabled="isLoading"
                 @keyup.enter="handleSearch"
               />
             </div>
@@ -120,6 +121,7 @@
           :options="pageSizeOptions"
           compact
           class="page-size-select-premium"
+          :disabled="isLoading"
           @update:model-value="handlePageSizeChange"
         />
         <span class="pagination-results-label">
@@ -430,6 +432,9 @@ import { accountService } from '@/services/api/account/account.service'
 import type { AdminUser, AdminUserDetails } from '@/services/api/admin/admin.models'
 import type { AccountUserUsageResponse } from '@/services/api/account/account.models'
 import { getUserRoles, getUserId } from '@/utils/auth'
+import { useToast } from '@/stores/useToast'
+import { useConfirm } from '@/stores/useConfirm'
+import { usePrompt } from '@/stores/usePrompt'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import UISidePanelShell from '@/components/UISidePanelShell.vue'
 import UISelect from '@/components/UISelect.vue'
@@ -488,6 +493,10 @@ export default defineComponent({
     const isRevokingConfirm = ref(false)
     const isRevoked = ref(false)
     let revokeTimer: any = null
+
+    const toast = useToast()
+    const confirm = useConfirm()
+    const prompt = usePrompt()
 
     const hasUppercase = computed(() => /[A-Z]/.test(newPassword.value))
     const hasSpecial = computed(() => /[^A-Za-z0-9]/.test(newPassword.value))
@@ -749,36 +758,34 @@ export default defineComponent({
         userDetails.value = updated
         isLocking.value = false
         lockUntilDate.value = new Date()
+        toast.success(locked ? 'Account unlocked' : 'Account locked')
         fetchUsers()
       } catch (error) {
-        alert('Failed to toggle lock')
+        toast.error('Failed to toggle lock')
       } finally {
         isLockingApi.value = false
       }
     }
-
     const handleRevokeSessions = async () => {
       if (!userDetails.value) return
+      const confirmed = await confirm.ask({
+        title: t.value.revokeSessions,
+        message: 'Are you sure you want to log out all devices for this user?',
+        confirmText: 'Revoke All',
+        type: 'danger'
+      })
 
-      if (!isRevokingConfirm.value) {
-        isRevokingConfirm.value = true
-        revokeTimer = setTimeout(() => {
-          isRevokingConfirm.value = false
-        }, 3000)
-        return
-      }
-
-      if (revokeTimer) clearTimeout(revokeTimer)
-      isRevokingConfirm.value = false
+      if (!confirmed) return
 
       try {
         await adminService.revokeSessions(userDetails.value.id)
+        toast.success('All sessions have been revoked.')
         isRevoked.value = true
         setTimeout(() => {
           isRevoked.value = false
         }, 3000)
       } catch (error) {
-        alert('Failed to revoke sessions')
+        toast.error('Failed to revoke sessions')
       }
     }
 
@@ -787,12 +794,12 @@ export default defineComponent({
       isResettingPassword.value = true
       try {
         await adminService.setPassword(userDetails.value.id, newPassword.value)
-        alert('Password reset successfully')
+        toast.success('Password reset successfully')
         isResetting.value = false
         newPassword.value = ''
       } catch (error: any) {
         const errorMsg = error.message || 'Failed to reset password'
-        alert(`Error: ${errorMsg}. Please ensure the password meets all requirements.`)
+        toast.error(`Error: ${errorMsg}. Please ensure the password meets all requirements.`)
       } finally {
         isResettingPassword.value = false
       }
@@ -826,12 +833,13 @@ export default defineComponent({
         })
         userDetails.value.subscriptionTier = parseInt(selectedTier.value)
         isTierUpdated.value = true
+        toast.success('Subscription tier updated')
         setTimeout(() => {
           isTierUpdated.value = false
         }, 3000)
         fetchUsers()
       } catch (error) {
-        alert('Failed to update tier')
+        toast.error('Failed to update tier')
       } finally {
         isUpdatingTier.value = false
       }

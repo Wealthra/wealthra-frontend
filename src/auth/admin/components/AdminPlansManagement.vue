@@ -240,22 +240,14 @@
       @save="handleModalSave"
     />
 
-    <!-- Simple Delete Confirmation -->
-    <div v-if="planToDelete" class="modal-backdrop" @click="planToDelete = null">
-      <div class="confirm-modal glass-card" @click.stop>
-        <h3>{{ t.confirmDeleteTitle }}</h3>
-        <p>
-          {{ t.confirmDeleteText }} <strong>{{ planToDelete.name }}</strong
-          >?
-        </p>
-        <div class="confirm-actions">
-          <button class="cancel-btn" @click="planToDelete = null">{{ t.cancel }}</button>
-          <button class="delete-btn" @click="handleDelete" :disabled="isDeleting">
-            {{ isDeleting ? t.deleting : t.delete }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Plan Edit/Create Modal -->
+    <UIPlanModal
+      v-if="isModalOpen"
+      :plan="modalPlan"
+      :selected-language="selectedLanguage"
+      @close="isModalOpen = false"
+      @save="handleModalSave"
+    />
   </div>
 </template>
 
@@ -284,6 +276,8 @@ import {
   faChevronRight,
   faBan,
 } from '@fortawesome/free-solid-svg-icons'
+import { useToast } from '@/stores/useToast'
+import { useConfirm } from '@/stores/useConfirm'
 
 export default defineComponent({
   name: 'AdminPlansManagement',
@@ -319,7 +313,9 @@ export default defineComponent({
 
     // Delete state
     const isDeleting = ref(false)
-    const planToDelete = ref<AdminPlan | null>(null)
+
+    const toast = useToast()
+    const confirm = useConfirm()
 
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
@@ -413,22 +409,27 @@ export default defineComponent({
       selectedPlan.value = null
     }
 
-    const confirmDelete = (plan: AdminPlan) => {
-      planToDelete.value = plan
-    }
+    const confirmDelete = async (plan: AdminPlan) => {
+      const confirmed = await confirm.ask({
+        title: t.value.confirmDeleteTitle,
+        message: t.value.confirmDeleteText,
+        confirmText: t.value.delete,
+        type: 'danger'
+      })
 
-    const handleDelete = async () => {
-      if (!planToDelete.value) return
-      isDeleting.value = true
-      try {
-        await adminPlansService.deletePlan(planToDelete.value.id)
-        await fetchPlans()
-        await fetchSummary()
-        planToDelete.value = null
-      } catch (error) {
-        console.error('Failed to delete plan:', error)
-      } finally {
-        isDeleting.value = false
+      if (confirmed) {
+        isDeleting.value = true
+        try {
+          await adminPlansService.deletePlan(plan.id)
+          toast.success('Plan deactivated successfully')
+          await fetchPlans()
+          await fetchSummary()
+        } catch (error) {
+          toast.error('Failed to deactivate plan')
+          console.error('Failed to delete plan:', error)
+        } finally {
+          isDeleting.value = false
+        }
       }
     }
 
@@ -441,9 +442,11 @@ export default defineComponent({
           planId: selectedPlan.value.id,
         })
         assignEmail.value = ''
+        toast.success('Plan assigned to user successfully')
         await fetchPlanUsers()
         await fetchSummary()
       } catch (error) {
+        toast.error('Failed to assign plan')
         console.error('Failed to assign plan:', error)
       } finally {
         isAssigning.value = false
@@ -476,7 +479,6 @@ export default defineComponent({
       isModalOpen,
       modalPlan,
       isDeleting,
-      planToDelete,
       planUsers,
       isLoadingUsers,
       assignEmail,
@@ -487,7 +489,6 @@ export default defineComponent({
       openAssignmentPanel,
       closePanel,
       confirmDelete,
-      handleDelete,
       handleAssignPlan,
       fetchPlanUsers,
       fetchPlans,

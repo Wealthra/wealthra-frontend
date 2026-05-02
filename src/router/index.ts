@@ -152,6 +152,12 @@ const router = createRouter({
           meta: { requiresAdmin: true },
         },
         {
+          path: 'admin/security',
+          name: 'admin-security',
+          component: AdminView,
+          meta: { requiresAdmin: true },
+        },
+        {
           path: 'admin/settings',
           name: 'admin-settings',
           component: AdminView,

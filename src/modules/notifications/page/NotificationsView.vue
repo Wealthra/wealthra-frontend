@@ -134,8 +134,7 @@ export default defineComponent({
       try {
         const langCode = props.selectedLanguage === 'Turkish' ? 'tr' : 'en'
         notifications.value = await notificationService.getNotifications(
-          unreadOnly.value,
-          langCode
+          unreadOnly.value
         )
         updateUnreadCount()
       } catch (error) {

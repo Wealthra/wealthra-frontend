@@ -6,7 +6,7 @@
         {{ selectedLanguage === 'Turkish' ? 'Sistem Duyuruları' : 'System Announcements' }}
       </h1>
       
-      <button class="add-btn-premium" @click="showForm = !showForm">
+      <button class="add-btn-premium" @click="showForm = !showForm" :disabled="isLoading">
         <font-awesome-icon :icon="showForm ? 'xmark' : 'plus'" />
         {{ showForm ? (selectedLanguage === 'Turkish' ? 'Vazgeç' : 'Cancel') : (selectedLanguage === 'Turkish' ? 'Yeni Duyuru' : 'New Announcement') }}
       </button>
@@ -129,12 +129,12 @@
         
         <template v-else>
           <div v-for="ann in announcements" :key="ann.id" class="table-row" role="row">
-            <div class="col col-severity">
+            <div class="col col-severity" :data-label="selectedLanguage === 'Turkish' ? 'Önem' : 'Level'">
               <span :class="['severity-tag', getSeverityClass(ann.severity)]">
                 {{ getSeverityLabel(ann.severity) }}
               </span>
             </div>
-            <div class="col col-title">
+            <div class="col col-title" :data-label="selectedLanguage === 'Turkish' ? 'Duyuru Başlığı' : 'Announcement'">
               <div class="title-info">
                 <span class="main-title">{{ ann.titleEn }}</span>
                 <span class="sub-title">{{ ann.titleTr }}</span>
@@ -143,7 +143,7 @@
                 {{ selectedLanguage === 'Turkish' ? 'Taslak' : 'Draft' }}
               </span>
             </div>
-            <div class="col col-schedule">
+            <div class="col col-schedule" :data-label="selectedLanguage === 'Turkish' ? 'Zamanlama' : 'Schedule'">
               <div class="schedule-info">
                 <div class="time-range">
                   <font-awesome-icon icon="calendar-days" class="time-icon" />
@@ -154,7 +154,7 @@
                 </span>
               </div>
             </div>
-            <div class="col col-actions">
+            <div class="col col-actions" :data-label="selectedLanguage === 'Turkish' ? 'İşlemler' : 'Actions'">
               <button class="row-delete-btn" @click="handleDelete(ann.id)" :title="selectedLanguage === 'Turkish' ? 'Sil' : 'Delete'">
                 <font-awesome-icon icon="trash-can" />
               </button>
@@ -186,6 +186,8 @@ import UISelect from '@/components/UISelect.vue'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
+import { useToast } from '@/stores/useToast'
+import { useConfirm } from '@/stores/useConfirm'
 
 export default defineComponent({
   name: 'AdminAnnouncements',
@@ -204,8 +206,11 @@ export default defineComponent({
     const announcements = ref<AdminAnnouncement[]>([])
     const isLoading = ref(true)
     const error = ref<string | null>(null)
-    const showForm = ref(false)
     const isSubmitting = ref(false)
+    const showForm = ref(false)
+
+    const toast = useToast()
+    const confirm = useConfirm()
 
     const form = ref<CreateAnnouncementRequest>({
       titleEn: '',
@@ -259,7 +264,9 @@ export default defineComponent({
           isPublished: true
         }
         await fetchAnnouncements()
+        toast.success('Announcement created successfully')
       } catch (err) {
+        toast.error('Failed to create announcement')
         console.error(err)
       } finally {
         isSubmitting.value = false
@@ -267,11 +274,20 @@ export default defineComponent({
     }
 
     const handleDelete = async (id: number) => {
-      if (!confirm('Are you sure you want to delete this announcement?')) return
+      const confirmed = await confirm.ask({
+        title: 'Delete Announcement',
+        message: 'Are you sure you want to delete this announcement?',
+        confirmText: 'Delete',
+        type: 'danger'
+      })
+      if (!confirmed) return
+
       try {
         await adminService.deleteAnnouncement(id)
+        toast.success('Announcement deleted successfully')
         await fetchAnnouncements()
       } catch (err) {
+        toast.error('Failed to delete announcement')
         console.error(err)
       }
     }
@@ -380,8 +396,7 @@ export default defineComponent({
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover {
-    transform: translateY(-1px);
+  &:hover:not(:disabled) {
     filter: brightness(1.1);
   }
 }
@@ -794,7 +809,45 @@ export default defineComponent({
   .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .add-btn-premium { width: 100%; justify-content: center; }
   .table-header { display: none; }
-  .table-row { grid-template-columns: 1fr; gap: 15px; padding: 1.5rem; }
-  .col { justify-content: space-between; &::before { content: attr(data-label); font-size: 0.7rem; font-weight: 700; color: var(--normal-text-color); text-transform: uppercase; } }
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 1.5rem;
+    background: var(--background-color-soft);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    margin-bottom: 16px;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  .col {
+    justify-content: flex-end;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: right;
+
+    &:last-child { border-bottom: none; }
+
+    &::before {
+      content: attr(data-label);
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--normal-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.6;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    .title-info, .schedule-info {
+      align-items: flex-end;
+    }
+  }
+
+  .col-actions {
+    padding-top: 12px;
+  }
 }
 </style>

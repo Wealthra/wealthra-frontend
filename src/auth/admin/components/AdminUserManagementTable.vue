@@ -198,6 +198,9 @@ import { accountService } from '@/services/api/account/account.service'
 import type { AccountUserUsageResponse } from '@/services/api/account/account.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import AdminUserAssignment from './AdminUserAssignment.vue'
+import { useToast } from '@/stores/useToast'
+import { useConfirm } from '@/stores/useConfirm'
+import { usePrompt } from '@/stores/usePrompt'
 
 export default defineComponent({
   name: 'AdminUserManagementTable',
@@ -229,6 +232,10 @@ export default defineComponent({
     const usageLoading = ref(false)
     const usageRows = ref<AccountUserUsageResponse[]>([])
     const usageTargetUser = ref<AdminUser | null>(null)
+
+    const toast = useToast()
+    const confirm = useConfirm()
+    const prompt = usePrompt()
 
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
@@ -294,22 +301,40 @@ export default defineComponent({
 
     const promptLockUser = async (user: AdminUser) => {
        const isLocked = !!user.lockoutEnd
-       if (confirm(`Are you sure you want to ${isLocked ? 'unlock' : 'lock'} ${user.email}?`)) {
+       const confirmed = await confirm.ask({
+         title: isLocked ? 'Unlock User' : 'Lock User',
+         message: `Are you sure you want to ${isLocked ? 'unlock' : 'lock'} ${user.email}?`,
+         confirmText: isLocked ? 'Unlock' : 'Lock',
+         type: isLocked ? 'primary' : 'danger'
+       })
+
+       if (confirmed) {
          try {
            await adminService.lockUser(user.id, !isLocked)
+           toast.success(`User ${isLocked ? 'unlocked' : 'locked'} successfully`)
            await fetchUsers()
          } catch (err) {
+           toast.error('Failed to update user status')
            console.error(err)
          }
        }
     }
 
-    const promptResetPassword = (user: AdminUser) => {
-      const newPass = prompt(`Enter new password for ${user.email}:`)
+    const promptResetPassword = async (user: AdminUser) => {
+      const newPass = await prompt.ask({
+        title: 'Reset Password',
+        message: `Enter new password for ${user.email}:`,
+        placeholder: 'New password',
+        inputType: 'password'
+      })
+
       if (newPass) {
-        adminService.setPassword(user.id, newPass)
-          .then(() => alert('Password updated'))
-          .catch(err => alert('Failed: ' + err.message))
+        try {
+          await adminService.setPassword(user.id, newPass)
+          toast.success('Password updated successfully')
+        } catch (err: any) {
+          toast.error('Failed: ' + (err.message || 'Unknown error'))
+        }
       }
     }
 
@@ -335,19 +360,25 @@ export default defineComponent({
     }
 
     const promptChangeTier = async (user: AdminUser) => {
-      const tier = prompt(
-        props.selectedLanguage === 'Turkish'
-          ? `${user.email} için yeni katman (tier) string değeri:`
-          : `New tier string for ${user.email}:`
-      )
+      const tier = await prompt.ask({
+        title: t.value.changeTierTitle,
+        message: props.selectedLanguage === 'Turkish'
+          ? `${user.email} için yeni katman (tier) sayısal değeri:`
+          : `New tier numeric value for ${user.email}:`,
+        placeholder: 'e.g. 1, 2, 3',
+        inputType: 'number',
+        initialValue: String(user.subscriptionTier)
+      })
+
       if (tier === null || tier.trim() === '') return
+
       try {
         await accountService.updateTier({ email: user.email, newTier: parseInt(tier.trim()) })
-        alert(t.value.tierUpdated)
+        toast.success(t.value.tierUpdated)
         await fetchUsers()
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
-        alert(`${t.value.tierUpdateFailed} ${msg}`)
+        toast.error(`${t.value.tierUpdateFailed} ${msg}`)
       }
     }
 

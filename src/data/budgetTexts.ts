@@ -52,6 +52,11 @@ export const budgetTexts = {
     budgetDetailStatus: 'Status',
     budgetDetailPercentUsed: 'Used',
     budgetDetailLoadError: 'Could not load budget details.',
+    statusSafe: 'Safe',
+    statusWarning: 'Warning',
+    statusExceeded: 'Exceeded',
+    statusHealthy: 'Healthy',
+    statusOk: 'Ok',
   },
   Turkish: {
     budget: 'Bütçe Yönetimi',
@@ -106,5 +111,10 @@ export const budgetTexts = {
     budgetDetailStatus: 'Durum',
     budgetDetailPercentUsed: 'Kullanım',
     budgetDetailLoadError: 'Bütçe detayı yüklenemedi.',
+    statusSafe: 'Güvenli',
+    statusWarning: 'Uyarı',
+    statusExceeded: 'Aşıldı',
+    statusHealthy: 'Sağlıklı',
+    statusOk: 'Tamam',
   },
 }

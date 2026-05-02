@@ -1,7 +1,9 @@
 export interface AnnouncementDto {
   id: number;
-  title: string;
-  body: string;
+  titleEn: string;
+  titleTr: string;
+  bodyEn: string;
+  bodyTr: string;
   severity: number;
   startsAt: string;
   endsAt: string;

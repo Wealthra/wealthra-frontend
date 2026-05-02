@@ -26,7 +26,7 @@
             <div v-for="item in breakdown" :key="item.budgetId" class="breakdown-card glass-card">
               <div class="card-header">
                 <span class="category-name">{{ item.categoryName }}</span>
-                <span :class="['status-badge', item.status.toLowerCase()]">{{ item.status }}</span>
+                <span :class="['status-badge', item.status.toLowerCase()]">{{ formatStatus(item.status) }}</span>
               </div>
               
               <div class="card-body">
@@ -108,6 +108,11 @@ export default defineComponent({
     t(key: string) {
       const texts = budgetTexts[this.selectedLanguage] as any
       return texts[key] || key
+    },
+    formatStatus(status: string) {
+      const key = `status${status}`
+      const translated = this.t(key)
+      return translated === key ? status : translated
     }
   }
 })

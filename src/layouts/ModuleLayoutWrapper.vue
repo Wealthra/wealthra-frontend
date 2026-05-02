@@ -37,6 +37,7 @@ const ADMIN_ROUTE_LABELS: Record<string, { en: string; tr: string }> = {
   'admin-system': { en: 'System & AI Config', tr: 'Sistem Ayarları ve Yapay Zeka' },
   'admin-support': { en: 'Support', tr: 'Destek' },
   'admin-operations': { en: 'Platform Operations', tr: 'Platform Operasyonları' },
+  'admin-security': { en: 'Security & Monitoring', tr: 'Güvenlik ve İzleme' },
   'admin-settings': { en: 'Admin Settings', tr: 'Admin Ayarları' },
 }
 
@@ -65,6 +66,8 @@ export default defineComponent({
     const handleLanguageUpdate = (language: string) => {
       selectedLanguage.value = language as Language
       localStorage.setItem('selectedLanguage', language)
+      // Trigger a global refetch to update localized data from the API
+      window.dispatchEvent(new CustomEvent('app:refetch'))
     }
 
     onMounted(() => {

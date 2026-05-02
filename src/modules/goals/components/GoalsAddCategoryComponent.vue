@@ -30,11 +30,16 @@
 <script lang="ts">
 import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
+import { useToast } from '@/stores/useToast'
 
 export default {
   name: 'GoalsAddCategoryComponent',
   components: {
     Datepicker,
+  },
+  setup() {
+    const toast = useToast()
+    return { toast }
   },
   data() {
     return {
@@ -91,7 +96,7 @@ export default {
         this.$emit('handleAddNewGoalCategory', newGoalCategory)
         this.resetForm()
       } else {
-        alert(
+        this.toast.warning(
           this.selectedLanguage === 'English'
             ? 'Please fill in all fields'
             : 'Lütfen tüm alanları doldurun'

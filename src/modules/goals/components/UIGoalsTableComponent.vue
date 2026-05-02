@@ -392,6 +392,7 @@ import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import UISelect from '@/components/UISelect.vue'
+import { useConfirm } from '@/stores/useConfirm'
 
 export default {
   name: 'UIGoalsTableComponent',
@@ -423,7 +424,8 @@ export default {
 
   setup() {
     const { formatCurrency, currencySymbol } = useCurrency()
-    return { formatCurrency, currencySymbol }
+    const confirm = useConfirm()
+    return { formatCurrency, currencySymbol, confirm }
   },
   data() {
     return {
@@ -636,9 +638,14 @@ export default {
       })
       this.hideEditModal()
     },
-    confirmDelete(goal: Goal) {
-      if (!window.confirm(this.t('confirmDeleteGoal'))) return
-      this.$emit('deleteGoal', goal.id)
+    async confirmDelete(goal: Goal) {
+      const confirmed = await this.confirm.ask({
+        title: this.t('deleteGoal'),
+        message: this.t('confirmDeleteGoal'),
+        confirmText: this.t('deleteGoal'),
+        type: 'danger'
+      })
+      if (confirmed) this.$emit('deleteGoal', goal.id)
     },
   },
 }

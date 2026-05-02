@@ -154,29 +154,50 @@
                             }}</span>
                           </div>
                         </div>
-                        <button
-                          class="copilot-item__edit-btn"
-                          @click="startEditItem(msg.id, idx, item)"
-                          :title="t.edit"
-                        >
-                          <svg
-                            width="10"
-                            height="10"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                        <div class="copilot-item__actions-view">
+                          <button
+                            class="copilot-item__edit-btn"
+                            @click="startEditItem(msg.id, idx, item)"
+                            :title="t.edit"
                           >
-                            <path
-                              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                            ></path>
-                            <path
-                              d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                            ></path>
-                          </svg>
-                        </button>
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <path
+                                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                              ></path>
+                              <path
+                                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                              ></path>
+                            </svg>
+                          </button>
+                          <button
+                            class="copilot-item__delete-btn"
+                            @click="removeItem(msg.id, idx)"
+                            :title="t.remove"
+                          >
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2.5"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                          </button>
+                        </div>
                       </template>
 
                       <!-- Edit Mode -->
@@ -187,22 +208,20 @@
                             class="copilot-item__input"
                             :placeholder="t.description"
                           />
-                          <div class="copilot-item__row">
-                            <UISelect
-                              v-model="editForm.categoryId"
-                              class="copilot-item__select"
-                              :options="categories.map(cat => ({ label: cat.categoryName, value: cat.id }))"
+                          <UISelect
+                            v-model="editForm.categoryId"
+                            class="copilot-item__select"
+                            :options="categories.map(cat => ({ label: cat.categoryName, value: cat.id }))"
+                          />
+                          <div class="copilot-item__price-wrap">
+                            <span class="copilot-item__currency">{{ currencySymbol }}</span>
+                            <input
+                              v-model.number="editForm.amount"
+                              type="number"
+                              step="0.01"
+                              class="copilot-item__input copilot-item__input--price"
+                              :placeholder="t.amount"
                             />
-                            <div class="copilot-item__price-wrap">
-                              <span class="copilot-item__currency">{{ currencySymbol }}</span>
-                              <input
-                                v-model.number="editForm.amount"
-                                type="number"
-                                step="0.01"
-                                class="copilot-item__input copilot-item__input--price"
-                                :placeholder="t.amount"
-                              />
-                            </div>
                           </div>
                           <div class="copilot-item__actions">
                             <button
@@ -222,7 +241,7 @@
 
                   <!-- Save All Button -->
                   <button
-                    v-if="!msg.saved"
+                    v-if="!msg.saved && msg.itemData && msg.itemData.length > 0"
                     class="copilot-items__save-all"
                     :disabled="msg.saving"
                     @click="handleSaveAll(msg)"
@@ -309,8 +328,9 @@
               class="copilot-icon-btn"
               @click="triggerImageUpload"
               :title="t.image"
+              :disabled="isOcrLimitReached"
             >
-              <font-awesome-icon icon="image" />
+              <font-awesome-icon icon="image" :class="{ 'icon-disabled': isOcrLimitReached }" />
             </button>
 
             <textarea
@@ -335,8 +355,9 @@
               class="copilot-icon-btn copilot-icon-btn--mic"
               @click="startRecording"
               :title="t.voice"
+              :disabled="isSttLimitReached"
             >
-              <font-awesome-icon icon="microphone" />
+              <font-awesome-icon icon="microphone" :class="{ 'icon-disabled': isSttLimitReached }" />
             </button>
           </div>
 
@@ -409,9 +430,25 @@ export default defineComponent({
       type: String,
       default: 'English',
     },
+    usageData: {
+      type: Object as () => any | null,
+      default: null,
+    }
   },
   setup(props) {
     const { currencySymbol, formatCurrency } = useCurrency()
+    
+    const isOcrLimitReached = computed(() => {
+      if (!props.usageData) return false
+      return props.usageData.monthlyOcrLimit !== null && 
+             props.usageData.ocrRequestsThisMonth >= props.usageData.monthlyOcrLimit
+    })
+
+    const isSttLimitReached = computed(() => {
+      if (!props.usageData) return false
+      return props.usageData.monthlySttLimit !== null && 
+             props.usageData.sttRequestsThisMonth >= props.usageData.monthlySttLimit
+    })
     // ── State ──
     const isOpen = ref(false)
     const messages = ref<ChatMessage[]>([])
@@ -498,6 +535,7 @@ export default defineComponent({
           ? 'Ses kaydınız analiz ediliyor...'
           : 'Analyzing your voice recording...',
         analyzingImage: isTr ? 'Görseliniz analiz ediliyor...' : 'Analyzing your image...',
+        remove: isTr ? 'Sil' : 'Remove',
       }
     })
 
@@ -688,6 +726,8 @@ export default defineComponent({
         isTyping.value = false
         removeLastBotTextMessage()
         addMessage({ sender: 'bot', type: 'text', content: t.value.errorExtract })
+      } finally {
+        window.dispatchEvent(new CustomEvent('app:refetch-usage'))
       }
     }
 
@@ -742,6 +782,8 @@ export default defineComponent({
         isTyping.value = false
         removeLastBotTextMessage()
         addMessage({ sender: 'bot', type: 'text', content: t.value.errorExtract })
+      } finally {
+        window.dispatchEvent(new CustomEvent('app:refetch-usage'))
       }
     }
 
@@ -877,6 +919,19 @@ export default defineComponent({
       editingItemKey.value = null
     }
 
+    const removeItem = (msgId: string, idx: number) => {
+      const msg = messages.value.find(m => m.id === msgId)
+      if (msg?.itemData) {
+        msg.itemData.splice(idx, 1)
+        // If no items left, we could potentially remove the whole interactive message or show a state
+        if (msg.itemData.length === 0) {
+          msg.content = props.selectedLanguage === 'Turkish' 
+            ? 'Tüm öğeler kaldırıldı.' 
+            : 'All items have been removed.'
+        }
+      }
+    }
+
     // ── Save All ──
     const handleSaveAll = async (msg: ChatMessage) => {
       if (!msg.itemData || msg.itemData.length === 0) return
@@ -938,6 +993,7 @@ export default defineComponent({
       startEditItem,
       saveEditItem,
       cancelEditItem,
+      removeItem,
       handleSaveAll,
       formatTime,
       formatDuration,
@@ -950,6 +1006,8 @@ export default defineComponent({
       parseMarkdown,
       formatCurrency,
       currencySymbol,
+      isOcrLimitReached,
+      isSttLimitReached,
     }
   },
 })
@@ -1420,7 +1478,14 @@ export default defineComponent({
   flex-shrink: 0;
 }
 
-.copilot-item__edit-btn {
+.copilot-item__actions-view {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.copilot-item__edit-btn,
+.copilot-item__delete-btn {
   flex-shrink: 0;
   background: var(--background-color-soft);
   border: none;
@@ -1434,63 +1499,75 @@ export default defineComponent({
   transition: all 0.15s;
 
   &:hover {
-    color: var(--primary-green-color);
     background: var(--hover-color);
   }
+}
+
+.copilot-item__edit-btn:hover {
+  color: var(--primary-green-color);
+}
+
+.copilot-item__delete-btn:hover {
+  color: #ef4444;
 }
 
 /* Edit Form */
 .copilot-item__edit-form {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
   width: 100%;
+  padding: 4px 0;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .copilot-item__input {
   width: 100%;
-  padding: 6px 8px;
+  height: 42px; /* Explicit height for all inputs */
+  padding: 0 12px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 12px;
-  background: var(--background-color);
+  border-radius: 12px;
+  font-size: 13px;
+  background: var(--background-color-soft);
   color: var(--header-text-color);
   font-family: var(--main-font);
   outline: none;
-  transition: border-color 0.2s;
+  box-sizing: border-box;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:focus {
     border-color: var(--primary-green-color);
+    background: var(--background-color);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
   }
 
   &.copilot-item__input--price {
-    padding-left: 20px;
+    padding-left: 32px;
+    font-weight: 700;
   }
 }
 
 .copilot-item__select {
   flex: 1;
-  padding: 6px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 12px;
-  background: var(--background-color);
-  color: var(--header-text-color);
-  font-family: var(--main-font);
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
   min-width: 0;
-
-  &:focus {
-    border-color: var(--primary-green-color);
+  
+  /* UISelect handles its own border and padding internally */
+  :deep(.select-trigger) {
+    background: var(--background-color-soft);
+    height: 42px; /* Matching the height of other inputs */
+    
+    &:focus {
+      background: var(--background-color);
+    }
   }
 }
 
-.copilot-item__row {
-  display: flex;
-  gap: 6px;
-}
+/* Removed .copilot-item__row as we are stacking items now */
 
 .copilot-item__price-wrap {
   position: relative;
@@ -1498,12 +1575,14 @@ export default defineComponent({
 
   .copilot-item__currency {
     position: absolute;
-    left: 8px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 12px;
-    color: var(--normal-text-color);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-green-color);
     pointer-events: none;
+    z-index: 1;
   }
 }
 
@@ -1519,29 +1598,45 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 6px 0;
+  gap: 8px;
+  padding: 10px 0;
   border: none;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   font-family: var(--main-font);
-  transition: opacity 0.15s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    opacity: 0.85;
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
 }
 
 .copilot-item__save-btn {
   background: var(--primary-green-color);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+    filter: brightness(1.05);
+  }
 }
 
 .copilot-item__cancel-btn {
-  background: var(--hover-color);
-  color: var(--header-text-color);
+  background: var(--background-color-soft);
+  color: var(--normal-text-color);
+  border: 1px solid var(--border-color);
+
+  &:hover {
+    background: var(--border-color);
+    color: var(--header-text-color);
+  }
 }
 
 /* Save All Button */
@@ -1867,5 +1962,13 @@ export default defineComponent({
     bottom: 16px;
     right: 16px;
   }
+}
+.copilot-icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.icon-disabled {
+  color: var(--normal-text-color) !important;
 }
 </style>

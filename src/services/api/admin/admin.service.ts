@@ -46,7 +46,20 @@ export const adminService = {
     return apiRequest<AdminAnnouncement[]>('admin/announcements', { method: 'GET' });
   },
   async createAnnouncement(data: CreateAnnouncementRequest): Promise<number> {
-    return apiRequest<number>('admin/announcements', { method: 'POST', body: data });
+    const payload = {
+      titleEn: data.titleEn,
+      titleTr: data.titleTr,
+      bodyEn: data.bodyEn,
+      bodyTr: data.bodyTr,
+      severity: data.severity,
+      startsAt: new Date(data.startsAt).toISOString(),
+      endsAt: new Date(data.endsAt).toISOString(),
+      targetAllSubscribers: data.targetAllSubscribers,
+      targetPlanIdsJson: data.targetPlanIdsJson,
+      targetTiersJson: data.targetTiersJson,
+      isPublished: data.isPublished
+    };
+    return apiRequest<number>('admin/announcements', { method: 'POST', body: payload });
   },
   async deleteAnnouncement(id: number): Promise<void> {
     return apiRequest<void>(`admin/announcements/${id}`, { method: 'DELETE' });
@@ -90,13 +103,23 @@ export const adminService = {
   async setManualRate(data: CreateFxRateRequest): Promise<number> {
     return apiRequest<number>('admin/fx/manual-rates', { method: 'POST', body: data });
   },
+  async updateManualRate(id: number, rate: number): Promise<void> {
+    return apiRequest<void>(`admin/fx/manual-rates/${id}`, { method: 'PUT', body: { rate } });
+  },
+  async deleteManualRate(id: number): Promise<void> {
+    return apiRequest<void>(`admin/fx/manual-rates/${id}`, { method: 'DELETE' });
+  },
 
   // --- Admin Security ---
   async getBlockedIps(): Promise<BlockedIp[]> {
     return apiRequest<BlockedIp[]>('admin/security/blocked-ips', { method: 'GET' });
   },
   async blockIp(data: CreateBlockedIpRequest): Promise<number> {
-    return apiRequest<number>('admin/security/blocked-ips', { method: 'POST', body: data });
+    const payload = {
+      ...data,
+      expiresUtc: data.expiresUtc ? new Date(data.expiresUtc).toISOString() : null
+    };
+    return apiRequest<number>('admin/security/blocked-ips', { method: 'POST', body: payload });
   },
   async unblockIp(ip: string): Promise<void> {
     return apiRequest<void>(`admin/security/blocked-ips/${encodeURIComponent(ip)}`, { method: 'DELETE' });

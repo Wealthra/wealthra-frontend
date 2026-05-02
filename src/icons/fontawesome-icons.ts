@@ -92,6 +92,7 @@ import {
   faLayerGroup,
   faBolt,
   faServer,
+  faListCheck,
 } from '@fortawesome/free-solid-svg-icons'
 
 export const leftSidebarIconMap: Record<string, IconDefinition> = {
@@ -110,6 +111,7 @@ export const leftSidebarIconMap: Record<string, IconDefinition> = {
   'Plans & Subscriptions': faLayerGroup,
   'System & AI Config': faShieldHalved,
   'Platform Operations': faBolt,
+  'Security & Monitoring': faLock,
   Support: faHeadset,
   'Admin Settings': faGear,
   Tickets: faHeadset,
@@ -229,3 +231,5 @@ export const transactionCategoryIconMap: Record<string, IconDefinition> = {
   utilities: faLightbulb,
   default: faReceipt,
 }
+
+export { faShieldHalved, faTriangleExclamation, faListCheck }

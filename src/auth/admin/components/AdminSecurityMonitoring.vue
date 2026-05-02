@@ -1,7 +1,7 @@
 <template>
-  <div class="admin-operations">
+  <div class="admin-security-monitoring">
     <!-- Tab Navigation -->
-    <div class="ops-tabs">
+    <div class="sec-tabs">
       <button 
         v-for="tab in tabs" 
         :key="tab.id"
@@ -15,15 +15,20 @@
     </div>
 
     <!-- Tab Content -->
-    <div class="ops-content-wrapper">
-      <!-- Financial Settings (FX) -->
-      <div v-if="activeSubTab === 'fx'" class="sub-tab-pane">
-        <AdminFxControls :selectedLanguage="selectedLanguage" />
+    <div class="sec-content-wrapper">
+      <!-- Access Control (IP Blocking) -->
+      <div v-if="activeSubTab === 'ip-blocking'" class="sub-tab-pane glass-card">
+        <AdminSecurity :selectedLanguage="selectedLanguage" />
       </div>
 
-      <!-- Announcements -->
-      <div v-else-if="activeSubTab === 'announcements'" class="sub-tab-pane">
-        <AdminAnnouncements :selectedLanguage="selectedLanguage" />
+      <!-- System Errors (Error Logs) -->
+      <div v-else-if="activeSubTab === 'error-logs'" class="sub-tab-pane glass-card">
+        <AdminErrorLogs :selectedLanguage="selectedLanguage" />
+      </div>
+
+      <!-- Audit Logs -->
+      <div v-else-if="activeSubTab === 'audit-logs'" class="sub-tab-pane glass-card">
+        <AdminAuditLogs :selectedLanguage="selectedLanguage" />
       </div>
     </div>
   </div>
@@ -31,14 +36,17 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import AdminFxControls from './AdminFxControls.vue'
-import AdminAnnouncements from './AdminAnnouncements.vue'
+import AdminSecurity from './AdminSecurity.vue'
+import AdminErrorLogs from './AdminErrorLogs.vue'
+import AdminAuditLogs from './AdminAuditLogs.vue'
+import { faShieldHalved, faTriangleExclamation, faListCheck } from '@/icons/fontawesome-icons'
 
 export default defineComponent({
-  name: 'AdminOperations',
+  name: 'AdminSecurityMonitoring',
   components: {
-    AdminFxControls,
-    AdminAnnouncements
+    AdminSecurity,
+    AdminErrorLogs,
+    AdminAuditLogs
   },
   props: {
     selectedLanguage: {
@@ -47,20 +55,26 @@ export default defineComponent({
     }
   },
   setup() {
-    const activeSubTab = ref<'fx' | 'announcements'>('fx')
+    const activeSubTab = ref<'ip-blocking' | 'error-logs' | 'audit-logs'>('ip-blocking')
 
     const tabs = [
       { 
-        id: 'fx', 
-        labelEn: 'Financial Settings (FX)', 
-        labelTr: 'Finansal Ayarlar (FX)',
-        icon: 'money-bill-trend-up' 
+        id: 'ip-blocking', 
+        labelEn: 'Access Control', 
+        labelTr: 'Erişim Kontrolü',
+        icon: faShieldHalved 
       },
       { 
-        id: 'announcements', 
-        labelEn: 'Announcements', 
-        labelTr: 'Duyurular',
-        icon: 'bullhorn' 
+        id: 'error-logs', 
+        labelEn: 'System Errors', 
+        labelTr: 'Sistem Hataları',
+        icon: faTriangleExclamation 
+      },
+      { 
+        id: 'audit-logs', 
+        labelEn: 'Audit Logs', 
+        labelTr: 'Denetim Günlükleri',
+        icon: faListCheck 
       }
     ] as const
 
@@ -73,7 +87,7 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
-.admin-operations {
+.admin-security-monitoring {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -81,7 +95,7 @@ export default defineComponent({
   min-height: 0;
 }
 
-.ops-tabs {
+.sec-tabs {
   display: flex;
   gap: 8px;
   background: var(--background-color-soft);
@@ -149,7 +163,7 @@ export default defineComponent({
   }
 }
 
-.ops-content-wrapper {
+.sec-content-wrapper {
   position: relative;
   flex: 1;
   min-height: 0;
@@ -160,52 +174,60 @@ export default defineComponent({
 .sub-tab-pane {
   display: flex;
   flex-direction: column;
-  gap: 24px;
   flex: 1;
   min-height: 0;
 
-  .pane-header {
-    margin-bottom: 8px;
-    padding-left: 4px;
-
-    h2 {
-      font-size: 28px;
-      font-weight: 800;
-      margin: 0;
-      color: var(--header-text-color);
-      letter-spacing: -0.03em;
-      background: linear-gradient(135deg, var(--header-text-color) 0%, var(--normal-text-color) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    p {
-      margin: 6px 0 0;
-      font-size: 15px;
-      color: var(--normal-text-color);
-      opacity: 0.8;
-    }
+  &.glass-card {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 0; // Content will handle internal padding
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden; // Clip children to border radius
   }
 }
 
-
-@media (max-width: 768px) {
-  .ops-tabs {
+@media (max-width: 900px) {
+  .sec-tabs {
     width: 100%;
     overflow-x: auto;
-    padding: 4px;
-    gap: 4px;
+    overflow-y: hidden;
+    padding: 6px;
+    gap: 6px;
     border-radius: 12px;
+    display: flex;
+    -webkit-overflow-scrolling: touch;
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
     
     .tab-btn {
-      flex: 1;
-      white-space: nowrap;
-      padding: 10px 16px;
-      font-size: 12px;
+      flex: 0 0 auto;
+      min-width: max-content;
+      padding: 10px 18px;
+      font-size: 13px;
       gap: 8px;
       border-radius: 10px;
 
       svg { font-size: 14px; }
+    }
+  }
+
+  .sub-tab-pane.glass-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .sec-tabs {
+    .tab-btn {
+      padding: 8px 14px;
+      font-size: 12px;
+      
+      span {
+        display: inline-block;
+      }
     }
   }
 }

@@ -24,25 +24,18 @@
 
         <div class="sidebar-middle">
           <div class="middle-wrapper">
-            <template v-if="isLoadingUser">
-              <div v-for="i in 7" :key="'skel-coll-' + i" class="icon-wrapper">
-                <UISkeletonLoader width="24px" height="24px" border-radius="50%" />
+            <div
+              v-for="(item, index) in sidebarItems"
+              :key="'collapsed-' + index"
+              class="icon-wrapper clickable"
+              :class="{ active: selectedPage === item.label }"
+              @click="routeToSidebarItem(item.englishLabel)"
+              :title="item.label"
+            >
+              <div class="nav-icon">
+                <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
               </div>
-            </template>
-            <template v-else>
-              <div
-                v-for="(item, index) in sidebarItems"
-                :key="'collapsed-' + index"
-                class="icon-wrapper clickable"
-                :class="{ active: selectedPage === item.label }"
-                @click="routeToSidebarItem(item.englishLabel)"
-                :title="item.label"
-              >
-                <div class="nav-icon">
-                  <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
-                </div>
-              </div>
-            </template>
+            </div>
           </div>
         </div>
 
@@ -69,38 +62,55 @@
 
         <div class="sidebar-middle">
           <div class="middle-wrapper">
-            <template v-if="isLoadingUser">
+            <div
+              v-for="(item, index) in sidebarItems"
+              :key="'expanded-' + index"
+              class="menu-item-container"
+            >
               <div
-                v-for="i in 7"
-                :key="'skel-exp-' + i"
-                class="menu-item-container"
-                style="padding: 4px 12px"
+                class="icon-wrapper"
+                :class="{ active: selectedPage === item.label }"
+                @click="routeToSidebarItem(item.englishLabel)"
               >
-                <UISkeletonLoader width="100%" height="32px" border-radius="8px" />
-              </div>
-            </template>
-            <template v-else>
-              <div
-                v-for="(item, index) in sidebarItems"
-                :key="'expanded-' + index"
-                class="menu-item-container"
-              >
-                <div
-                  class="icon-wrapper"
-                  :class="{ active: selectedPage === item.label }"
-                  @click="routeToSidebarItem(item.englishLabel)"
-                >
-                  <div class="nav-icon">
-                    <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
-                  </div>
-                  <span class="nav-label">{{ item.label }}</span>
+                <div class="nav-icon">
+                  <font-awesome-icon :icon="leftSidebarIconMap[item.englishLabel]" />
                 </div>
+                <span class="nav-label">{{ item.label }}</span>
               </div>
-            </template>
+            </div>
           </div>
         </div>
 
-        <div class="navbar-divider"></div>
+        <div class="navbar-divider" v-if="!isUserAdmin && usageData"></div>
+
+        <div class="sidebar-usage-container" v-if="!isLoadingUser && !isUserAdmin && usageData">
+          <div class="usage-item">
+            <div class="usage-label">
+              <span>OCR</span>
+              <span class="usage-value">{{ usageData.ocrRequestsThisMonth }} / {{ usageData.monthlyOcrLimit || '∞' }}</span>
+            </div>
+            <div class="usage-bar-bg">
+              <div 
+                class="usage-bar-fill" 
+                :class="{ 'warning': (usageData.ocrRequestsThisMonth / (usageData.monthlyOcrLimit || 1)) > 0.8 }"
+                :style="{ width: getUsagePercentage(usageData.ocrRequestsThisMonth, usageData.monthlyOcrLimit) + '%' }"
+              ></div>
+            </div>
+          </div>
+          <div class="usage-item">
+            <div class="usage-label">
+              <span>{{ normalizedLanguage === 'English' ? 'Voice' : 'Ses' }}</span>
+              <span class="usage-value">{{ usageData.sttRequestsThisMonth }} / {{ usageData.monthlySttLimit || '∞' }}</span>
+            </div>
+            <div class="usage-bar-bg">
+              <div 
+                class="usage-bar-fill" 
+                :class="{ 'warning': (usageData.sttRequestsThisMonth / (usageData.monthlySttLimit || 1)) > 0.8 }"
+                :style="{ width: getUsagePercentage(usageData.sttRequestsThisMonth, usageData.monthlySttLimit) + '%' }"
+              ></div>
+            </div>
+          </div>
+        </div>
 
         <div class="sidebar-bottom">
           <div class="toggle-wrapper" @click="toggleSidebar">
@@ -117,23 +127,15 @@
       <!-- Topbar -->
       <div class="top-bar-c">
         <div class="top-bar-left">
-          <template v-if="isLoadingUser">
-            <div class="greeting-section">
-              <UISkeletonLoader width="120px" height="14px" style="margin-bottom: 4px" />
-              <UISkeletonLoader width="180px" height="24px" />
-            </div>
-          </template>
-          <template v-else>
-            <div class="greeting-section" v-if="isDashboard">
-              <span class="greeting-name">
-                {{ greetingTitle }}
-              </span>
-              <span class="greeting-time">
-                {{ greetingSubtitle }}
-              </span>
-            </div>
-            <div class="page-title" v-else>{{ selectedPage }}</div>
-          </template>
+          <div class="greeting-section" v-if="isDashboard">
+            <span class="greeting-name">
+              {{ greetingTitle }}
+            </span>
+            <span class="greeting-time">
+              {{ greetingSubtitle }}
+            </span>
+          </div>
+          <div class="page-title" v-else>{{ selectedPage }}</div>
         </div>
 
         <div class="top-bar-right">
@@ -181,13 +183,10 @@
           <div class="profile-section-wrapper" ref="profileWrapperRef">
             <div class="profile-section" @click="toggleSettingsPanel">
               <div class="profile-avatar">
-                <UISkeletonLoader v-if="isLoadingUser" type="circle" width="100%" height="100%" />
-                <template v-else>
-                  <img v-if="userAvatarUrl" :src="userAvatarUrl" alt="User Avatar" />
-                  <div v-else class="avatar-initials">
-                    {{ userInitials }}
-                  </div>
-                </template>
+                <img v-if="userAvatarUrl" :src="userAvatarUrl" alt="User Avatar" />
+                <div v-else class="avatar-initials">
+                  {{ userInitials }}
+                </div>
               </div>
             </div>
 
@@ -210,19 +209,7 @@
 
       <!-- Content Area -->
       <div class="content-area">
-        <div v-if="isLoadingUser" class="layout-loading-skeleton">
-          <div class="skeleton-header">
-            <UISkeletonLoader width="300px" height="32px" />
-            <UISkeletonLoader width="200px" height="16px" />
-          </div>
-          <div class="skeleton-grid">
-            <UISkeletonLoader v-for="i in 4" :key="i" height="200px" border-radius="16px" />
-          </div>
-          <div class="skeleton-content">
-            <UISkeletonLoader height="400px" border-radius="16px" />
-          </div>
-        </div>
-        <slot v-else />
+        <slot />
       </div>
     </div>
 
@@ -239,7 +226,11 @@
     </div>
 
     <!-- Copilot Chatbot -->
-    <CopilotChat v-if="!isUserAdmin" :selectedLanguage="selectedLanguage" />
+    <CopilotChat 
+      v-if="!isUserAdmin" 
+      :selectedLanguage="selectedLanguage" 
+      :usageData="usageData"
+    />
 
     <UIExportModal
       v-if="isExportModalOpen"
@@ -270,6 +261,7 @@ import { accountService } from '@/services/api/account/account.service'
 import { useCurrency } from '@/composables/useCurrency'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import { notificationService } from '@/services/api/notification/notification.service'
+import type { AccountUserUsageResponse } from '@/services/api/account/account.models'
 
 export default defineComponent({
   name: 'ModuleLayout',
@@ -304,6 +296,7 @@ export default defineComponent({
     const isLoadingUser = ref(true)
     const profileWrapperRef = ref<HTMLElement | null>(null)
     const unreadNotificationsCount = ref(0)
+    const usageData = ref<AccountUserUsageResponse | null>(null)
 
     const { isPrivacyMode, togglePrivacyMode } = useCurrency()
 
@@ -354,23 +347,37 @@ export default defineComponent({
 
     const fetchInitialUnreadCount = async () => {
       try {
-        const notifications = await notificationService.getNotifications(true, props.selectedLanguage === 'Turkish' ? 'tr' : 'en')
+        const notifications = await notificationService.getNotifications(true)
         unreadNotificationsCount.value = notifications.length
       } catch (err) {
         console.error('Failed to fetch initial unread count', err)
       }
     }
 
+    const fetchUsageData = async () => {
+      if (isUserAdmin.value) return
+      try {
+        usageData.value = await accountService.getMeUsage()
+      } catch (err) {
+        console.error('Failed to fetch usage data', err)
+      }
+    }
+
     onMounted(() => {
       document.addEventListener('click', handleClickOutside)
       window.addEventListener('unread-notifications-updated', handleUnreadUpdate)
+      window.addEventListener('app:refetch', fetchUsageData)
+      window.addEventListener('app:refetch-usage', fetchUsageData)
       loadCurrentUser()
       fetchInitialUnreadCount()
+      fetchUsageData()
     })
 
     onBeforeUnmount(() => {
       document.removeEventListener('click', handleClickOutside)
       window.removeEventListener('unread-notifications-updated', handleUnreadUpdate)
+      window.removeEventListener('app:refetch', fetchUsageData)
+      window.removeEventListener('app:refetch-usage', fetchUsageData)
     })
 
     const emitUpdateLanguage = (language: string) => {
@@ -405,6 +412,7 @@ export default defineComponent({
           'Plans & Subscriptions': 'admin-plans',
           'System & AI Config': 'admin-system',
           'Platform Operations': 'admin-operations',
+          'Security & Monitoring': 'admin-security',
           Support: 'admin-support',
           'Admin Settings': 'admin-settings',
         }
@@ -487,6 +495,7 @@ export default defineComponent({
           'Plans & Subscriptions',
           'System & AI Config',
           'Platform Operations',
+          'Security & Monitoring',
           'Support',
           'Admin Settings',
         ]
@@ -496,6 +505,7 @@ export default defineComponent({
           'Plan ve Abonelikler',
           'Sistem Ayarları ve Yapay Zeka',
           'Platform Operasyonları',
+          'Güvenlik ve İzleme',
           'Destek',
           'Admin Ayarları',
         ]
@@ -582,6 +592,7 @@ export default defineComponent({
       isPrivacyMode,
       isExportModalOpen,
       unreadNotificationsCount,
+      usageData,
       togglePrivacyMode,
       emitUpdateLanguage,
       toggleSidebar,
@@ -599,6 +610,10 @@ export default defineComponent({
       faRotateRight,
       faEye,
       faEyeSlash,
+      getUsagePercentage: (used: number, limit: number | null) => {
+        if (!limit) return 0
+        return Math.min(Math.round((used / limit) * 100), 100)
+      }
     }
   },
 })
@@ -641,6 +656,65 @@ export default defineComponent({
   margin: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+.sidebar-usage-container {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeIn 0.5s ease;
+
+  .usage-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .usage-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--normal-text-color);
+      opacity: 0.8;
+      letter-spacing: 0.02em;
+
+      .usage-value {
+        font-weight: 800;
+        color: var(--header-text-color);
+      }
+    }
+
+    .usage-bar-bg {
+      height: 6px;
+      background: var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .usage-bar-fill {
+      height: 100%;
+      background: var(--primary-green-color);
+      border-radius: 10px;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+
+      &.warning {
+        background: #f59e0b;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+      }
+      &.danger {
+        background: #ef4444;
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .layout-loading-skeleton {
@@ -1229,19 +1303,43 @@ export default defineComponent({
     }
 
     .sidebar-middle {
-      padding: 0;
+      padding: 0 16px;
       flex: 1;
-      justify-content: center;
+      justify-content: flex-start;
+      overflow-x: auto;
+      overflow-y: hidden;
+      display: flex;
+      align-items: center;
+      -webkit-overflow-scrolling: touch;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
       .middle-wrapper {
         flex-direction: row;
-        justify-content: space-evenly;
+        justify-content: flex-start;
         height: 100%;
         align-items: center;
+        gap: 8px;
+        width: auto;
       }
+
       .icon-wrapper {
         width: auto;
-        padding: 8px;
+        padding: 8px 12px;
         margin: 0;
+        flex-shrink: 0;
+        min-width: max-content;
+
+        .nav-label {
+          display: block;
+          font-size: 13px;
+        }
+      }
+      
+      .menu-item-container {
+        flex-shrink: 0;
       }
     }
   }

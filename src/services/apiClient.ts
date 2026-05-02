@@ -42,24 +42,26 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
   
   // --- Localization logic ---
   const currentLang = localStorage.getItem('selectedLanguage') === 'Turkish' ? 'tr' : 'en'
+  requestHeaders['Accept-Language'] = currentLang
+  
   const localizedEndpoints = [
-    /^Categories(\/|$)/,
-    /^Summary\/dashboard(\/|$)/,
-    /^Summary\/dashboard-web(\/|$)/,
-    /^Expenses(\/|$)/,
-    /^Budgets(\/|$)/
+    /^Categories([/?]|$)/,
+    /^Summary\/dashboard([/?-]|$)/,
+    /^Expenses([/?]|$)/,
+    /^Budgets([/?]|$)/,
+    /^Notifications([/?]|$)/
   ]
   const excludedEndpoints = [
-    /^Expenses\/extract-from-image(\/|$)/,
-    /^Expenses\/extract-from-audio(\/|$)/,
-    /^Budgets\/overview(\/|$)/,
-    /^Expenses\/generalinfo(\/|$)/
+    /^Expenses\/extract-from-image([/?]|$)/,
+    /^Expenses\/extract-from-audio([/?]|$)/,
+    /^Budgets\/overview([/?]|$)/,
+    /^Expenses\/generalinfo([/?]|$)/
   ]
 
   const isLocalized = localizedEndpoints.some(re => re.test(endpoint))
   const isExcluded = excludedEndpoints.some(re => re.test(endpoint))
 
-  if (isLocalized && !isExcluded) {
+  if (isLocalized && !isExcluded && !endpoint.includes('language=')) {
     const separator = endpoint.includes('?') ? '&' : '?'
     endpoint += `${separator}language=${currentLang}`
   }

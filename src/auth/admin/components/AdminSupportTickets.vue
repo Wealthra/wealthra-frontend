@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-support-tickets">
+  <div class="admin-support-tickets glass-card">
     <div class="table-toolbar">
       <h2 class="table-toolbar__title">{{ t.pageTitle }}</h2>
       <div class="table-toolbar__filter">
@@ -11,7 +11,7 @@
       </div>
     </div>
 
-    <div class="table-container glass-card">
+    <div class="table-container">
       <div class="table-scroll">
         <table class="tickets-table">
           <thead>
@@ -39,29 +39,29 @@
             </template>
             <template v-else>
               <tr v-for="ticket in tickets" :key="ticket.id">
-                <td class="col-id">
+                <td class="col-id" :data-label="'ID'">
                   <span class="mono">#{{ ticket.id }}</span>
                 </td>
-                <td class="col-user">
+                <td class="col-user" :data-label="t.userIdCol">
                   <span class="user-id-cell mono" :title="ticket.userId">{{
                     abbreviateId(ticket.userId)
                   }}</span>
                 </td>
-                <td class="col-subject">
+                <td class="col-subject" :data-label="t.subjectCol">
                   <span class="subject-cell" :title="ticket.subject">{{
                     truncate(ticket.subject, 48)
                   }}</span>
                 </td>
-                <td class="col-status">
+                <td class="col-status" :data-label="t.statusCol">
                   <span :class="['status-badge', statusClass(ticket.status)]">{{
                     getStatusText(ticket.status)
                   }}</span>
                 </td>
-                <td class="col-date date-cell">{{ formatDateTime(ticket.createdOn) }}</td>
-                <td class="col-date date-cell">
+                <td class="col-date date-cell" :data-label="t.createdCol">{{ formatDateTime(ticket.createdOn) }}</td>
+                <td class="col-date date-cell" :data-label="t.modifiedCol">
                   {{ formatDateTime(ticket.lastModifiedOn || ticket.createdOn) }}
                 </td>
-                <td class="col-actions">
+                <td class="col-actions" :data-label="t.actionsCol">
                   <button type="button" class="table-action-btn" @click="openReplyModal(ticket)">
                     {{ t.reply }}
                   </button>
@@ -238,6 +238,7 @@ import { supportService } from '@/services/api/support/support.service'
 import type { SupportTicket } from '@/services/api/support/support.models'
 import UISelect from '@/components/UISelect.vue'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
+import { useToast } from '@/stores/useToast'
 
 export default defineComponent({
   name: 'AdminSupportTickets',
@@ -266,6 +267,7 @@ export default defineComponent({
     const replyMessage = ref('')
     const replyStatus = ref<number>(1)
     const isSubmitting = ref(false)
+    const toast = useToast()
 
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
@@ -408,9 +410,10 @@ export default defineComponent({
           status: replyStatus.value,
         })
         closeReplyModal()
+        toast.success('Reply sent successfully')
         await refreshTickets()
       } catch (err) {
-        alert('Failed to send reply.')
+        toast.error('Failed to send reply.')
       } finally {
         isSubmitting.value = false
       }
@@ -469,6 +472,13 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;
+  min-height: 0;
+  padding: 24px;
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .table-toolbar {
@@ -498,7 +508,8 @@ export default defineComponent({
   flex-direction: column;
   padding: 0;
   overflow: visible;
-  min-height: 600px;
+  flex: 1;
+  min-height: 0;
 }
 
 .table-scroll {
@@ -544,41 +555,45 @@ export default defineComponent({
 
 .tickets-hint-tooltip {
   position: absolute;
-  left: 50%;
-  top: calc(100% + 10px);
-  transform: translateX(-50%);
+  right: 0;
+  bottom: calc(100% + 12px);
   z-index: 40;
 
   width: max-content;
-  max-width: min(300px, calc(100vw - 32px));
-  padding: 10px 12px;
-  border-radius: 10px;
+  max-width: min(320px, calc(100vw - 40px));
+  padding: 12px 14px;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
   background: var(--background-color);
   color: var(--header-text-color);
   font-size: 12px;
   font-weight: 500;
-  line-height: 1.45;
+  line-height: 1.5;
   text-align: left;
   box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.14),
+    0 12px 32px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition:
-    opacity 0.12s ease,
-    visibility 0.12s ease;
+    opacity 0.15s ease,
+    visibility 0.15s ease,
+    transform 0.15s ease;
+  transform: translateY(4px);
 }
 
-.tickets-hint-tooltip::before {
+.tickets-hint-tooltip::after {
   content: '';
   position: absolute;
-  bottom: 100%;
-  left: 0;
-  right: 0;
-  height: 12px;
+  top: 100%;
+  right: 8px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--border-color);
 }
 
 .tickets-hint-wrap:hover .tickets-hint-tooltip,
@@ -586,6 +601,7 @@ export default defineComponent({
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  transform: translateY(0);
 }
 
 .tickets-hint-help {
@@ -747,6 +763,158 @@ export default defineComponent({
     text-align: center;
     padding: 32px !important;
     color: var(--normal-text-color);
+  }
+}
+
+@media (max-width: 1024px) {
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .table-toolbar__filter {
+    width: 100%;
+    max-width: none;
+  }
+
+  .tickets-table {
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 16px;
+      background: var(--background-color-soft);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      position: relative;
+
+      &:hover {
+        background: var(--background-color-soft);
+      }
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0 !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+      text-align: right;
+      width: 100%;
+      box-sizing: border-box;
+
+      &:last-child {
+        border-bottom: none !important;
+        margin-top: 8px;
+        padding-top: 16px !important;
+        border-top: 1px solid var(--border-color) !important;
+      }
+
+      &::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--normal-text-color);
+        opacity: 0.6;
+        text-align: left;
+        margin-right: 16px;
+      }
+
+      &.col-id {
+        display: flex;
+        justify-content: flex-start;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 4px;
+        
+        &::before { display: none; }
+        .mono {
+          background: var(--primary-green-color);
+          color: white;
+          padding: 4px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 800;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+      }
+
+      &.col-user, &.col-subject, &.col-status, &.col-date, &.col-actions {
+        width: 100%;
+      }
+
+      .user-id-cell, .subject-cell {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      &.col-actions {
+        justify-content: center;
+        &::before { display: none; }
+        .table-action-btn {
+          width: 100%;
+          padding: 12px;
+        }
+      }
+    }
+  }
+
+  .table-container {
+    flex: 1;
+    min-height: 0;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+  }
+  
+  .table-scroll {
+    overflow-y: auto;
+  }
+  
+  .tickets-table {
+    display: block;
+    width: 100%;
+  }
+
+  .tickets-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .tickets-table-footer {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+    text-align: center;
+
+    .tickets-table-footer__hint {
+      justify-content: center;
+    }
+
+    .tickets-load-more {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .modal-shell {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .reply-meta-card__dates {
+    flex-direction: column;
+    gap: 12px;
   }
 }
 

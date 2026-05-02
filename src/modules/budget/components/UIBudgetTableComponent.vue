@@ -277,6 +277,7 @@ import type { BudgetApiModel } from '@/services/api/budget/budget.models'
 import type { Category } from '@/services/api/category/category.models'
 import { useCurrency } from '@/composables/useCurrency'
 import UISelect from '@/components/UISelect.vue'
+import { useConfirm } from '@/stores/useConfirm'
 
 export default {
   name: 'UIBudgetTableComponent',
@@ -289,7 +290,8 @@ export default {
   },
   setup() {
     const { formatCurrency, currencySymbol } = useCurrency()
-    return { formatCurrency, currencySymbol }
+    const confirm = useConfirm()
+    return { formatCurrency, currencySymbol, confirm }
   },
   data() {
     return {
@@ -387,8 +389,14 @@ export default {
       this.$emit('updateBudget', this.editingBudget.id, this.editLimitAmount)
       this.hideEditModal()
     },
-    confirmDelete(budget: BudgetApiModel) {
-      if (window.confirm(this.t('confirmDeleteBudget'))) this.$emit('deleteBudget', budget.id)
+    async confirmDelete(budget: BudgetApiModel) {
+      const confirmed = await this.confirm.ask({
+        title: this.t('deleteBudget'),
+        message: this.t('confirmDeleteBudget'),
+        confirmText: this.t('deleteBudget'),
+        type: 'danger'
+      })
+      if (confirmed) this.$emit('deleteBudget', budget.id)
     },
   },
 }

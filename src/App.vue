@@ -1,6 +1,9 @@
 <template>
   <div id="app">
     <RouterView />
+    <UIToast />
+    <UIConfirmModal />
+    <UIPromptModal />
   </div>
 </template>
 
@@ -8,9 +11,17 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { isAuthenticated } from './utils/auth'
+import UIToast from './components/UIToast.vue'
+import UIConfirmModal from './components/UIConfirmModal.vue'
+import UIPromptModal from './components/UIPromptModal.vue'
 
 export default {
   name: 'App',
+  components: {
+    UIToast,
+    UIConfirmModal,
+    UIPromptModal
+  },
   setup() {
     const router = useRouter()
 

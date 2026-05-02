@@ -155,6 +155,7 @@
 
 <script lang="ts">
 import { arrowIcons, actionIcons } from '@/icons/fontawesome-icons'
+import { useToast } from '@/stores/useToast'
 
 const TRANSLATE_CATEGORY = {
   Food: 'Yiyecek',
@@ -169,6 +170,10 @@ const TRANSLATE_CATEGORY = {
 
 export default {
   name: 'BudgetCategoriesComponent',
+  setup() {
+    const toast = useToast()
+    return { toast }
+  },
   data() {
     return {
       newBudgetCategory: {
@@ -289,7 +294,7 @@ export default {
         this.newBudgetCategory.limitAmount === null ||
         this.newBudgetCategory.currentAmount === null
       ) {
-        alert('Please fill in all fields.')
+        this.toast.warning('Please fill in all fields.')
         return
       }
 

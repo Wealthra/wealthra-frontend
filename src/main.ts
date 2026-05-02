@@ -28,6 +28,7 @@ import {
   faCircleCheck,
   faCircleExclamation,
   faCircleInfo,
+  faCircleQuestion,
   faCircleXmark,
   faCommentSlash,
   faComments,
@@ -98,6 +99,7 @@ import {
   faHandHoldingDollar,
   faCoins,
   faWaveSquare,
+  faListCheck,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -131,6 +133,7 @@ library.add(
   faCircleCheck,
   faCircleExclamation,
   faCircleInfo,
+  faCircleQuestion,
   faCircleXmark,
   faCommentDots,
   faCommentSlash,
@@ -197,6 +200,7 @@ library.add(
   faHandHoldingDollar,
   faCoins,
   faWaveSquare,
+  faListCheck,
 )
 
 async function initApp() {
