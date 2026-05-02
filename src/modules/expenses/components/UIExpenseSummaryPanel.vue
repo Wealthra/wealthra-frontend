@@ -194,12 +194,13 @@ export default defineComponent({
     display: block;
     font-size: 0.7rem;
     text-transform: uppercase;
-    opacity: 0.65;
-    font-weight: 600;
+    color: var(--header-text-color);
+    opacity: 0.8;
+    font-weight: 700;
   }
 
   .val {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 1rem;
     color: var(--header-text-color);
   }
@@ -213,7 +214,8 @@ export default defineComponent({
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  opacity: 0.7;
+  color: var(--header-text-color);
+  opacity: 0.85;
   margin-bottom: 0.5rem;
 }
 

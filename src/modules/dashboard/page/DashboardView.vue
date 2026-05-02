@@ -821,12 +821,12 @@ export default {
           opacity: 0.12;
         }
         .rec-icon-box {
-          background: var(--notification-alert-color-soft);
-          color: var(--notification-alert-color);
+          background: rgba(220, 53, 69, 0.12);
+          color: var(--notification-alert-color-header);
         }
         .severity-pill {
-          background: var(--notification-alert-color-soft);
-          color: var(--notification-alert-color);
+          background: rgba(220, 53, 69, 0.12);
+          color: var(--notification-alert-color-header);
         }
       }
 
@@ -836,12 +836,12 @@ export default {
           opacity: 0.12;
         }
         .rec-icon-box {
-          background: var(--notification-warning-color-soft);
-          color: var(--notification-warning-color);
+          background: rgba(243, 156, 18, 0.12);
+          color: var(--notification-warning-color-header);
         }
         .severity-pill {
-          background: var(--notification-warning-color-soft);
-          color: var(--notification-warning-color);
+          background: rgba(243, 156, 18, 0.12);
+          color: var(--notification-warning-color-header);
         }
       }
 
@@ -851,12 +851,12 @@ export default {
           opacity: 0.12;
         }
         .rec-icon-box {
-          background: var(--notification-info-color-soft);
-          color: var(--notification-info-color);
+          background: rgba(13, 202, 240, 0.12);
+          color: var(--notification-info-color-header);
         }
         .severity-pill {
-          background: var(--notification-info-color-soft);
-          color: var(--notification-info-color);
+          background: rgba(13, 202, 240, 0.12);
+          color: var(--notification-info-color-header);
         }
       }
 

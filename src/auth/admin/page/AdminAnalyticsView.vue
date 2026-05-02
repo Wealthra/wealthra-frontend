@@ -4,16 +4,16 @@
       <!-- ROW 1 SKELETON: Revenue Cards -->
       <section class="analytics-section">
         <div class="section-header">
-          <!-- Removed title skeleton for cleaner look -->
+          <h2 class="analytics-section-title">
+            <font-awesome-icon icon="money-bill-wave" />
+            {{ t.revenueSectionTitle }}
+          </h2>
         </div>
         <div class="analytics-grid analytics-grid--4">
           <div v-for="i in 4" :key="'skel-r1-' + i" class="glass-card analytics-dash-card skeleton-card-detailed">
             <div class="skeleton-card-content">
               <UISkeletonLoader :width="'60%'" :height="'12px'" :borderRadius="'4px'" class="mb-2" />
               <UISkeletonLoader :width="'40%'" :height="'24px'" :borderRadius="'6px'" />
-            </div>
-            <div class="skeleton-card-icon">
-              <UISkeletonLoader :width="'40px'" :height="'40px'" :borderRadius="'10px'" />
             </div>
           </div>
         </div>
@@ -22,16 +22,16 @@
       <!-- ROW 2 SKELETON: Growth Cards -->
       <section class="analytics-section">
         <div class="section-header">
-          <!-- Removed title skeleton for cleaner look -->
+          <h2 class="analytics-section-title">
+            <font-awesome-icon icon="chart-line" />
+            {{ t.growthSectionTitle }}
+          </h2>
         </div>
         <div class="analytics-grid analytics-grid--3">
           <div v-for="i in 3" :key="'skel-r2-' + i" class="glass-card analytics-dash-card skeleton-card-detailed">
             <div class="skeleton-card-content">
               <UISkeletonLoader :width="'55%'" :height="'12px'" :borderRadius="'4px'" class="mb-2" />
               <UISkeletonLoader :width="'35%'" :height="'24px'" :borderRadius="'6px'" />
-            </div>
-            <div class="skeleton-card-icon">
-              <UISkeletonLoader :width="'40px'" :height="'40px'" :borderRadius="'10px'" />
             </div>
           </div>
         </div>
@@ -40,16 +40,16 @@
       <!-- ROW 3 SKELETON: Feature Cards -->
       <section class="analytics-section">
         <div class="section-header">
-          <!-- Removed title skeleton for cleaner look -->
+          <h2 class="analytics-section-title">
+            <font-awesome-icon icon="puzzle-piece" />
+            {{ t.featureSectionTitle }}
+          </h2>
         </div>
         <div class="analytics-grid analytics-grid--3">
           <div v-for="i in 3" :key="'skel-r3-' + i" class="glass-card analytics-dash-card skeleton-card-detailed">
             <div class="skeleton-card-content">
               <UISkeletonLoader :width="'50%'" :height="'12px'" :borderRadius="'4px'" class="mb-2" />
               <UISkeletonLoader :width="'30%'" :height="'24px'" :borderRadius="'6px'" />
-            </div>
-            <div class="skeleton-card-icon">
-              <UISkeletonLoader :width="'40px'" :height="'40px'" :borderRadius="'10px'" />
             </div>
           </div>
         </div>
@@ -59,7 +59,7 @@
       <section class="analytics-section">
         <div class="glass-card analytics-dash-panel--chart p-6">
           <div class="chart-header mb-6">
-            <UISkeletonLoader :width="'240px'" :height="'28px'" :borderRadius="'6px'" />
+            <h3 class="card-inner-title">{{ t.dailyActive }}</h3>
             <UISkeletonLoader :width="'100px'" :height="'24px'" :borderRadius="'20px'" />
           </div>
           <UISkeletonLoader :height="'500px'" :borderRadius="'12px'" />
@@ -98,7 +98,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.mrrTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.mrrTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -115,7 +115,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.currencyTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.currencyTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -132,7 +132,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.subscribersTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.subscribersTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -149,7 +149,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.arpuTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.arpuTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -178,7 +178,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.dauTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.dauTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -195,7 +195,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.mauTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.mauTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -212,7 +212,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.churnTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.churnTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -241,7 +241,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.ocrTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.ocrTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -258,7 +258,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.sttTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.sttTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -275,7 +275,7 @@
                     <font-awesome-icon
                       icon="circle-info"
                       class="stat-tooltip-icon"
-                      @mouseenter="e => showTooltip(e, t.copilotTooltip)"
+                      @mouseenter="(e: MouseEvent) => showTooltip(e, t.copilotTooltip)"
                       @mouseleave="hideTooltip"
                     />
                   </div>
@@ -813,6 +813,7 @@ export default defineComponent({
     font-size: 1rem;
     font-weight: 700;
     margin: 0;
+    color: var(--header-text-color);
   }
 
   .chart-period {

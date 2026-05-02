@@ -84,6 +84,14 @@ import {
   faChartPie,
   faHeadset,
   faShieldHalved,
+  faMagnifyingGlass,
+  faUsersSlash,
+  faKey,
+  faLockOpen,
+  faCheckCircle,
+  faLayerGroup,
+  faBolt,
+  faServer,
 } from '@fortawesome/free-solid-svg-icons'
 
 export const leftSidebarIconMap: Record<string, IconDefinition> = {
@@ -98,9 +106,11 @@ export const leftSidebarIconMap: Record<string, IconDefinition> = {
   Overview: faChartPie,
   Analytics: faChartLine,
   'Dashboard & Analytics': faChartPie,
-  'Users & Plans': faUsers,
-  'Support & Ops': faHeadset,
-  'System & Security': faShieldHalved,
+  'User Management': faUsers,
+  'Plans & Subscriptions': faLayerGroup,
+  'System & AI Config': faShieldHalved,
+  'Platform Operations': faBolt,
+  Support: faHeadset,
   'Admin Settings': faGear,
   Tickets: faHeadset,
 }

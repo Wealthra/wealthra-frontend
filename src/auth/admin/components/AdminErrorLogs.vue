@@ -4,7 +4,7 @@
       <UISkeletonLoader height="400px" />
     </div>
     <div v-else-if="error" class="error-state">
-      <font-awesome-icon icon="triangle-exclamation" />
+      <font-awesome-icon :icon="faTriangleExclamation" />
       <p>{{ error }}</p>
       <button @click="fetchLogs" class="retry-btn">Retry</button>
     </div>
@@ -14,10 +14,6 @@
           <label>Status Code</label>
           <input v-model.number="statusFilter" type="number" placeholder="All" @change="fetchLogs" />
         </div>
-        <button @click="fetchLogs" class="refresh-btn" :disabled="isLoading">
-          <font-awesome-icon icon="arrows-rotate" :spin="isLoading" />
-          Refresh
-        </button>
       </div>
 
       <AdminErrorLogsTable
@@ -38,11 +34,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue'
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
 import AdminErrorLogsTable from './AdminErrorLogsTable.vue'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import { adminService } from '@/services/api/admin/admin.service'
 import type { ErrorLog } from '@/services/api/admin/admin.models'
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 export default defineComponent({
   name: 'AdminErrorLogs',
@@ -104,7 +101,14 @@ export default defineComponent({
        }
     }
 
-    onMounted(fetchLogs)
+    onMounted(() => {
+      fetchLogs()
+      window.addEventListener('app:refetch', fetchLogs)
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('app:refetch', fetchLogs)
+    })
 
     return {
       logs,
@@ -115,7 +119,8 @@ export default defineComponent({
       statusFilter,
       fetchLogs,
       loadMore,
-      handlePageChange
+      handlePageChange,
+      faTriangleExclamation
     }
   }
 })

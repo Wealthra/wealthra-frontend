@@ -9,6 +9,7 @@ export interface ApiRequestOptions {
   requiresAuth?: boolean
   isFormData?: boolean
   credentials?: RequestCredentials
+  _retry?: boolean
 }
 
 export interface ApiError {
@@ -31,12 +32,39 @@ export class ApiErrorException extends Error {
   }
 }
 
+// --- Token Refresh Locking Mechanism ---
+let refreshPromise: Promise<boolean> | null = null
+
 export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {}, requiresAuth = true, isFormData = false } = options
 
-  const url = `${production.apiUrl}/api/${endpoint}`
-
   const requestHeaders: Record<string, string> = { ...headers }
+  
+  // --- Localization logic ---
+  const currentLang = localStorage.getItem('selectedLanguage') === 'Turkish' ? 'tr' : 'en'
+  const localizedEndpoints = [
+    /^Categories(\/|$)/,
+    /^Summary\/dashboard(\/|$)/,
+    /^Summary\/dashboard-web(\/|$)/,
+    /^Expenses(\/|$)/,
+    /^Budgets(\/|$)/
+  ]
+  const excludedEndpoints = [
+    /^Expenses\/extract-from-image(\/|$)/,
+    /^Expenses\/extract-from-audio(\/|$)/,
+    /^Budgets\/overview(\/|$)/,
+    /^Expenses\/generalinfo(\/|$)/
+  ]
+
+  const isLocalized = localizedEndpoints.some(re => re.test(endpoint))
+  const isExcluded = excludedEndpoints.some(re => re.test(endpoint))
+
+  if (isLocalized && !isExcluded) {
+    const separator = endpoint.includes('?') ? '&' : '?'
+    endpoint += `${separator}language=${currentLang}`
+  }
+
+  const url = `${production.apiUrl}/api/${endpoint}`
 
   if (!isFormData && !requestHeaders['Content-Type']) {
     requestHeaders['Content-Type'] = 'application/json'
@@ -49,8 +77,6 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
     }
   }
 
-  // Public endpoints should not send cookies by default: stale session cookies can cause 401
-  // on endpoints meant to be anonymous (e.g. active announcements).
   const baseRequestInit: RequestInit = {
     method,
     headers: requestHeaders,
@@ -59,7 +85,6 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
 
   const createRequestInit = (): RequestInit => {
     const init: RequestInit = { ...baseRequestInit }
-
     if (body) {
       if (isFormData) {
         init.body = body as BodyInit
@@ -67,13 +92,52 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
         init.body = JSON.stringify(body)
       }
     }
-
     return init
   }
 
   const response = await fetch(url, createRequestInit())
 
   if (!response.ok) {
+    // Handle 401 Unauthorized - attempt to transparently refresh the access token
+    if (response.status === 401 && requiresAuth && !options._retry) {
+      options._retry = true;
+      // If a refresh is already in progress, wait for it instead of starting a new one
+      if (!refreshPromise) {
+        refreshPromise = (async () => {
+          try {
+            const { accountService } = await import('./api/account/account.service')
+            const authData = await accountService.refreshToken()
+
+            if (authData && authData.token) {
+              const authUtils = await import('../utils/auth')
+              // Map backend response (id, email, token, refreshToken) to internal setAuth
+              authUtils.setAuth(authData.token, authData.id, [], authData.email, authData.refreshToken)
+              return true
+            }
+            return false
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError)
+            return false
+          } finally {
+            refreshPromise = null
+          }
+        })()
+      }
+
+      const refreshSuccess = await refreshPromise
+      if (refreshSuccess) {
+        // Retry the original request with the new token
+        return await apiRequest<T>(endpoint, { ...options, _retry: true })
+      }
+
+      // If refresh fails or returns no token, clear auth and redirect to login
+      const authUtils = await import('../utils/auth')
+      authUtils.clearAuth()
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    }
+
     let errorData: ApiError
     try {
       const errorText = await response.text()
@@ -84,32 +148,6 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
       }
     } catch {
       errorData = { message: response.statusText || 'An error occurred', status: response.status }
-    }
-
-    // Handle 401 Unauthorized - attempt to transparently refresh the access token
-    if (response.status === 401 && requiresAuth) {
-      try {
-        const { accountService } = await import('./api/account/account.service')
-        const authData = await accountService.refreshToken()
-
-        if (authData && authData.token) {
-          const authUtils = await import('../utils/auth')
-          // Map backend response (id, email, token, refreshToken) to internal setAuth
-          authUtils.setAuth(authData.token, authData.id, [], authData.email, authData.refreshToken)
-
-          // Retry the original request with the new token
-          return await apiRequest<T>(endpoint, options)
-        }
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError)
-      }
-
-      // If refresh fails or returns no token, clear auth and redirect to login
-      const authUtils = await import('../utils/auth')
-      authUtils.clearAuth()
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
-      }
     }
 
     throw new ApiErrorException(

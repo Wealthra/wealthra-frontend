@@ -8,12 +8,7 @@
       <button type="button" class="retry-btn" @click="fetchPage(true)">{{ t.retry }}</button>
     </div>
     <template v-else>
-      <div class="admin-audit-logs__toolbar">
-        <button type="button" class="refresh-btn" :disabled="isLoading" @click="fetchPage(true)">
-          <font-awesome-icon icon="arrows-rotate" :spin="isLoading" />
-          {{ t.refresh }}
-        </button>
-      </div>
+
       <div class="table-scroll">
         <table class="audit-table">
           <thead>
@@ -51,7 +46,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue'
+import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import type { PropType } from 'vue'
 import { adminService } from '@/services/api/admin/admin.service'
 import type { AdminAuditLog } from '@/services/api/admin/admin.models'
@@ -147,7 +142,16 @@ export default defineComponent({
       await fetchPage(false)
     }
 
-    onMounted(() => fetchPage(true))
+    const handleGlobalRefetch = () => fetchPage(true)
+
+    onMounted(() => {
+      fetchPage(true)
+      window.addEventListener('app:refetch', handleGlobalRefetch)
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('app:refetch', handleGlobalRefetch)
+    })
 
     return {
       rows,

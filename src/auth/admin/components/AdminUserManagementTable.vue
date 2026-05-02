@@ -3,7 +3,7 @@
     <div class="table-controls">
       <div class="search-box">
         <div class="input-wrapper">
-          <font-awesome-icon icon="magnifying-glass" class="search-icon" />
+          <font-awesome-icon :icon="faMagnifyingGlass" class="search-icon" />
           <input 
             v-model="searchQuery" 
             type="text" 
@@ -15,7 +15,7 @@
           {{ t.search }}
         </button>
         <button class="assign-trigger-btn" @click="isAssignmentModalOpen = true" :title="t.assignPlan">
-          <font-awesome-icon icon="user-plus" />
+          <font-awesome-icon :icon="faUserPlus" />
           {{ t.assign }}
         </button>
       </div>
@@ -43,54 +43,54 @@
           </template>
           <template v-else>
             <tr v-for="user in users" :key="user.id">
-              <td class="user-cell">
+              <td class="user-cell" data-label="User">
                 <div class="user-info">
                   <span class="full-name">{{ user.firstName }} {{ user.lastName }}</span>
                   <span class="email">{{ user.email }}</span>
                 </div>
               </td>
-              <td>
+              <td data-label="Status">
                 <span :class="['status-badge', user.lockoutEnd ? 'locked' : 'active']">
                   {{ user.lockoutEnd ? 'Locked' : 'Active' }}
                 </span>
               </td>
-              <td>
+              <td :data-label="t.tier">
                 <div class="tier-info">
                   <span class="tier-tag">T{{ user.subscriptionTier }}</span>
                   <span class="plan-name">{{ user.planName }}</span>
                 </div>
               </td>
-              <td>
+              <td data-label="Email Verified">
                 <font-awesome-icon 
-                  :icon="user.emailConfirmed ? 'circle-check' : 'circle-xmark'" 
+                  :icon="user.emailConfirmed ? faCircleCheck : faCircleXmark" 
                   :class="user.emailConfirmed ? 'confirmed' : 'pending'"
                 />
               </td>
-              <td class="date-cell">{{ user.lastLoginDate ? formatDate(user.lastLoginDate) : 'Never' }}</td>
-              <td>
+              <td class="date-cell" data-label="Last Login">{{ user.lastLoginDate ? formatDate(user.lastLoginDate) : 'Never' }}</td>
+              <td :data-label="t.actions">
                 <div class="action-buttons">
                   <button class="action-btn" @click="promptEditRoles(user)" title="Manage Roles">
-                    <font-awesome-icon icon="shield-halved" />
+                    <font-awesome-icon :icon="faShieldHalved" />
                   </button>
                   <button class="action-btn" @click="promptLockUser(user)" :title="user.lockoutEnd ? 'Unlock' : 'Lock'">
-                    <font-awesome-icon :icon="user.lockoutEnd ? 'lock-open' : 'lock'" />
+                    <font-awesome-icon :icon="user.lockoutEnd ? faLockOpen : faLock" />
                   </button>
                   <button class="action-btn delete" @click="promptResetPassword(user)" title="Reset Password">
-                    <font-awesome-icon icon="key" />
+                    <font-awesome-icon :icon="faKey" />
                   </button>
                   <button
                     class="action-btn"
                     @click="openUsageModal(user)"
                     :title="t.usageDetailsTitle"
                   >
-                    <font-awesome-icon icon="chart-line" />
+                    <font-awesome-icon :icon="faChartLine" />
                   </button>
                   <button
                     class="action-btn"
                     @click="promptChangeTier(user)"
                     :title="t.changeTierTitle"
                   >
-                    <font-awesome-icon icon="award" />
+                    <font-awesome-icon :icon="faAward" />
                   </button>
                 </div>
               </td>
@@ -176,6 +176,21 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue'
 import type { PropType } from 'vue'
+import {
+  faMagnifyingGlass,
+  faUserPlus,
+  faCircleCheck,
+  faCircleXmark,
+  faShieldHalved,
+  faLock,
+  faLockOpen,
+  faKey,
+  faChartLine,
+  faAward,
+  faXmark,
+  faChevronLeft,
+  faChevronRight
+} from '@fortawesome/free-solid-svg-icons'
 import { adminService } from '@/services/api/admin/admin.service'
 import type { AdminUser } from '@/services/api/admin/admin.models'
 import type { AdminPlan } from '@/services/api/adminPlans/adminPlans.models'
@@ -327,7 +342,7 @@ export default defineComponent({
       )
       if (tier === null || tier.trim() === '') return
       try {
-        await accountService.updateTier({ email: user.email, tier: tier.trim() })
+        await accountService.updateTier({ email: user.email, newTier: parseInt(tier.trim()) })
         alert(t.value.tierUpdated)
         await fetchUsers()
       } catch (err: unknown) {
@@ -360,6 +375,19 @@ export default defineComponent({
       openUsageModal,
       closeUsageModal,
       promptChangeTier,
+      faMagnifyingGlass,
+      faUserPlus,
+      faCircleCheck,
+      faCircleXmark,
+      faShieldHalved,
+      faLock,
+      faLockOpen,
+      faKey,
+      faChartLine,
+      faAward,
+      faXmark,
+      faChevronLeft,
+      faChevronRight
     }
   }
 })
@@ -455,6 +483,49 @@ export default defineComponent({
     text-transform: uppercase;
     color: var(--normal-text-color);
     letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 768px) {
+    thead {
+      display: none;
+    }
+
+    tr {
+      display: block;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: var(--background-color);
+
+      &:last-child {
+        border-bottom: 1px solid var(--border-color);
+      }
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px !important;
+      border-bottom: 1px solid var(--border-color);
+      text-align: right;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 800;
+        font-size: 10px;
+        text-transform: uppercase;
+        color: var(--normal-text-color);
+        opacity: 0.7;
+        margin-right: 16px;
+        text-align: left;
+      }
+    }
   }
 
   .user-cell {

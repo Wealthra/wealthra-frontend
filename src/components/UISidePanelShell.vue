@@ -56,6 +56,10 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    selectedLanguage: {
+      type: String,
+      default: 'English',
+    },
   },
   emits: ['close'],
 })

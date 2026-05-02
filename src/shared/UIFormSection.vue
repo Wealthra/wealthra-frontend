@@ -108,7 +108,8 @@ export default defineComponent({
 
       .ui-logo {
         height: 0.9rem;
-        opacity: 0.6;
+        color: var(--header-text-color);
+        opacity: 0.7;
         transition: all 0.2s ease;
 
         &.border-state-true {
@@ -152,7 +153,8 @@ export default defineComponent({
 
         .eye-icon {
           height: 0.9rem;
-          opacity: 0.6;
+          color: var(--header-text-color);
+          opacity: 0.7;
           transition: all 0.2s ease;
 
           &:hover {

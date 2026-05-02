@@ -138,6 +138,13 @@ export default defineComponent({
   min-height: 0;
 }
 
+.breakdown-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: var(--header-text-color);
+}
+
 .table-container {
   flex: 1;
   min-height: 0;
@@ -153,9 +160,10 @@ export default defineComponent({
   th {
     padding: 16px 20px;
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 700;
     text-transform: uppercase;
-    color: var(--normal-text-color);
+    color: var(--header-text-color);
+    opacity: 0.6;
     border-bottom: 1px solid var(--border-color);
     white-space: nowrap;
   }

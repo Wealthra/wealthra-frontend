@@ -88,16 +88,20 @@
   --font-size-sm: 13px;
   --font-size-base: 14px;
 
+  --input-background-color: #fcfcfc;
+  --input-background-color-soft: #f0f0f0;
+
   /* Above UISidePanelShell overlay (10001) and panel (10002); used by teleported select/datepicker */
   --z-portal-above-side-panel: 10050;
 }
 
 /* Dark theme variables */
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --primary-blue-color: #358fc0;
   --reverse-primary-blue-color: #85c1e9;
 
-  --primary-green-color: #2c692c;
+  --primary-green-color: #3e8e3e;
   --reverse-primary-green-color: #5cb85c;
 
   --primary-pink-color: #fc5c7d;
@@ -174,6 +178,9 @@
   /* Skeleton Loading */
   --skeleton-bg: #2a2a2a;
   --skeleton-shimmer: #3a3a3a;
+
+  --input-background-color: #262626;
+  --input-background-color-soft: #333333;
 }
 
 /* Global datepicker (vue-datepicker-next) – use green instead of default blue */

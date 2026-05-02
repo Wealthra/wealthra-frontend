@@ -339,24 +339,30 @@
         <div v-else-if="usageData" class="usage-layout">
           <div class="usage-item">
             <span class="usage-label">{{ selectedLanguage === 'English' ? 'Current Tier' : 'Mevcut Seviye' }}</span>
-            <span class="usage-value tier-badge">{{ usageData.tier || 'Free' }}</span>
+            <span class="usage-value tier-badge">{{ usageData.subscriptionPlanName || 'Free' }}</span>
           </div>
+          <!-- OCR Quota -->
           <div class="usage-item">
-            <span class="usage-label">AI Chat</span>
+            <span class="usage-label">{{ selectedLanguage === 'English' ? 'OCR Scans' : 'OCR Taramaları' }}</span>
             <div class="usage-progress-wrap">
               <div class="usage-progress-bar">
-                <div class="usage-progress-fill" :style="{ width: ((usageData.aiChatUsage || 0) / (Math.max(usageData.aiChatLimit || 1, 1))) * 100 + '%' }"></div>
+                <div class="usage-progress-fill" :style="{ width: getProgress(usageData.ocrRequestsThisMonth, usageData.monthlyOcrLimit) + '%' }"></div>
               </div>
-              <span class="usage-count">{{ usageData.aiChatUsage || 0 }} / {{ usageData.aiChatLimit || 0 }}</span>
+              <span class="usage-count">
+                {{ usageData.ocrRequestsThisMonth || 0 }} / {{ usageData.monthlyOcrLimit ?? (selectedLanguage === 'English' ? '∞' : '∞') }}
+              </span>
             </div>
           </div>
+          <!-- STT Quota -->
           <div class="usage-item">
-            <span class="usage-label">Receipt Scans</span>
+            <span class="usage-label">{{ selectedLanguage === 'English' ? 'STT Minutes' : 'STT Dakikaları' }}</span>
             <div class="usage-progress-wrap">
               <div class="usage-progress-bar">
-                <div class="usage-progress-fill" :style="{ width: ((usageData.receiptScanUsage || 0) / (Math.max(usageData.receiptScanLimit || 1, 1))) * 100 + '%' }"></div>
+                <div class="usage-progress-fill" :style="{ width: getProgress(usageData.sttRequestsThisMonth, usageData.monthlySttLimit) + '%' }"></div>
               </div>
-              <span class="usage-count">{{ usageData.receiptScanUsage || 0 }} / {{ usageData.receiptScanLimit || 0 }}</span>
+              <span class="usage-count">
+                {{ usageData.sttRequestsThisMonth || 0 }} / {{ usageData.monthlySttLimit ?? (selectedLanguage === 'English' ? '∞' : '∞') }}
+              </span>
             </div>
           </div>
         </div>
@@ -614,6 +620,11 @@ export default defineComponent({
       showDeleteAccountModal.value = false
       deleteConfirmPhraseInput.value = ''
       deleteAccountError.value = null
+    }
+
+    const getProgress = (usage: number, limit: number | null) => {
+      if (limit === null) return 0
+      return Math.min(((usage || 0) / Math.max(limit, 1)) * 100, 100)
     }
 
     const confirmDeleteAccount = async () => {
@@ -909,6 +920,7 @@ export default defineComponent({
       closeDeleteAccountModal,
       confirmDeleteAccount,
       hideUsageSection,
+      getProgress,
     }
   },
 })

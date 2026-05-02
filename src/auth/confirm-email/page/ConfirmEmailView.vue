@@ -135,7 +135,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-@import '../../styles/auth-split-layout.scss';
+@use '../../styles/auth-split-layout.scss';
 
 .verify-loading {
   display: flex;

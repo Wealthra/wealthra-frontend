@@ -14,7 +14,9 @@ import type {
   FxRate,
   CreateFxRateRequest,
   BlockedIp,
-  CreateBlockedIpRequest
+  CreateBlockedIpRequest,
+  AdminLookupData,
+  GroqModelsListDto
 } from './admin.models';
 
 export const adminService = {
@@ -88,12 +90,6 @@ export const adminService = {
   async setManualRate(data: CreateFxRateRequest): Promise<number> {
     return apiRequest<number>('admin/fx/manual-rates', { method: 'POST', body: data });
   },
-  async getProviderOrder(): Promise<string> {
-    return apiRequest<string>('admin/fx/provider-order', { method: 'GET' });
-  },
-  async updateProviderOrder(providerOrderJson: string): Promise<void> {
-    return apiRequest<void>('admin/fx/provider-order', { method: 'PUT', body: { providerOrderJson } });
-  },
 
   // --- Admin Security ---
   async getBlockedIps(): Promise<BlockedIp[]> {
@@ -105,5 +101,10 @@ export const adminService = {
   async unblockIp(ip: string): Promise<void> {
     return apiRequest<void>(`admin/security/blocked-ips/${encodeURIComponent(ip)}`, { method: 'DELETE' });
   },
-
+  async getLookupData(): Promise<AdminLookupData> {
+    return apiRequest<AdminLookupData>('admin/lookup', { method: 'GET' });
+  },
+  async getGroqModels(): Promise<GroqModelsListDto> {
+    return apiRequest<GroqModelsListDto>('admin/settings/ai/groq-models', { method: 'GET' });
+  }
 };

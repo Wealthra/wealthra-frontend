@@ -143,7 +143,7 @@
             :title="texts.notifications"
             @click="routeToPage('Notifications', selectedLanguage)"
           >
-            <font-awesome-icon icon="bell" />
+            <font-awesome-icon :icon="faBell" />
             <span v-if="unreadNotificationsCount > 0" class="notification-badge">
               {{ unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount }}
             </span>
@@ -155,7 +155,7 @@
             @click="isExportModalOpen = true"
             :title="texts.export"
           >
-            <font-awesome-icon icon="download" />
+            <font-awesome-icon :icon="faDownload" />
           </button>
 
           <button
@@ -163,7 +163,7 @@
             @click="handleRefetch"
             :title="texts.refetch"
           >
-            <font-awesome-icon icon="rotate-right" />
+            <font-awesome-icon :icon="faRotateRight" />
           </button>
 
           <!-- Privacy Mode Toggle -->
@@ -172,7 +172,7 @@
             @click="togglePrivacyMode"
             :title="texts.privacy"
           >
-            <font-awesome-icon :icon="isPrivacyMode ? 'eye-slash' : 'eye'" />
+            <font-awesome-icon :icon="isPrivacyMode ? faEyeSlash : faEye" />
           </button>
 
           <UILanguageButton @updateLanguage="emitUpdateLanguage" />
@@ -259,6 +259,13 @@ import UIExportModal from '@/modules/dashboard/components/UIExportModal.vue'
 import { clearAuth, getUserId, isAdmin, setAdminStatus } from '@/utils/auth'
 import UIAnnouncementBanner from '@/components/UIAnnouncementBanner.vue'
 import { arrowIcons, leftSidebarIconMap, profileIcon } from '@/icons/fontawesome-icons'
+import {
+  faBell,
+  faDownload,
+  faRotateRight,
+  faEye,
+  faEyeSlash,
+} from '@fortawesome/free-solid-svg-icons'
 import { accountService } from '@/services/api/account/account.service'
 import { useCurrency } from '@/composables/useCurrency'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
@@ -394,9 +401,11 @@ export default defineComponent({
         const routeMap: Record<string, string> = {
           Overview: 'admin-overview',
           'Dashboard & Analytics': 'admin-analytics',
-          'Users & Plans': 'admin-users',
-          'Support & Ops': 'admin-support',
-          'System & Security': 'admin-system',
+          'User Management': 'admin-users',
+          'Plans & Subscriptions': 'admin-plans',
+          'System & AI Config': 'admin-system',
+          'Platform Operations': 'admin-operations',
+          Support: 'admin-support',
           'Admin Settings': 'admin-settings',
         }
         router.push({ name: routeMap[englishPage] || 'admin-analytics' })
@@ -474,16 +483,20 @@ export default defineComponent({
       if (admin) {
         const adminContentEnglish = [
           'Dashboard & Analytics',
-          'Users & Plans',
-          'Support & Ops',
-          'System & Security',
+          'User Management',
+          'Plans & Subscriptions',
+          'System & AI Config',
+          'Platform Operations',
+          'Support',
           'Admin Settings',
         ]
         const adminContentTurkish = [
           'Genel Bakış',
-          'Kullanıcılar & Planlar',
-          'Destek & Operasyon',
-          'Sistem ve Güvenlik',
+          'Kullanıcı Yönetimi',
+          'Plan ve Abonelikler',
+          'Sistem Ayarları ve Yapay Zeka',
+          'Platform Operasyonları',
+          'Destek',
           'Admin Ayarları',
         ]
         const content = lang === 'Turkish' ? adminContentTurkish : adminContentEnglish
@@ -581,6 +594,11 @@ export default defineComponent({
       handleLogout,
       handleRefetch: () => window.dispatchEvent(new CustomEvent('app:refetch')),
       isUserAdmin,
+      faBell,
+      faDownload,
+      faRotateRight,
+      faEye,
+      faEyeSlash,
     }
   },
 })

@@ -28,9 +28,13 @@
           <tbody>
             <template v-if="isLoading">
               <tr v-for="i in 5" :key="i">
-                <td v-for="j in 7" :key="j">
-                  <UISkeletonLoader height="18px" />
-                </td>
+                <td class="col-id"><UISkeletonLoader width="40px" height="14px" border-radius="4px" /></td>
+                <td class="col-user"><UISkeletonLoader width="100px" height="14px" border-radius="4px" /></td>
+                <td class="col-subject"><UISkeletonLoader width="100%" height="14px" border-radius="4px" /></td>
+                <td class="col-status"><UISkeletonLoader width="70px" height="22px" border-radius="20px" /></td>
+                <td class="col-date"><UISkeletonLoader width="100px" height="14px" border-radius="4px" /></td>
+                <td class="col-date"><UISkeletonLoader width="100px" height="14px" border-radius="4px" /></td>
+                <td class="col-actions"><UISkeletonLoader width="60px" height="32px" border-radius="8px" /></td>
               </tr>
             </template>
             <template v-else>

@@ -142,3 +142,20 @@ export interface CreateBlockedIpRequest {
   expiresUtc: string;
 }
 
+
+export interface AdminLookupData {
+  roles: string[];
+  subscriptionTiers: Array<{
+    id: number;
+    name: string;
+  }>;
+}
+
+export interface GroqModelDto {
+  id: string;
+  contextWindow: number;
+}
+
+export interface GroqModelsListDto {
+  models: GroqModelDto[];
+}

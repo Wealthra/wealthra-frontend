@@ -15,24 +15,24 @@
         </thead>
         <tbody>
           <tr v-for="plan in plans" :key="plan.id">
-            <td>#{{ plan.id }}</td>
-            <td class="plan-name-cell">
+            <td data-label="ID">#{{ plan.id }}</td>
+            <td class="plan-name-cell" :data-label="t.name">
               <span class="plan-name">{{ plan.name }}</span>
               <span class="plan-desc">{{ plan.description }}</span>
             </td>
-            <td class="price-cell">
+            <td class="price-cell" :data-label="t.price">
               <span class="price-value">{{ plan.monthlyPrice }}</span>
               <span class="currency">{{ plan.priceCurrency }}</span>
               <span class="period">/mo</span>
             </td>
-            <td>{{ plan.monthlyOcrLimit }}</td>
-            <td>{{ plan.monthlySttLimit }}</td>
-            <td>
+            <td :data-label="t.ocrLimit">{{ plan.monthlyOcrLimit }}</td>
+            <td :data-label="t.sttLimit">{{ plan.monthlySttLimit }}</td>
+            <td :data-label="t.status">
               <span :class="['status-tag', plan.isActive ? 'active' : 'inactive']">
                 {{ plan.isActive ? t.active : t.inactive }}
               </span>
             </td>
-            <td>
+            <td :data-label="t.actions">
               <div class="action-buttons">
                 <button class="action-btn users" @click="viewUsers(plan)" :title="t.viewUsers">
                   <font-awesome-icon icon="user-group" />
@@ -178,6 +178,49 @@ export default defineComponent({
     font-size: 14px;
     color: var(--header-text-color);
     border-bottom: 1px solid var(--border-color);
+  }
+
+  @media (max-width: 768px) {
+    thead {
+      display: none;
+    }
+
+    tr {
+      display: block;
+      padding: 12px;
+      border-bottom: 2px solid var(--border-color);
+      background: var(--background-color-soft);
+      margin-bottom: 12px;
+      border-radius: 12px;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0 !important;
+      border-bottom: 1px solid var(--border-color);
+      text-align: right;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 800;
+        font-size: 10px;
+        text-transform: uppercase;
+        color: var(--normal-text-color);
+        opacity: 0.7;
+        margin-right: 16px;
+        text-align: left;
+      }
+    }
   }
 }
 

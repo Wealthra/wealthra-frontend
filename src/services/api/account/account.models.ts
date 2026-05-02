@@ -20,6 +20,26 @@ export interface UserInfoResponse {
   email: string
 }
 
+export interface AdminLookupData {
+  roles: string[];
+  subscriptionTiers: Array<{
+    id: number;
+    name: string;
+  }>;
+}
+
+export interface GroqModelDto {
+  id: string;
+  ownedBy: string | null;
+  active: boolean;
+  contextWindow: number | null;
+}
+
+export interface GroqModelsListDto {
+  models: GroqModelDto[];
+  groqApiKeyConfigured: boolean;
+}
+
 // New API models based on /api/Account spec
 
 export interface AccountRegisterRequest {
@@ -80,7 +100,7 @@ export interface AccountChangePreferredCurrencyRequest {
 
 export interface AccountUpdateUserTierRequest {
   email: string
-  tier: string
+  newTier: number
 }
 
 export interface AccountUserUsageResponse {
@@ -93,5 +113,7 @@ export interface AccountUserUsageResponse {
   subscriptionPlanName: string
   ocrRequestsThisMonth: number
   sttRequestsThisMonth: number
+  monthlyOcrLimit: number | null
+  monthlySttLimit: number | null
   lastUsageActivityDate: string | null
 }

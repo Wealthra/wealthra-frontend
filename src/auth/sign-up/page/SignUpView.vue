@@ -526,10 +526,10 @@ export default {
               cursor: pointer;
             }
 
-            img {
+            svg {
               width: 0.8rem;
               height: 0.8rem;
-              color: var(--button-text-color);
+              color: white;
             }
           }
 

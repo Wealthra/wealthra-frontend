@@ -43,12 +43,28 @@ export function setAuth(
 ): void {
   currentAccessToken = token
   currentRefreshToken = refreshToken || currentRefreshToken
-  currentRoles = roles
   currentUserId = userId || null
   currentEmail = email || null
 
+  // Decode roles from the JWT if none were explicitly provided
+  let resolvedRoles = roles
+  if (resolvedRoles.length === 0) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const roleClaim = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+        || payload['role']
+        || payload['roles']
+      if (Array.isArray(roleClaim)) resolvedRoles = roleClaim
+      else if (typeof roleClaim === 'string') resolvedRoles = [roleClaim]
+    } catch {
+      // Not a valid JWT, keep empty
+    }
+  }
+
+  currentRoles = resolvedRoles
+
   localStorage.setItem('access_token', token)
-  localStorage.setItem('user_roles', JSON.stringify(roles))
+  localStorage.setItem('user_roles', JSON.stringify(resolvedRoles))
   if (refreshToken) {
     localStorage.setItem('refresh_token', refreshToken)
   }

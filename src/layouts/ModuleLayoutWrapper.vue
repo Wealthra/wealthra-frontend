@@ -32,9 +32,11 @@ const ROUTE_NAME_TO_PAGE: Record<string, { en: string; tr: string }> = {
 const ADMIN_ROUTE_LABELS: Record<string, { en: string; tr: string }> = {
   'admin-analytics': { en: 'Dashboard & Analytics', tr: 'Genel Bakış' },
   'admin-overview': { en: 'Dashboard & Analytics', tr: 'Genel Bakış' },
-  'admin-users': { en: 'Users & Plans', tr: 'Kullanıcılar & Planlar' },
-  'admin-support': { en: 'Support & Ops', tr: 'Destek & Operasyon' },
-  'admin-system': { en: 'System & Security', tr: 'Sistem ve Güvenlik' },
+  'admin-users': { en: 'User Management', tr: 'Kullanıcı Yönetimi' },
+  'admin-plans': { en: 'Plans & Subscriptions', tr: 'Plan ve Abonelikler' },
+  'admin-system': { en: 'System & AI Config', tr: 'Sistem Ayarları ve Yapay Zeka' },
+  'admin-support': { en: 'Support', tr: 'Destek' },
+  'admin-operations': { en: 'Platform Operations', tr: 'Platform Operasyonları' },
   'admin-settings': { en: 'Admin Settings', tr: 'Admin Ayarları' },
 }
 

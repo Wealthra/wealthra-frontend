@@ -38,7 +38,9 @@ function redirectAdminLegacy(to: RouteLocation) {
   const paths: Record<string, string> = {
     overview: '/admin/analytics',
     users: '/admin/users',
+    plans: '/admin/plans',
     support: '/admin/support',
+    operations: '/admin/operations',
     system: '/admin/system',
     settings: '/admin/settings',
     analytics: '/admin/analytics',
@@ -135,6 +137,18 @@ const router = createRouter({
           path: 'admin/system',
           name: 'admin-system',
           component: AdminSystemHubView,
+          meta: { requiresAdmin: true },
+        },
+        {
+          path: 'admin/plans',
+          name: 'admin-plans',
+          component: AdminView,
+          meta: { requiresAdmin: true },
+        },
+        {
+          path: 'admin/operations',
+          name: 'admin-operations',
+          component: AdminView,
           meta: { requiresAdmin: true },
         },
         {

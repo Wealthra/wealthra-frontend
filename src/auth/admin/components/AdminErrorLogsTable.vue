@@ -5,8 +5,6 @@
         <thead>
           <tr>
             <th>Code</th>
-            <th>Method</th>
-            <th>Path</th>
             <th>Message</th>
             <th>Exception</th>
             <th>User</th>
@@ -20,8 +18,6 @@
                 {{ error.statusCode }}
               </span>
             </td>
-            <td><span class="method-tag">{{ error.method }}</span></td>
-            <td class="path-cell">{{ error.path }}</td>
             <td class="message-cell">{{ error.message }}</td>
             <td class="type-cell">{{ error.exceptionType }}</td>
             <td class="user-cell">{{ error.userId || 'Anonymous' }}</td>
@@ -34,7 +30,7 @@
     <!-- Pagination -->
     <div class="pagination" v-if="totalPagesError > 1">
       <button :disabled="page === 1" @click="$emit('changePage', page - 1)" class="pagination-btn">
-        <font-awesome-icon icon="chevron-left" />
+        <font-awesome-icon :icon="faChevronLeft" />
       </button>
 
       <span
@@ -61,7 +57,7 @@
         @click="$emit('changePage', page + 1)"
         class="pagination-btn"
       >
-        <font-awesome-icon icon="chevron-right" />
+        <font-awesome-icon :icon="faChevronRight" />
       </button>
     </div>
 
@@ -71,7 +67,7 @@
         <div class="modal-header">
           <h3>Error Details #{{ selectedError.id }}</h3>
           <button class="close-btn" @click="selectedError = null">
-            <font-awesome-icon icon="xmark" />
+            <font-awesome-icon :icon="faXmark" />
           </button>
         </div>
         <div class="modal-body">
@@ -102,6 +98,7 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue'
 import type { ErrorLog } from '@/services/api/admin/admin.models'
+import { faChevronLeft, faChevronRight, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 export default defineComponent({
   name: 'AdminErrorLogsTable',
@@ -173,7 +170,10 @@ export default defineComponent({
       showEllipsis,
       showLastPage,
       getStatusClass,
-      formatDate
+      formatDate,
+      faChevronLeft,
+      faChevronRight,
+      faXmark
     }
   }
 })
