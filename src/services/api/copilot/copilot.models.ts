@@ -24,9 +24,15 @@ export interface BulkExpenseRequest {
 
 export interface CopilotChatRequest {
   message: string
+  updated_batch?: any // Support for passing final edited items back to AI
 }
 
 export interface CopilotChatResponse {
+  type?: string
   message: string
   response?: string
+  payload?: any
+  ui_hints?: {
+    show_confirm_buttons?: boolean
+  }
 }

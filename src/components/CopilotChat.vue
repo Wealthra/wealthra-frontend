@@ -140,7 +140,7 @@
                   v-else-if="msg.type === 'interactive'"
                   class="copilot-bubble copilot-bubble--bot copilot-bubble--interactive"
                 >
-                  <p class="copilot-interactive__text">{{ msg.content }}</p>
+                  <p class="copilot-interactive__text" v-html="parseMarkdown(msg.content)"></p>
 
                   <div class="copilot-items">
                     <div class="copilot-items__header">
@@ -171,6 +171,7 @@
                               class="copilot-item__edit-btn"
                               @click="startEditItem(msg.id, idx, item)"
                               :title="t.edit"
+                              :disabled="editingItemKey !== null"
                             >
                               <svg
                                 width="12"
@@ -194,6 +195,7 @@
                               class="copilot-item__delete-btn"
                               @click="removeItem(msg.id, idx)"
                               :title="t.remove"
+                              :disabled="editingItemKey !== null"
                             >
                               <svg
                                 width="12"
@@ -228,7 +230,12 @@
                               "
                             />
                             <div class="copilot-item__price-wrap">
-                              <span class="copilot-item__currency">{{ editForm.currency }}</span>
+                              <UISelect
+                                v-model="editForm.currency"
+                                :options="currencyOptions"
+                                compact
+                                class="copilot-item__currency-select-ui"
+                              />
                               <input
                                 v-model.number="editForm.amount"
                                 type="number"
@@ -253,33 +260,45 @@
                       </div>
                     </div>
 
-                    <!-- Save All Button -->
-                    <button
-                      v-if="!msg.saved && msg.itemData && msg.itemData.length > 0"
-                      class="copilot-items__save-all"
-                      :disabled="msg.saving"
-                      @click="handleSaveAll(msg)"
+                    <!-- Actions Group -->
+                    <div
+                      v-if="!msg.saved && msg.itemData && msg.itemData.length > 0 && msg.uiHints?.show_confirm_buttons !== false"
+                      class="copilot-items__actions-group"
                     >
-                      <template v-if="msg.saving">
-                        <span class="copilot-items__spinner"></span>
-                        {{ t.saving }}
-                      </template>
-                      <template v-else>
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        {{ t.saveAll }}
-                      </template>
-                    </button>
+                      <button
+                        class="copilot-items__save-all"
+                        :disabled="msg.saving || editingItemKey !== null"
+                        @click="handleSaveAll(msg)"
+                      >
+                        <template v-if="msg.saving">
+                          <span class="copilot-items__spinner"></span>
+                          {{ t.saving }}
+                        </template>
+                        <template v-else>
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          {{ t.confirm }}
+                        </template>
+                      </button>
+
+                      <button
+                        class="copilot-items__reject-btn"
+                        :disabled="msg.saving || editingItemKey !== null"
+                        @click="handleReject(msg)"
+                      >
+                        {{ t.cancel }}
+                      </button>
+                    </div>
                     <div v-else class="copilot-items__saved-badge">
                       <svg
                         width="12"
@@ -337,14 +356,14 @@
             </div>
 
             <!-- Default State: Pill-shaped Chat Input Wrapper -->
-            <div v-else class="copilot-input-box">
+            <div v-else class="copilot-input-box" :class="{ 'copilot-input-box--disabled': editingItemKey !== null }">
               <button
                 class="copilot-icon-btn"
                 @click="triggerImageUpload"
                 :title="t.image"
-                :disabled="isOcrLimitReached"
+                :disabled="isOcrLimitReached || editingItemKey !== null"
               >
-                <font-awesome-icon icon="image" :class="{ 'icon-disabled': isOcrLimitReached }" />
+                <font-awesome-icon icon="image" :class="{ 'icon-disabled': isOcrLimitReached || editingItemKey !== null }" />
               </button>
 
               <textarea
@@ -354,6 +373,7 @@
                 :placeholder="t.typeMessagePlaceholder"
                 @keydown.enter.exact.prevent="sendTextMessage"
                 rows="1"
+                :disabled="editingItemKey !== null"
               ></textarea>
 
               <button
@@ -369,11 +389,11 @@
                 class="copilot-icon-btn copilot-icon-btn--mic"
                 @click="startRecording"
                 :title="t.voice"
-                :disabled="isSttLimitReached"
+                :disabled="isSttLimitReached || editingItemKey !== null"
               >
                 <font-awesome-icon
                   icon="microphone"
-                  :class="{ 'icon-disabled': isSttLimitReached }"
+                  :class="{ 'icon-disabled': isSttLimitReached || editingItemKey !== null }"
                 />
               </button>
             </div>
@@ -413,6 +433,7 @@ import { categoryService } from '@/services/api/category/category.service'
 import type {
   ExtractedExpenseItem,
   BulkExpenseRequest,
+  CopilotChatResponse,
 } from '@/services/api/copilot/copilot.models'
 import type { Category, ApiCategory } from '@/services/api/category/category.models'
 import UISelect from '@/components/UISelect.vue'
@@ -433,6 +454,10 @@ interface ChatMessage {
   itemData?: ExtractedExpenseItem[]
   saving?: boolean
   saved?: boolean
+  isChatConfirmation?: boolean // New: To distinguish between AI-waiting-for-confirm vs simple extraction result
+  uiHints?: {
+    show_confirm_buttons?: boolean
+  }
 }
 
 import { useCurrency } from '@/composables/useCurrency'
@@ -455,7 +480,13 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { currencySymbol, formatCurrency } = useCurrency()
+    const { currency: preferredCurrency, currencySymbol, formatCurrency } = useCurrency()
+
+    const currencyOptions = [
+      { label: '$', value: 'USD' },
+      { label: '€', value: 'EUR' },
+      { label: '₺', value: 'TRY' },
+    ]
 
     // ── Resizing ──
     const windowWidth = ref(Number(localStorage.getItem('copilot-width')) || 380)
@@ -609,6 +640,7 @@ export default defineComponent({
         save: isTr ? 'Kaydet' : 'Save',
         cancel: isTr ? 'İptal' : 'Cancel',
         saveAll: isTr ? 'Tümünü Kaydet' : 'Save All',
+        confirm: isTr ? 'Onayla' : 'Confirm',
         saving: isTr ? 'Kaydediliyor...' : 'Saving...',
         saved: isTr ? 'Kaydedildi' : 'Saved',
         description: isTr ? 'Açıklama' : 'Description',
@@ -644,6 +676,7 @@ export default defineComponent({
         type: 'text',
         content: t.value.welcome,
       })
+
       // Load categories
       loadCategories()
     })
@@ -813,7 +846,7 @@ export default defineComponent({
             sender: 'bot',
             type: 'interactive',
             content: t.value.extractedMsg,
-            itemData: items,
+            itemData: items, isChatConfirmation: false,
           })
         } else {
           removeLastBotTextMessage()
@@ -869,7 +902,7 @@ export default defineComponent({
             sender: 'bot',
             type: 'interactive',
             content: t.value.extractedMsg,
-            itemData: items,
+            itemData: items, isChatConfirmation: false,
           })
         } else {
           removeLastBotTextMessage()
@@ -915,23 +948,64 @@ export default defineComponent({
 
       try {
         const result = await copilotService.chat({ message: msgText })
-        isTyping.value = false
+        
+        if (result && typeof result === 'object') {
+          const res = result as CopilotChatResponse
+          const resType = (res.type || '').toLowerCase()
+          const itemsSource = res.payload?.batch?.items || res.payload?.items
 
-        if (result) {
-          // The new backend agent architecture returns { type, message, ... }
-          const replyText =
-            typeof result === 'string'
-              ? result
-              : (result as any).message || (result as any).response || String(result)
-          addMessage({ sender: 'bot', type: 'text', content: replyText })
-        } else {
-          const errorMsg = (t.value as any).errorChat || t.value.errorExtract
-          addMessage({ sender: 'bot', type: 'text', content: errorMsg })
+          if ((resType === 'confirmation' || resType === 'interactive') && Array.isArray(itemsSource)) {
+            const sanitize = (val: any) => (val === 'null' || val === 'None' || val === null || val === undefined) ? '' : String(val).trim()
+
+            const mappedItems: ExtractedExpenseItem[] = itemsSource.map((item: any) => {
+              const rawCatId = sanitize(item.category_id || item.categoryId)
+              const rawCatName = sanitize(item.category_name || item.categoryName)
+              
+              let catId = Number(rawCatId) || 0
+              if (!catId && rawCatName) {
+                const targetName = rawCatName.toLowerCase()
+                const found = categories.value.find(c => (c.categoryName || '').toLowerCase() === targetName)
+                if (found) catId = found.id
+              }
+
+              // Safer amount parsing
+              const rawAmount = item.amount !== undefined && item.amount !== null ? item.amount : 0
+              const amountValue = typeof rawAmount === 'string' ? parseFloat(rawAmount) : Number(rawAmount)
+
+              return {
+                id: Math.floor(Math.random() * 1000000),
+                description: sanitize(item.description) || 'Expense',
+                amount: isNaN(amountValue) ? 0 : amountValue,
+                currency: (sanitize(item.currency) || preferredCurrency.value || 'TRY').toUpperCase(),
+                paymentMethod: sanitize(item.payment_method || item.paymentMethod) || 'Other',
+                isRecurring: !!(item.is_recurring || item.isRecurring),
+                transactionDate: sanitize(item.date || item.transactionDate) || new Date().toISOString(),
+                categoryId: catId || 0,
+                categoryName: rawCatName || 'Uncategorized',
+              }
+            })
+
+            addMessage({
+              sender: 'bot',
+              type: 'interactive',
+              content: res.message || res.response || t.value.extractedMsg,
+              itemData: mappedItems,
+              uiHints: res.ui_hints,
+              isChatConfirmation: true, // This is a specific AI confirmation state
+            })
+          } else {
+            const replyText = res.message || res.response || String(result)
+            addMessage({ sender: 'bot', type: 'text', content: replyText })
+          }
+        } else if (result) {
+          addMessage({ sender: 'bot', type: 'text', content: String(result) })
         }
-      } catch {
-        isTyping.value = false
+      } catch (err) {
+        console.error('Copilot chat error:', err)
         const errorMsg = (t.value as any).errorChat || t.value.errorExtract
         addMessage({ sender: 'bot', type: 'text', content: errorMsg })
+      } finally {
+        isTyping.value = false
       }
     }
 
@@ -1032,31 +1106,86 @@ export default defineComponent({
       }
     }
 
+
+    const handleReject = async (msg: ChatMessage) => {
+      msg.saving = true
+      try {
+        if (msg.isChatConfirmation) {
+          await copilotService.chat({
+            message: props.selectedLanguage === 'Turkish' ? 'Hayır' : 'No',
+          })
+        }
+        
+        msg.saving = false
+        msg.itemData = []
+        msg.type = 'text'
+        msg.content =
+          props.selectedLanguage === 'Turkish'
+            ? 'İşlem iptal edildi.'
+            : 'Operation has been cancelled.'
+      } catch {
+        msg.saving = false
+        msg.itemData = []
+        msg.type = 'text'
+        msg.content =
+          props.selectedLanguage === 'Turkish'
+            ? 'İşlem iptal edildi.'
+            : 'Operation has been cancelled.'
+      }
+    }
+
     // ── Save All ──
     const handleSaveAll = async (msg: ChatMessage) => {
       if (!msg.itemData || msg.itemData.length === 0) return
       msg.saving = true
 
       try {
-        const payload: BulkExpenseRequest[] = msg.itemData.map(item => ({
+        const payload = msg.itemData.map(item => ({
           description: item.description,
           amount: item.amount,
           currency: item.currency,
-          paymentMethod: item.paymentMethod || 'Other',
-          isRecurring: item.isRecurring || false,
-          categoryId: item.categoryId,
-          transactionDate: item.transactionDate || new Date().toISOString(),
+          payment_method: item.paymentMethod || 'Other',
+          is_recurring: item.isRecurring || false,
+          category_id: item.categoryId,
+          category_name: item.categoryName,
+          date: item.transactionDate || new Date().toISOString(),
         }))
 
-        await copilotService.bulkCreateExpenses(payload)
+        if (msg.isChatConfirmation) {
+          // AI Confirmation Path: Notify AI with final data
+          const response = await copilotService.chat({
+            message: props.selectedLanguage === 'Turkish' ? 'Evet' : 'Yes',
+            updated_batch: payload,
+          })
+
+          addMessage({
+            sender: 'bot',
+            type: 'text',
+            content: response.message || response.response || t.value.savedSuccess,
+          })
+        } else {
+          // Direct Save Path (OCR/STT): Call .NET API directly
+          const bulkRequest: BulkExpenseRequest[] = msg.itemData.map(item => ({
+            description: item.description,
+            amount: item.amount,
+            currency: item.currency,
+            paymentMethod: item.paymentMethod || 'Other',
+            isRecurring: item.isRecurring || false,
+            categoryId: item.categoryId,
+            transactionDate: item.transactionDate || new Date().toISOString(),
+          }))
+
+          await copilotService.bulkCreateExpenses(bulkRequest)
+
+          addMessage({
+            sender: 'bot',
+            type: 'text',
+            content: t.value.savedSuccess,
+          })
+        }
+
         msg.saving = false
         msg.saved = true
-
-        addMessage({
-          sender: 'bot',
-          type: 'text',
-          content: t.value.savedSuccess,
-        })
       } catch {
         msg.saving = false
         addMessage({
@@ -1077,6 +1206,7 @@ export default defineComponent({
       categories,
       editingItemKey,
       editForm,
+      currencyOptions,
       // Refs
       messagesEndRef,
       messagesContainerRef,
@@ -1096,6 +1226,7 @@ export default defineComponent({
       cancelEditItem,
       removeItem,
       handleSaveAll,
+      handleReject,
       formatTime,
       formatDuration,
       openImageViewer,
@@ -1769,7 +1900,6 @@ export default defineComponent({
   }
 
   &.copilot-item__input--price {
-    padding-left: 32px;
     font-weight: 700;
   }
 }
@@ -1791,22 +1921,6 @@ export default defineComponent({
 
 /* Removed .copilot-item__row as we are stacking items now */
 
-.copilot-item__price-wrap {
-  position: relative;
-  flex: 1;
-
-  .copilot-item__currency {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--primary-green-color);
-    pointer-events: none;
-    z-index: 1;
-  }
-}
 
 .copilot-item__actions {
   display: flex;
@@ -1861,30 +1975,57 @@ export default defineComponent({
   }
 }
 
-/* Save All Button */
+.copilot-items__actions-group {
+  display: flex;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Save All / Confirm Button */
 .copilot-items__save-all {
-  width: 100%;
+  flex: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 0;
+  padding: 10px 0;
   border: none;
-  border-top: 1px solid var(--border-color);
   background: var(--primary-green-color);
   color: #fff;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   font-family: var(--main-font);
-  transition: opacity 0.15s;
+  transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    filter: brightness(1.1);
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.copilot-items__reject-btn {
+  flex: 1;
+  background: var(--background-color-soft);
+  color: var(--normal-text-color);
+  border: none;
+  border-left: 1px solid var(--border-color);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--main-font);
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--border-color);
+    color: var(--header-text-color);
+  }
+
+  &:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
   }
 }
@@ -1930,6 +2071,65 @@ export default defineComponent({
   display: none;
 }
 
+.copilot-item__price-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--background-color-soft);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  height: 42px;
+  transition: all 0.2s;
+  overflow: hidden;
+
+  &:focus-within {
+    border-color: var(--primary-green-color);
+    background: var(--background-color);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  }
+
+  .copilot-item__input--price {
+    background: transparent !important;
+    border: none !important;
+    height: 100% !important;
+    padding-left: 8px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+.copilot-item__currency-select-ui {
+  width: auto !important;
+  flex-shrink: 0;
+
+  :deep(.select-trigger) {
+    background: transparent !important;
+    border: none !important;
+    border-right: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    padding: 0 10px 0 12px !important;
+    height: 28px !important;
+    color: var(--primary-green-color) !important;
+    font-weight: 800 !important;
+    font-size: 18px !important;
+    box-shadow: none !important;
+    gap: 4px !important;
+
+    &:hover {
+      background: var(--background-color-soft) !important;
+    }
+
+    .select-icon {
+      font-size: 8px;
+      opacity: 0.3;
+      transition: opacity 0.2s;
+    }
+
+    &:hover .select-icon {
+      opacity: 0.8;
+    }
+  }
+}
+
 /* Pill-shaped Input Container */
 .copilot-input-box {
   display: flex;
@@ -1941,7 +2141,17 @@ export default defineComponent({
   padding: 6px 8px;
   transition: all 0.2s ease;
 
-  &:focus-within {
+  &--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--background-color-soft);
+    
+    * {
+      pointer-events: none;
+    }
+  }
+
+  &:focus-within:not(&--disabled) {
     border-color: var(--primary-green-color);
     box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.12);
   }
