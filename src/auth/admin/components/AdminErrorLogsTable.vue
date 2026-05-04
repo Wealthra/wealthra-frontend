@@ -5,19 +5,19 @@
         <table class="tickets-table">
           <thead>
             <tr>
-              <th class="col-code">Code</th>
-              <th class="col-exception">Exception</th>
-              <th class="col-user">User</th>
-              <th class="col-date">Timestamp</th>
+              <th class="col-code">{{ t.code }}</th>
+              <th class="col-exception">{{ t.exception }}</th>
+              <th class="col-user">{{ t.user }}</th>
+              <th class="col-date">{{ t.timestamp }}</th>
             </tr>
           </thead>
           <tbody>
             <template v-if="isLoading">
               <tr v-for="i in 10" :key="'skeleton-' + i" class="skeleton-row">
-                <td class="col-code" data-label="Status Code"><UISkeletonLoader width="100%" height="24px" border-radius="6px" /></td>
-                <td class="col-exception" data-label="Exception"><UISkeletonLoader width="70%" height="16px" border-radius="4px" /></td>
-                <td class="col-user" data-label="User"><UISkeletonLoader width="120px" height="16px" border-radius="4px" /></td>
-                <td class="col-date" data-label="Timestamp"><UISkeletonLoader width="100px" height="14px" border-radius="4px" /></td>
+                <td class="col-code" :data-label="t.code"><UISkeletonLoader width="100%" height="24px" border-radius="6px" /></td>
+                <td class="col-exception" :data-label="t.exception"><UISkeletonLoader width="70%" height="16px" border-radius="4px" /></td>
+                <td class="col-user" :data-label="t.user"><UISkeletonLoader width="120px" height="16px" border-radius="4px" /></td>
+                <td class="col-date" :data-label="t.timestamp"><UISkeletonLoader width="100px" height="14px" border-radius="4px" /></td>
               </tr>
             </template>
             <template v-else>
@@ -27,18 +27,18 @@
                 @click="selectedError = error" 
                 class="clickable-row"
               >
-                <td class="col-code" data-label="Status Code">
+                <td class="col-code" :data-label="t.code">
                   <span :class="['status-badge-mono', getStatusClass(error.statusCode)]">
                      {{ error.statusCode }}
                   </span>
                 </td>
-                <td class="col-exception" data-label="Exception">
+                <td class="col-exception" :data-label="t.exception">
                   <span class="exception-type-mono">{{ error.exceptionType }}</span>
                 </td>
-                <td class="col-user" data-label="User">
-                  <span class="user-text">{{ error.userId || 'Anonymous' }}</span>
+                <td class="col-user" :data-label="t.user">
+                  <span class="user-text">{{ error.userId || t.anonymous }}</span>
                 </td>
-                <td class="col-date date-cell" data-label="Timestamp">
+                <td class="col-date date-cell" :data-label="t.timestamp">
                   {{ formatDate(error.createdUtc) }}
                 </td>
               </tr>
@@ -48,7 +48,7 @@
                     <div class="empty-icon-circle">
                       <font-awesome-icon icon="circle-check" />
                     </div>
-                    <p class="empty-text">No error logs found for the selected criteria.</p>
+                    <p class="empty-text">{{ t.noLogs }}</p>
                   </div>
                 </td>
               </tr>
@@ -61,36 +61,36 @@
     <!-- Error Detail Modal -->
     <UIModal 
       :is-open="!!selectedError" 
-      :title="'Error Details #' + (selectedError?.id || '')" 
+      :title="t.errorDetailTitle + (selectedError?.id || '')" 
       max-width="700px" 
       @close="selectedError = null"
     >
       <div v-if="selectedError" class="error-detail-content">
         <div class="detail-grid">
           <div class="detail-item">
-            <label>Status Code</label>
+            <label>{{ t.code }}</label>
             <span :class="['status-badge-mono', getStatusClass(selectedError.statusCode)]">
               {{ selectedError.statusCode }}
             </span>
           </div>
           <div class="detail-item">
-            <label>Correlation ID</label>
+            <label>{{ t.correlationId }}</label>
             <code class="mono-id">{{ selectedError.correlationId }}</code>
           </div>
           <div class="detail-item full">
-            <label>Message</label>
+            <label>{{ t.message }}</label>
             <div class="detail-text-box">{{ selectedError.message }}</div>
           </div>
           <div class="detail-item full">
-            <label>Exception Type</label>
+            <label>{{ t.exceptionType }}</label>
             <code class="exception-code">{{ selectedError.exceptionType }}</code>
           </div>
           <div v-if="selectedError.userId" class="detail-item">
-            <label>User ID</label>
+            <label>{{ t.userId }}</label>
             <code class="mono-id">{{ selectedError.userId }}</code>
           </div>
           <div class="detail-item">
-            <label>Timestamp</label>
+            <label>{{ t.timestamp }}</label>
             <span class="detail-date">{{ formatDate(selectedError.createdUtc) }}</span>
           </div>
         </div>
@@ -100,7 +100,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
 import type { ErrorLog } from '@/services/api/admin/admin.models'
 import UIModal from '@/components/UIModal.vue'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
@@ -122,8 +122,25 @@ export default defineComponent({
       default: false
     }
   },
-  setup() {
+  setup(props) {
     const selectedError = ref<ErrorLog | null>(null)
+
+    const t = computed(() => {
+      const isTr = props.selectedLanguage === 'Turkish'
+      return {
+        code: isTr ? 'Kod' : 'Code',
+        exception: isTr ? 'İstisna' : 'Exception',
+        user: isTr ? 'Kullanıcı' : 'User',
+        timestamp: isTr ? 'Zaman Damgası' : 'Timestamp',
+        anonymous: isTr ? 'Anonim' : 'Anonymous',
+        noLogs: isTr ? 'Seçilen kriterlere göre hata günlüğü bulunamadı.' : 'No error logs found for the selected criteria.',
+        errorDetailTitle: isTr ? 'Hata Detayları #' : 'Error Details #',
+        correlationId: 'Correlation ID',
+        message: isTr ? 'Mesaj' : 'Message',
+        exceptionType: isTr ? 'İstisna Türü' : 'Exception Type',
+        userId: 'User ID'
+      }
+    })
 
     const getStatusClass = (code: number) => {
       if (code >= 500) return 'status-500'
@@ -132,7 +149,10 @@ export default defineComponent({
     }
 
     const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+      return new Date(dateString).toLocaleString(props.selectedLanguage === 'Turkish' ? 'tr-TR' : 'en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      })
     }
 
     const truncate = (text: string, max: number) => {
@@ -144,7 +164,8 @@ export default defineComponent({
       selectedError,
       getStatusClass,
       formatDate,
-      truncate
+      truncate,
+      t
     }
   }
 })

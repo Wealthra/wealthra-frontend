@@ -292,6 +292,7 @@ import { notificationHub, type NotificationDto } from '@/services/api/notificati
 import { adminHub } from '@/services/api/admin/admin.hub'
 import type { AccountUserUsageResponse } from '@/services/api/account/account.models'
 import notificationSound from '@/assets/notification.wav'
+import { useToast } from '@/stores/useToast'
 
 export default defineComponent({
   name: 'ModuleLayout',
@@ -329,6 +330,7 @@ export default defineComponent({
     const usageData = ref<AccountUserUsageResponse | null>(null)
 
     const { isPrivacyMode, togglePrivacyMode, currency, setCurrency } = useCurrency()
+    const toast = useToast()
 
     const userFirstName = ref<string>('')
     const userLastName = ref<string>('')
@@ -398,6 +400,14 @@ export default defineComponent({
       window.dispatchEvent(new CustomEvent('new-notification', { detail: notification }))
     }
 
+    const onAdminActivityReceived = (event: any) => {
+      const activity = event.detail
+      if (!activity) return
+
+      // Show toast for admin activity
+      toast.info(activity.message || `Admin Activity: ${activity.activityType}`, 5000)
+    }
+
     const fetchInitialUnreadCount = async () => {
       try {
         const notifications = await notificationService.getNotifications(true)
@@ -430,6 +440,7 @@ export default defineComponent({
 
       if (isUserAdmin.value) {
         adminHub.start()
+        window.addEventListener('admin-activity', onAdminActivityReceived)
       }
     })
 
@@ -442,6 +453,7 @@ export default defineComponent({
       notificationHub.offNotificationReceived(onNotificationReceived)
       notificationHub.stop()
       adminHub.stop()
+      window.removeEventListener('admin-activity', onAdminActivityReceived)
     })
 
     const emitUpdateLanguage = (language: string) => {
@@ -472,6 +484,7 @@ export default defineComponent({
         const routeMap: Record<string, string> = {
           Overview: 'admin-overview',
           'Dashboard & Analytics': 'admin-analytics',
+          'Admin System Monitor Center': 'admin-monitor',
           'User Management': 'admin-users',
           'Plans & Subscriptions': 'admin-plans',
           'System & AI Config': 'admin-system',
@@ -555,6 +568,7 @@ export default defineComponent({
       if (admin) {
         const adminContentEnglish = [
           'Dashboard & Analytics',
+          'Admin System Monitor Center',
           'User Management',
           'Plans & Subscriptions',
           'System & AI Config',
@@ -565,6 +579,7 @@ export default defineComponent({
         ]
         const adminContentTurkish = [
           'Genel Bakış',
+          'Admin Sistem Monitör Merkezi',
           'Kullanıcı Yönetimi',
           'Plan ve Abonelikler',
           'Sistem Ayarları ve Yapay Zeka',

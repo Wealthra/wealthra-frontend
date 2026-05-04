@@ -13,6 +13,7 @@ const ModuleLayoutWrapper = () => import('../layouts/ModuleLayoutWrapper.vue')
 const DashboardView = () => import('../modules/dashboard/page/DashboardView.vue')
 const AdminView = () => import('../auth/admin/page/AdminView.vue')
 const AdminAnalyticsView = () => import('../auth/admin/page/AdminAnalyticsView.vue')
+const AdminSystemMonitorView = () => import('../auth/admin/page/AdminSystemMonitorView.vue')
 const AdminSystemHubView = () => import('../auth/admin/page/AdminSystemHubView.vue')
 const BudgetView = () => import('../modules/budget/page/BudgetView.vue')
 const ExpensesView = () => import('../modules/expenses/page/ExpensesView.vue')
@@ -119,6 +120,12 @@ const router = createRouter({
           path: 'admin/analytics',
           name: 'admin-analytics',
           component: AdminAnalyticsView,
+          meta: { requiresAdmin: true },
+        },
+        {
+          path: 'admin/monitor',
+          name: 'admin-monitor',
+          component: AdminSystemMonitorView,
           meta: { requiresAdmin: true },
         },
         {

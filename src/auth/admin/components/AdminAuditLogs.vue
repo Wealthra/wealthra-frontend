@@ -9,7 +9,7 @@
       <div class="table-toolbar">
         <div class="table-toolbar__title-wrap">
           <font-awesome-icon icon="list-check" class="table-toolbar__icon" />
-          <h2 class="table-toolbar__title">{{ selectedLanguage === 'Turkish' ? 'Denetim Günlükleri' : 'Audit Logs' }}</h2>
+          <h2 class="table-toolbar__title">{{ t.title }}</h2>
         </div>
       </div>
 
@@ -57,7 +57,7 @@
         <div class="audit-table-footer__hint">
           <font-awesome-icon icon="circle-info" />
           <span class="audit-table-footer__text">
-            {{ selectedLanguage === 'Turkish' ? 'Sistem üzerindeki tüm idari ve kritik işlemler kaydedilmektedir.' : 'All administrative and critical operations on the system are recorded.' }}
+            {{ t.footerHint }}
           </span>
         </div>
         <button 
@@ -103,6 +103,7 @@ export default defineComponent({
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
       return {
+        title: isTr ? 'Denetim Günlükleri' : 'Audit Logs',
         when: isTr ? 'Zaman' : 'When',
         actor: isTr ? 'Aktör' : 'Actor',
         action: isTr ? 'İşlem' : 'Action',
@@ -114,6 +115,7 @@ export default defineComponent({
         loading: isTr ? 'Yükleniyor…' : 'Loading…',
         retry: isTr ? 'Yeniden dene' : 'Retry',
         failed: isTr ? 'Denetim günlüğü yüklenemedi.' : 'Failed to load audit logs.',
+        footerHint: isTr ? 'Sistem üzerindeki tüm idari ve kritik işlemler kaydedilmektedir.' : 'All administrative and critical operations on the system are recorded.'
       }
     })
 

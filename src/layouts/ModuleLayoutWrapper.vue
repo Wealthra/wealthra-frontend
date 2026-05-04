@@ -39,6 +39,7 @@ const ADMIN_ROUTE_LABELS: Record<string, { en: string; tr: string }> = {
   'admin-operations': { en: 'Platform Operations', tr: 'Platform Operasyonları' },
   'admin-security': { en: 'Security & Monitoring', tr: 'Güvenlik ve İzleme' },
   'admin-settings': { en: 'Admin Settings', tr: 'Admin Ayarları' },
+  'admin-monitor': { en: 'Admin System Monitor Center', tr: 'Admin Sistem Monitör Merkezi' },
 }
 
 export default defineComponent({

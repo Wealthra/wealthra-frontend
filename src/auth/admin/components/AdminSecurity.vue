@@ -3,12 +3,12 @@
     <div class="table-toolbar">
       <div class="table-toolbar__title-wrap">
         <font-awesome-icon icon="shield-halved" class="table-toolbar__icon" />
-        <h2 class="table-toolbar__title">Blocked IP Addresses</h2>
+        <h2 class="table-toolbar__title">{{ t.title }}</h2>
       </div>
       <div class="table-toolbar__actions">
         <button class="add-btn-premium" @click="showAddModal = true">
           <font-awesome-icon icon="plus" />
-          Block New IP
+          {{ t.blockNewIp }}
         </button>
       </div>
     </div>
@@ -18,11 +18,11 @@
         <table class="tickets-table">
           <thead>
             <tr>
-              <th class="col-ip">IP Address</th>
-              <th class="col-reason">Reason</th>
-              <th class="col-blocked-at">Blocked At</th>
-              <th class="col-expires-at">Expires At</th>
-              <th class="col-actions">Actions</th>
+              <th class="col-ip">{{ t.ipAddress }}</th>
+              <th class="col-reason">{{ t.reason }}</th>
+              <th class="col-blocked-at">{{ t.blockedAt }}</th>
+              <th class="col-expires-at">{{ t.expiresAt }}</th>
+              <th class="col-actions">{{ t.actions }}</th>
             </tr>
           </thead>
           <tbody>
@@ -37,25 +37,25 @@
             </template>
             <template v-else>
               <tr v-for="ip in blockedIps" :key="ip.id">
-                <td class="col-ip" data-label="IP Address">
+                <td class="col-ip" :data-label="t.ipAddress">
                   <span class="mono ip-text">{{ isPrivacyMode ? '•••.•••.•••.•••' : ip.ipAddress }}</span>
                 </td>
-                <td class="col-reason" data-label="Reason">
+                <td class="col-reason" :data-label="t.reason">
                   <span class="reason-cell" :title="ip.reason">{{ truncate(ip.reason, 40) }}</span>
                 </td>
-                <td class="col-blocked-at date-cell" data-label="Blocked At">{{ formatDateTime(ip.createdUtc) }}</td>
-                <td class="col-expires-at" data-label="Expires At">
+                <td class="col-blocked-at date-cell" :data-label="t.blockedAt">{{ formatDateTime(ip.createdUtc) }}</td>
+                <td class="col-expires-at" :data-label="t.expiresAt">
                   <span :class="['status-badge', isExpired(ip.expiresUtc) ? 'closed' : 'pending']">
                     {{ formatDateTime(ip.expiresUtc) }}
                   </span>
                 </td>
                 <td class="col-actions">
-                  <UITooltip :content="confirmingIp === ip.ipAddress ? 'Click again to confirm' : 'Unblock this IP'" side="left">
+                  <UITooltip :content="confirmingIp === ip.ipAddress ? t.confirmPrompt : t.unblockHint" side="left">
                     <button 
                       :class="['table-action-btn-red', { 'is-confirming': confirmingIp === ip.ipAddress }]" 
                       @click="handleUnblockClick(ip.ipAddress)"
                     >
-                      {{ confirmingIp === ip.ipAddress ? 'Confirm?' : 'Unblock' }}
+                      {{ confirmingIp === ip.ipAddress ? t.confirm : t.unblock }}
                     </button>
                   </UITooltip>
                 </td>
@@ -66,7 +66,7 @@
                     <div class="empty-icon-circle">
                       <font-awesome-icon icon="circle-check" />
                     </div>
-                    <p class="empty-text">No IPs are currently blocked. Your system is clean!</p>
+                    <p class="empty-text">{{ t.noBlockedIps }}</p>
                   </div>
                 </td>
               </tr>
@@ -79,18 +79,18 @@
         <div class="tickets-table-footer__hint">
           <font-awesome-icon icon="circle-info" />
           <span class="tickets-table-footer__text">
-            Security policies are active. All listed IPs are currently restricted from accessing the platform.
+            {{ t.footerHint }}
           </span>
         </div>
       </footer>
     </div>
 
     <!-- Add IP Modal -->
-    <UIModal :is-open="showAddModal" title="Block New IP Address" max-width="500px" @close="showAddModal = false">
+    <UIModal :is-open="showAddModal" :title="t.blockNewIpTitle" max-width="500px" @close="showAddModal = false">
       <form @submit.prevent="handleAddIp" class="block-ip-form">
         <div class="form-section">
           <div class="form-group">
-            <label>IP Address</label>
+            <label>{{ t.ipAddress }}</label>
             <div class="input-container">
               <font-awesome-icon icon="network-wired" class="input-icon" />
               <input v-model="newIp.ipAddress" type="text" placeholder="e.g. 192.168.1.1" required />
@@ -98,32 +98,32 @@
           </div>
 
           <div class="form-group">
-            <label>Expiry Date</label>
+            <label>{{ t.expiryDate }}</label>
             <UIDatepicker 
               v-model="newIp.expiresUtc" 
               type="datetime" 
               value-type="format"
               format="YYYY-MM-DD HH:mm:ss"
-              placeholder="Select expiry date"
+              :placeholder="t.selectExpiry"
             />
           </div>
 
           <div class="form-group">
-            <label>Reason for blocking</label>
+            <label>{{ t.reasonLabel }}</label>
             <textarea 
               v-model="newIp.reason" 
               rows="3" 
-              placeholder="Describe why this IP is being blocked..." 
+              :placeholder="t.reasonPlaceholder" 
               required
             ></textarea>
           </div>
         </div>
 
         <div class="modal-form-actions">
-          <button type="button" class="btn-secondary" @click="showAddModal = false">Cancel</button>
+          <button type="button" class="btn-secondary" @click="showAddModal = false">{{ t.cancel }}</button>
           <button type="submit" class="btn-primary-red" :disabled="isSubmitting">
             <font-awesome-icon v-if="isSubmitting" icon="spinner" spin />
-            {{ isSubmitting ? 'Blocking...' : 'Block IP' }}
+            {{ isSubmitting ? t.blocking : t.blockBtn }}
           </button>
         </div>
       </form>
@@ -132,7 +132,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
+import { defineComponent, ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { adminService } from '@/services/api/admin/admin.service'
 import type { BlockedIp, CreateBlockedIpRequest } from '@/services/api/admin/admin.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
@@ -145,13 +145,48 @@ import { useCurrency } from '@/composables/useCurrency'
 export default defineComponent({
   name: 'AdminSecurity',
   components: { UISkeletonLoader, UIModal, UIDatepicker, UITooltip },
-  setup() {
+  props: {
+    selectedLanguage: {
+      type: String,
+      default: 'English'
+    }
+  },
+  setup(props) {
     const { isPrivacyMode } = useCurrency()
     const blockedIps = ref<BlockedIp[]>([])
     const isLoading = ref(true)
     const showAddModal = ref(false)
     const isSubmitting = ref(false)
     const toast = useToast()
+
+    const t = computed(() => {
+      const isTr = props.selectedLanguage === 'Turkish'
+      return {
+        title: isTr ? 'Engellenmiş IP Adresleri' : 'Blocked IP Addresses',
+        blockNewIp: isTr ? 'Yeni IP Engelle' : 'Block New IP',
+        ipAddress: isTr ? 'IP Adresi' : 'IP Address',
+        reason: isTr ? 'Sebep' : 'Reason',
+        blockedAt: isTr ? 'Engellenme Tarihi' : 'Blocked At',
+        expiresAt: isTr ? 'Bitiş Tarihi' : 'Expires At',
+        actions: isTr ? 'İşlemler' : 'Actions',
+        unblock: isTr ? 'Engeli Kaldır' : 'Unblock',
+        confirm: isTr ? 'Onayla?' : 'Confirm?',
+        confirmPrompt: isTr ? 'Onaylamak için tekrar tıklayın' : 'Click again to confirm',
+        unblockHint: isTr ? 'Bu IP engelini kaldır' : 'Unblock this IP',
+        noBlockedIps: isTr ? 'Şu anda engellenmiş IP yok. Sisteminiz temiz!' : 'No IPs are currently blocked. Your system is clean!',
+        footerHint: isTr ? 'Güvenlik politikaları etkin. Listelenen tüm IP\'lerin platforma erişimi şu anda kısıtlıdır.' : 'Security policies are active. All listed IPs are currently restricted from accessing the platform.',
+        blockNewIpTitle: isTr ? 'Yeni IP Adresi Engelle' : 'Block New IP Address',
+        expiryDate: isTr ? 'Bitiş Tarihi' : 'Expiry Date',
+        selectExpiry: isTr ? 'Bitiş tarihini seçin' : 'Select expiry date',
+        reasonLabel: isTr ? 'Engelleme Nedeni' : 'Reason for blocking',
+        reasonPlaceholder: isTr ? 'Bu IP\'nin neden engellendiğini açıklayın...' : 'Describe why this IP is being blocked...',
+        cancel: isTr ? 'İptal' : 'Cancel',
+        blocking: isTr ? 'Engelleniyor...' : 'Blocking...',
+        blockBtn: isTr ? 'IP Engelle' : 'Block IP',
+        successAdd: isTr ? 'IP başarıyla engellendi.' : 'IP blocked successfully.',
+        errorAdd: isTr ? 'IP engellenirken hata oluştu.' : 'Failed to block IP.'
+      }
+    })
     
     const newIp = ref<CreateBlockedIpRequest>({
       ipAddress: '',
@@ -181,10 +216,10 @@ export default defineComponent({
           expiresUtc: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         }
         showAddModal.value = false
-        toast.success('IP blocked successfully.')
+        toast.success(t.value.successAdd)
         await fetchIps()
       } catch (err) {
-        toast.error('Failed to block IP.')
+        toast.error(t.value.errorAdd)
       } finally {
         isSubmitting.value = false
       }
@@ -218,7 +253,7 @@ export default defineComponent({
 
     const formatDateTime = (iso: string) => {
       try {
-        return new Date(iso).toLocaleString('en-US', {
+        return new Date(iso).toLocaleString(props.selectedLanguage === 'Turkish' ? 'tr-TR' : 'en-US', {
           dateStyle: 'medium',
           timeStyle: 'short',
         })
@@ -257,7 +292,8 @@ export default defineComponent({
       formatDateTime,
       isExpired,
       truncate,
-      isPrivacyMode
+      isPrivacyMode,
+      t
     }
   }
 })

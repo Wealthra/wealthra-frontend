@@ -8,7 +8,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, computed } from 'vue'
 import type { PropType } from 'vue'
 import AdminAiConfig from '../components/AdminAiConfig.vue'
 
@@ -23,6 +23,17 @@ export default defineComponent({
       default: 'English',
     },
   },
+  setup(props) {
+    const t = computed(() => {
+      const isTr = props.selectedLanguage === 'Turkish'
+      return {
+        aiConfig: isTr ? 'Yapay Zeka Yapılandırması' : 'AI Engine Configuration',
+        aiDesc: isTr ? 'Büyük dil modellerini, jeton limitlerini ve çalışma zamanı parametrelerini yönetin.' : 'Manage large language models, token limits, and runtime parameters.'
+      }
+    })
+
+    return { t }
+  }
 })
 </script>
 
@@ -54,7 +65,28 @@ export default defineComponent({
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  gap: 1.25rem;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  .section-header {
+    margin-bottom: 0.5rem;
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--header-text-color);
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--normal-text-color);
+      opacity: 0.6;
+      margin: 4px 0 0;
+    }
+  }
 
   @media (max-width: 1024px) {
     flex: none;
@@ -62,5 +94,3 @@ export default defineComponent({
   }
 }
 </style>
-
-

@@ -93,6 +93,7 @@ import {
   faBolt,
   faServer,
   faListCheck,
+  faTowerBroadcast,
 } from '@fortawesome/free-solid-svg-icons'
 
 export const leftSidebarIconMap: Record<string, IconDefinition> = {
@@ -107,6 +108,7 @@ export const leftSidebarIconMap: Record<string, IconDefinition> = {
   Overview: faChartPie,
   Analytics: faChartLine,
   'Dashboard & Analytics': faChartPie,
+  'Admin System Monitor Center': faTowerBroadcast,
   'User Management': faUsers,
   'Plans & Subscriptions': faLayerGroup,
   'System & AI Config': faShieldHalved,

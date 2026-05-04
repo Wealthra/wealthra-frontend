@@ -3,7 +3,7 @@
     <div class="table-toolbar">
       <div class="table-toolbar__title-wrap">
         <font-awesome-icon icon="bug" class="table-toolbar__icon" />
-        <h2 class="table-toolbar__title">System Error Logs</h2>
+        <h2 class="table-toolbar__title">{{ t.title }}</h2>
       </div>
       <div class="table-toolbar__filter">
         <UISelect
@@ -18,7 +18,7 @@
       <div v-if="error" class="error-state">
         <font-awesome-icon :icon="faTriangleExclamation" />
         <p>{{ error }}</p>
-        <button @click="fetchLogs" class="retry-btn">Retry</button>
+        <button @click="fetchLogs" class="retry-btn">{{ t.retry }}</button>
       </div>
       <AdminErrorLogsTable
         v-else
@@ -31,7 +31,7 @@
         <div class="tickets-table-footer__hint">
           <font-awesome-icon icon="circle-info" />
           <span class="tickets-table-footer__text">
-            Showing the latest server-side exceptions and status code errors. Click a row to view full details.
+            {{ t.footerHint }}
           </span>
         </div>
         <button
@@ -42,7 +42,7 @@
           @click="loadMore"
         >
           <font-awesome-icon v-if="isLoading" icon="spinner" spin />
-          {{ isLoading ? 'Loading...' : 'Load More Logs' }}
+          {{ isLoading ? t.loading : t.loadMore }}
         </button>
       </footer>
     </div>
@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
+import { defineComponent, ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import AdminErrorLogsTable from './AdminErrorLogsTable.vue'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import UISelect from '@/components/UISelect.vue'
@@ -74,7 +74,7 @@ export default defineComponent({
       default: 'English'
     }
   },
-  setup() {
+  setup(props) {
     const logs = ref<ErrorLog[]>([])
     const isLoading = ref(true)
     const error = ref<string | null>(null)
@@ -84,15 +84,28 @@ export default defineComponent({
     const statusFilter = ref<string | number>('all')
     const currentPage = ref(1)
 
-    const statusOptions = [
-      { label: 'All Status Codes', value: 'all' },
+    const t = computed(() => {
+      const isTr = props.selectedLanguage === 'Turkish'
+      return {
+        title: isTr ? 'Sistem Hata Kayıtları' : 'System Error Logs',
+        retry: isTr ? 'Yeniden Dene' : 'Retry',
+        footerHint: isTr ? 'En son sunucu tarafı istisnaları ve durum kodu hataları gösterilmektedir. Tam detayları görmek için bir satıra tıklayın.' : 'Showing the latest server-side exceptions and status code errors. Click a row to view full details.',
+        loading: isTr ? 'Yükleniyor...' : 'Loading...',
+        loadMore: isTr ? 'Daha Fazla Kayıt Yükle' : 'Load More Logs',
+        allStatusCodes: isTr ? 'Tüm Durum Kodları' : 'All Status Codes',
+        failedLoad: isTr ? 'Hata kayıtları yüklenemedi.' : 'Failed to load error logs.'
+      }
+    })
+
+    const statusOptions = computed(() => [
+      { label: t.value.allStatusCodes, value: 'all' },
       { label: '400 Bad Request', value: 400 },
       { label: '401 Unauthorized', value: 401 },
       { label: '403 Forbidden', value: 403 },
       { label: '404 Not Found', value: 404 },
       { label: '500 Server Error', value: 500 },
       { label: '503 Service Unavailable', value: 503 }
-    ]
+    ])
 
     const fetchLogs = async () => {
       isLoading.value = true
@@ -105,7 +118,7 @@ export default defineComponent({
         currentPage.value = 1
       } catch (err) {
         console.error('Failed to fetch error logs', err)
-        error.value = 'Failed to load error logs.'
+        error.value = t.value.failedLoad
       } finally {
         isLoading.value = false
       }
@@ -146,7 +159,8 @@ export default defineComponent({
       statusOptions,
       fetchLogs,
       loadMore,
-      faTriangleExclamation
+      faTriangleExclamation,
+      t
     }
   }
 })
