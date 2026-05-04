@@ -27,6 +27,7 @@
                 :aria-label="t('searchCategory')"
               />
             </div>
+
             <div class="filter-group">
               <UISelect
                 :model-value="categoryFilter ?? 'all'"
@@ -148,7 +149,7 @@
           <div class="col col-status">
             <span class="col-mobile-label">{{ t('status') }}</span>
             <span class="status-badge" :class="statusClass(budget.status)">{{
-              budget.status
+              statusText(budget.status)
             }}</span>
           </div>
           <div class="col col-actions">
@@ -217,7 +218,7 @@
           <div class="form-group">
             <label for="create-budget-limit">{{ t('enterLimitAmount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">{{ currencySymbol }}</span>
+              <span class="input-prefix">{{ SYMBOLS[newBudget.currency as any] || currencySymbol }}</span>
               <input
                 id="create-budget-limit"
                 v-model.number="newBudget.limitAmount"
@@ -227,6 +228,18 @@
                 step="0.01"
               />
             </div>
+          </div>
+          <div class="form-group">
+            <label for="create-budget-currency">{{ selectedLanguage == 'English' ? 'Currency' : 'Para Birimi' }}</label>
+            <UISelect
+              id="create-budget-currency"
+              v-model="newBudget.currency"
+              :options="[
+                { label: 'USD ($)', value: 'USD' },
+                { label: 'EUR (€)', value: 'EUR' },
+                { label: 'TRY (₺)', value: 'TRY' },
+              ]"
+            />
           </div>
           <div v-if="createError" class="error-message">{{ createError }}</div>
           <button type="button" class="add-btn" @click="submitCreate">{{ t('save') }}</button>
@@ -250,7 +263,7 @@
           <div class="form-group">
             <label for="edit-budget-limit">{{ t('enterLimitAmount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">{{ currencySymbol }}</span>
+              <span class="input-prefix">{{ SYMBOLS[editingBudget?.currency as any] || currencySymbol }}</span>
               <input
                 id="edit-budget-limit"
                 v-model.number="editLimitAmount"
@@ -289,9 +302,14 @@ export default {
     selectedLanguage: { type: String, default: 'English' },
   },
   setup() {
-    const { formatCurrency, currencySymbol } = useCurrency()
+    const { formatCurrency, currencySymbol, currency, setCurrency, isPrivacyMode } = useCurrency()
     const confirm = useConfirm()
-    return { formatCurrency, currencySymbol, confirm }
+    const SYMBOLS: Record<string, string> = {
+      USD: '$',
+      EUR: '€',
+      TRY: '₺',
+    }
+    return { formatCurrency, currencySymbol, currency, setCurrency, confirm, SYMBOLS, isPrivacyMode }
   },
   data() {
     return {
@@ -300,7 +318,7 @@ export default {
       categoryFilter: null as number | null,
       statusFilter: '' as string,
       searchQuery: '' as string,
-      newBudget: { categoryId: 0, limitAmount: 0 },
+      newBudget: { categoryId: 0, limitAmount: 0, currency: '' },
       editingBudget: null as BudgetApiModel | null,
       editLimitAmount: 0,
       createError: '',
@@ -342,17 +360,28 @@ export default {
       return (val ?? 0).toFixed(2)
     },
     formatPercent(val: number): string {
+      if (this.isPrivacyMode) return '••%'
       return (val ?? 0).toFixed(1) + '%'
     },
     statusClass(status: string): string {
       if (!status) return ''
       const s = String(status).toLowerCase()
       if (s.includes('exceed') || s.includes('aşım')) return 'status-exceeded'
-      if (s.includes('warn')) return 'status-warning'
+      if (s.includes('warn') || s.includes('uyarı')) return 'status-warning'
       return 'status-ok'
     },
+    statusText(status: string): string {
+      if (!status) return ''
+      const s = String(status).toLowerCase()
+      if (s.includes('exceed') || s.includes('aşım')) return this.t('statusExceeded')
+      if (s.includes('warn') || s.includes('uyarı')) return this.t('statusWarning')
+      if (s.includes('safe') || s.includes('güvenli')) return this.t('statusSafe')
+      if (s.includes('healthy') || s.includes('sağlıklı')) return this.t('statusHealthy')
+      if (s.includes('ok') || s.includes('tamam')) return this.t('statusOk')
+      return status
+    },
     showCreateModalOpen() {
-      this.newBudget = { categoryId: 0, limitAmount: 0 }
+      this.newBudget = { categoryId: 0, limitAmount: 0, currency: this.currency }
       this.createError = ''
       this.showCreateModal = true
     },
@@ -369,7 +398,7 @@ export default {
         this.createError = this.t('enterLimitAmount')
         return
       }
-      this.$emit('createBudget', { categoryId, limitAmount })
+      this.$emit('createBudget', { categoryId, limitAmount, currency: this.currency })
       this.hideCreateModal()
     },
     openEditModal(budget: BudgetApiModel) {
@@ -397,6 +426,13 @@ export default {
         type: 'danger'
       })
       if (confirmed) this.$emit('deleteBudget', budget.id)
+    },
+  },
+  watch: {
+    currency(newVal) {
+      if (newVal && !this.showEditModal) {
+        this.newBudget.currency = newVal
+      }
     },
   },
 }
@@ -448,13 +484,15 @@ export default {
   }
 
   .btn {
-    padding: 0.4rem 0.75rem;
-    border-radius: var(--border-radius);
+    padding: 0 1.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     border: 1px solid transparent;
     transition: opacity 0.15s ease;
+    box-sizing: border-box;
     &:hover:not(:disabled) {
       opacity: var(--hover-opacity);
     }
@@ -472,7 +510,7 @@ export default {
   .btn-skeleton {
     width: 100px;
     height: 2.25rem;
-    border-radius: var(--border-radius);
+    border-radius: 10px;
   }
 
   .row-skeleton {
@@ -498,43 +536,41 @@ export default {
   .filter-skeleton {
     width: 10rem;
     height: 2.25rem;
-    border-radius: var(--border-radius);
+    border-radius: 10px;
     &.search-skeleton {
       width: 12rem;
-
-      @media (max-width: 1024px) {
-        width: 100%;
-      }
     }
   }
 
   .filter-input {
-    min-width: 12rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--border-radius);
+    height: 2.25rem;
+    padding: 0 0.75rem;
     border: 1px solid var(--border-color);
+    border-radius: 10px;
     background-color: var(--background-color);
     color: var(--header-text-color);
     font-size: 0.75rem;
+    width: 12rem;
+    box-sizing: border-box;
+
     &:focus {
       outline: none;
       border-color: var(--primary-green-color);
-      box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2);
     }
   }
 
   .filter-select {
     min-width: 10rem;
     :deep(.select-trigger) {
-      padding: 0.35rem 0.75rem;
-      border-radius: var(--border-radius);
+      padding: 0 0.75rem;
+      border-radius: 10px;
       border: 1px solid var(--border-color);
       background-color: var(--background-color);
       color: var(--header-text-color);
       font-size: 0.75rem;
-      height: auto;
-      min-height: auto;
+      height: 2.25rem;
       cursor: pointer;
+      box-sizing: border-box;
     }
   }
 
@@ -828,180 +864,100 @@ export default {
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .budget-table-container {
     padding: 1rem;
+    width: 100%;
+
     .header {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 0.75rem !important;
+      margin-bottom: 1.25rem !important;
     }
-    .header__title {
-      display: none;
+
+    .header__title,
+    .header__title-skeleton {
+      display: none !important;
     }
+
     .header__toolbar {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 0.75rem !important;
+      width: 100% !important;
     }
-    .toolbar-actions {
-      display: grid;
-      grid-template-columns: 1fr;
-    }
-    .btn,
-    .btn-skeleton {
-      min-height: 2.75rem;
-      font-size: 0.875rem;
-    }
-    .btn-skeleton {
-      width: 100%;
-      height: auto;
-    }
+
+    .toolbar-actions,
     .toolbar-filters {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
+      display: contents !important;
     }
+
+    .btn,
+    .btn-skeleton,
     .filter-input,
     .filter-select,
     .filter-skeleton {
-      width: 100%;
-      min-width: 0;
+      width: 100% !important;
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
     }
+
+    .filter-group {
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+
+    .filter-select :deep(.select-trigger) {
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+    }
+
     .filter-skeleton {
-      min-height: 2.75rem;
-      height: auto;
+      height: 2.75rem !important;
+      background-color: var(--background-color-soft) !important;
     }
+
     .table-header {
-      display: none;
+      display: none !important;
     }
+
     .table-row.budget-card,
     .table-row.skeleton-row {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
       padding: 1rem;
       border: 1px solid var(--border-color);
       border-radius: var(--border-radius);
       margin-bottom: 0.75rem;
+      gap: 0.5rem;
+
       .col {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
         width: 100%;
+        display: flex;
+        gap: 0.5rem;
       }
+
       .col-mobile-label {
         display: inline;
-        min-width: 5rem;
-        flex-shrink: 0;
-        font-size: 0.75rem;
+        min-width: 6rem;
         font-weight: 600;
-        color: var(--normal-text-color);
+        font-size: 0.75rem;
       }
-      .col-mobile-label-skeleton {
-        display: block;
-        width: 100px;
-        height: 1rem;
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
+
       .col-actions {
         margin-top: 0.5rem;
         padding-top: 0.75rem;
         border-top: 1px solid var(--border-color);
         width: 100%;
-      }
-      .col-actions-buttons {
         display: flex;
-        gap: 0.5rem;
-      }
-    }
-  }
-}
-@media (max-width: 768px) {
-  .budget-table-container {
-    padding: 1rem;
-    .header {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-    }
-    .header__title {
-      display: none;
-    }
-    .header__toolbar {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-    }
-    .btn,
-    .btn-skeleton {
-      min-height: 2.75rem;
-      font-size: 0.875rem;
-    }
-    .btn-skeleton {
-      width: 100%;
-      height: auto;
-    }
-    .toolbar-filters {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-    }
-    .filter-input,
-    .filter-select,
-    .filter-skeleton {
-      width: 100%;
-      min-width: 0;
-    }
-    .filter-skeleton {
-      min-height: 2.75rem;
-      height: auto;
-    }
-    .table-header {
-      display: none;
-    }
-    .table-row.budget-card,
-    .table-row.skeleton-row {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
-      padding: 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--border-radius);
-      margin-bottom: 0.75rem;
-      .col {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        width: 100%;
-      }
-      .col-mobile-label {
-        display: inline;
-        min-width: 5rem;
-        flex-shrink: 0;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--normal-text-color);
-      }
-      .col-mobile-label-skeleton {
-        display: block;
-        width: 100px;
-        height: 1rem;
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
-      .col-actions {
-        margin-top: 0.5rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid var(--border-color);
-        width: 100%;
-      }
-      .col-actions-buttons {
-        display: flex;
-        gap: 0.5rem;
+        justify-content: flex-end;
       }
     }
   }

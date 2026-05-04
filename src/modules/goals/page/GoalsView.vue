@@ -102,6 +102,11 @@ export default {
       goalDetail: null as Goal | null,
     }
   },
+  watch: {
+    currency() {
+      this.loadAppropriateData()
+    },
+  },
 
   computed: {
     achievedGoalsCount(): number {
@@ -112,7 +117,7 @@ export default {
   methods: {
     async fetchGoals() {
       try {
-        const data = await goalService.getGoalsUser(this.pageNumber, this.pageSize)
+        const data = await goalService.getGoalsUser(this.pageNumber, this.pageSize, this.currency)
         this.goals = data.items ?? []
         this.totalCount = data.totalCount ?? 0
         this.totalPages = data.totalPages ?? 0
@@ -134,7 +139,7 @@ export default {
 
     async fetchGoalsTotal() {
       try {
-        const data = await goalService.getGoalsTotal()
+        const data = await goalService.getGoalsTotal(this.currency)
         this.overviewTotalCurrent = data.totalCurrentAmount ?? 0
         this.overviewTotalTarget = data.totalTargetAmount ?? 0
         this.totalGoalsCount = data.totalGoals ?? 0
@@ -158,7 +163,7 @@ export default {
           targetAmount: payload.targetAmount,
           currentAmount,
           deadline: payload.deadline,
-          currency: this.currency,
+          currency: (payload as any).currency || this.currency,
         })
         this.loadAppropriateData()
       } catch (error) {
@@ -211,7 +216,7 @@ export default {
     async fetchGoalsOverviewList() {
       this.goalsOverviewLoading = true
       try {
-        const list = await goalService.getGoals()
+        const list = await goalService.getGoals(this.currency)
         this.goalsOverviewList = Array.isArray(list) ? list : []
       } catch {
         this.goalsOverviewList = []

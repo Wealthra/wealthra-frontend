@@ -206,11 +206,11 @@
           <div class="usage-quick-summary" v-if="userUsages && userUsages.length > 0">
             <div class="quick-stat">
               <span class="qs-label">OCR</span>
-              <span class="qs-value">{{ userUsages[0].ocrRequestsThisMonth }}</span>
+              <span class="qs-value">{{ formatAmount(userUsages[0].ocrRequestsThisMonth) }}</span>
             </div>
             <div class="quick-stat">
               <span class="qs-label">STT</span>
-              <span class="qs-value">{{ userUsages[0].sttRequestsThisMonth }}</span>
+              <span class="qs-value">{{ formatAmount(userUsages[0].sttRequestsThisMonth) }}</span>
             </div>
             <div class="quick-stat">
               <span class="qs-label">Last Active</span>
@@ -427,6 +427,7 @@
 import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import DatePicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
+import { useCurrency } from '@/composables/useCurrency'
 import { adminService } from '@/services/api/admin/admin.service'
 import { accountService } from '@/services/api/account/account.service'
 import type { AdminUser, AdminUserDetails } from '@/services/api/admin/admin.models'
@@ -467,6 +468,7 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const { formatAmount } = useCurrency()
     const users = ref<AdminUser[]>([])
     const isLoading = ref(true)
     const searchQuery = ref('')
@@ -937,6 +939,7 @@ export default defineComponent({
       isRolesUpdated,
       roleOptions,
       hierarchyText,
+      formatAmount,
     }
   },
 })

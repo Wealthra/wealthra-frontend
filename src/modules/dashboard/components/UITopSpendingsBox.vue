@@ -54,7 +54,7 @@
         </div>
 
         <div class="amount-wrap">
-          <span class="amount-value">{{ formatCurrency(spending.totalAmount) }}</span>
+          <span class="amount-value">{{ formatCurrencyValue(spending.totalAmount) }}</span>
         </div>
       </div>
     </div>
@@ -120,7 +120,7 @@ export default {
       }
       return transactionCategoryIconMap.default
     },
-    formatCurrency(amount: number) {
+    formatCurrencyValue(amount: number) {
       return this.formatCurrency(amount, 0)
     },
     getRelativeWidth(amount: number) {

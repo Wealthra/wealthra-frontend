@@ -29,23 +29,23 @@
     <div v-else-if="summary" class="kpi-grid">
       <div class="analytics-dash-card">
         <div class="stat-label">{{ t.promptTokens }}</div>
-        <div class="stat-value">{{ formatInt(summary.totalPromptTokens) }}</div>
+        <div class="stat-value">{{ formatAmount(summary.totalPromptTokens) }}</div>
       </div>
       <div class="analytics-dash-card">
         <div class="stat-label">{{ t.completionTokens }}</div>
-        <div class="stat-value">{{ formatInt(summary.totalCompletionTokens) }}</div>
+        <div class="stat-value">{{ formatAmount(summary.totalCompletionTokens) }}</div>
       </div>
       <div class="analytics-dash-card">
         <div class="stat-label">{{ t.totalTokens }}</div>
-        <div class="stat-value">{{ formatInt(totalTokens) }}</div>
+        <div class="stat-value">{{ formatAmount(totalTokens) }}</div>
       </div>
       <div class="analytics-dash-card">
         <div class="stat-label">{{ t.estimatedCost }}</div>
-        <div class="stat-value">{{ formatUsd(summary.totalEstimatedCostUsd) }}</div>
+        <div class="stat-value">{{ formatCurrency(summary.totalEstimatedCostUsd) }}</div>
       </div>
       <div class="analytics-dash-card">
         <div class="stat-label">{{ t.requests }}</div>
-        <div class="stat-value">{{ formatInt(summary.requestCount) }}</div>
+        <div class="stat-value">{{ formatAmount(summary.requestCount) }}</div>
       </div>
     </div>
   </div>
@@ -57,6 +57,7 @@ import type { PropType } from 'vue'
 import { adminService } from '@/services/api/admin/admin.service'
 import type { AiUsageSummary } from '@/services/api/admin/admin.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default defineComponent({
   name: 'AdminAiUsagePanel',
@@ -68,13 +69,12 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const { formatAmount, formatCurrency, isPrivacyMode } = useCurrency()
     const dayOptions = [7, 14, 30] as const
     const days = ref<number>(7)
     const summary = ref<AiUsageSummary | null>(null)
     const isLoading = ref(true)
     const loadError = ref<string | null>(null)
-
-    const locale = computed(() => (props.selectedLanguage === 'Turkish' ? 'tr-TR' : 'en-US'))
 
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
@@ -85,7 +85,7 @@ export default defineComponent({
         promptTokens: isTr ? 'İstem jetonları' : 'Prompt tokens',
         completionTokens: isTr ? 'Tamamlama jetonları' : 'Completion tokens',
         totalTokens: isTr ? 'Toplam jeton' : 'Total tokens',
-        estimatedCost: isTr ? 'Tahmini maliyet (USD)' : 'Estimated cost (USD)',
+        estimatedCost: isTr ? 'Tahmini maliyet' : 'Estimated cost',
         requests: isTr ? 'İstek sayısı' : 'Requests',
         failed: isTr ? 'AI kullanım özeti yüklenemedi.' : 'Could not load AI usage.',
         daysLabel: (n: number) =>
@@ -98,21 +98,6 @@ export default defineComponent({
       if (!s) return 0
       return (s.totalPromptTokens ?? 0) + (s.totalCompletionTokens ?? 0)
     })
-
-    const formatInt = (n: number) =>
-      new Intl.NumberFormat(locale.value, { maximumFractionDigits: 0 }).format(n ?? 0)
-
-    const formatUsd = (amount: number) => {
-      try {
-        return new Intl.NumberFormat(locale.value, {
-          style: 'currency',
-          currency: 'USD',
-          maximumFractionDigits: 4,
-        }).format(amount ?? 0)
-      } catch {
-        return `$${amount ?? 0}`
-      }
-    }
 
     const fetchUsage = async () => {
       isLoading.value = true
@@ -139,8 +124,8 @@ export default defineComponent({
       loadError,
       totalTokens,
       t,
-      formatInt,
-      formatUsd,
+      formatAmount,
+      formatCurrency,
       fetchUsage,
     }
   },

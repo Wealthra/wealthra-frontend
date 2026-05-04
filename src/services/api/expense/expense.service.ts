@@ -28,6 +28,7 @@ export const expenseService = {
     CategoryId?: number
     PageNumber?: number
     PageSize?: number
+    currency?: string
   } = {}): Promise<ExpensesApiListResponse> {
     const searchParams = new URLSearchParams()
     if (params.StartDate) searchParams.append('StartDate', params.StartDate)
@@ -35,6 +36,7 @@ export const expenseService = {
     if (params.CategoryId != null) searchParams.append('CategoryId', String(params.CategoryId))
     if (params.PageNumber != null) searchParams.append('PageNumber', String(params.PageNumber))
     if (params.PageSize != null) searchParams.append('PageSize', String(params.PageSize))
+    if (params.currency) searchParams.append('currency', params.currency)
 
     const query = searchParams.toString()
     const endpoint = query ? `Expenses?${query}` : 'Expenses'
@@ -50,6 +52,7 @@ export const expenseService = {
     CategoryId?: number
     PageNumber?: number
     PageSize?: number
+    currency?: string
   } = {}): Promise<ExpensesApiListResponse> {
     const searchParams = new URLSearchParams()
     if (params.StartDate) searchParams.append('startDate', params.StartDate)
@@ -57,6 +60,7 @@ export const expenseService = {
     if (params.CategoryId != null) searchParams.append('categoryId', String(params.CategoryId))
     if (params.PageNumber != null) searchParams.append('pageNumber', String(params.PageNumber))
     if (params.PageSize != null) searchParams.append('pageSize', String(params.PageSize))
+    if (params.currency) searchParams.append('currency', params.currency)
 
     const query = searchParams.toString()
     const endpoint = query ? `Expenses/user?${query}` : 'Expenses/user'
@@ -73,8 +77,9 @@ export const expenseService = {
     })
   },
 
-  async getExpenseById(id: number): Promise<ExpenseApiModel> {
-    return apiRequest<ExpenseApiModel>(`Expenses/${id}`, {
+  async getExpenseById(id: number, currency?: string): Promise<ExpenseApiModel> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<ExpenseApiModel>(`Expenses/${id}${query}`, {
       method: 'GET',
     })
   },

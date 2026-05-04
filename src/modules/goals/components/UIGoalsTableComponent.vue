@@ -298,10 +298,24 @@
               <Datepicker
                 id="create-goal-deadline"
                 v-model:value="newGoal.deadline"
-                :placeholder="t('selectDeadline')"
+                value-type="format"
+                format="YYYY-MM-DD"
                 :disabled-date="disablePastDates"
+                :placeholder="t('selectDeadline')"
               />
             </div>
+          </div>
+          <div class="form-group">
+            <label for="create-goal-currency">{{ selectedLanguage == 'English' ? 'Currency' : 'Para Birimi' }}</label>
+            <UISelect
+              id="create-goal-currency"
+              v-model="newGoal.currency"
+              :options="[
+                { label: 'USD ($)', value: 'USD' },
+                { label: 'EUR (€)', value: 'EUR' },
+                { label: 'TRY (₺)', value: 'TRY' },
+              ]"
+            />
           </div>
           <div v-if="createError" class="error-message">{{ createError }}</div>
           <button type="button" class="add-btn" @click="submitCreate">
@@ -423,9 +437,9 @@ export default {
   },
 
   setup() {
-    const { formatCurrency, currencySymbol } = useCurrency()
+    const { formatCurrency, currencySymbol, currency, isPrivacyMode } = useCurrency()
     const confirm = useConfirm()
-    return { formatCurrency, currencySymbol, confirm }
+    return { formatCurrency, currencySymbol, currency, confirm, isPrivacyMode }
   },
   data() {
     return {
@@ -441,6 +455,7 @@ export default {
         targetAmount: 0 as number,
         currentAmount: 0 as number,
         deadline: '' as string | Date,
+        currency: '' as string,
       },
       editingGoal: null as Goal | null,
       editForm: {
@@ -448,6 +463,7 @@ export default {
         targetAmount: 0 as number,
         currentAmount: 0 as number,
         deadline: '' as string | Date,
+        currency: '' as string,
       },
       createError: '' as string,
       editError: '' as string,
@@ -500,7 +516,13 @@ export default {
       )
     },
   },
-
+  watch: {
+    currency(newVal) {
+      if (newVal && !this.editingGoal) {
+        this.newGoal.currency = newVal
+      }
+    },
+  },
   methods: {
     t(key: keyof typeof goalsTexts.English) {
       const texts = goalsTexts[this.selectedLanguage as 'English' | 'Turkish']
@@ -510,10 +532,10 @@ export default {
       if (p >= 1 && p <= this.totalPages) this.$emit('changePage', p)
     },
     formatAmount(val: number): string {
-      if (val == null || Number.isNaN(val)) return '0.00'
-      return Number(val).toFixed(2)
+      return this.formatCurrency(val).replace(this.currencySymbol, '').trim()
     },
     formatPercent(val: number): string {
+      if (this.isPrivacyMode) return '••%'
       if (val == null || Number.isNaN(val)) return '0%'
       return Number(val).toFixed(1) + '%'
     },
@@ -542,7 +564,13 @@ export default {
       return date < today
     },
     showCreateModalOpen() {
-      this.newGoal = { name: '', targetAmount: 0, currentAmount: 0, deadline: '' }
+      this.newGoal = {
+        name: '',
+        targetAmount: 0,
+        currentAmount: 0,
+        deadline: '',
+        currency: (this as any).currency || 'USD',
+      }
       this.createError = ''
       this.showCreateModal = true
     },
@@ -579,6 +607,7 @@ export default {
         initialAmount: currentAmount,
         currentAmount,
         deadline: isoDeadline,
+        currency: this.newGoal.currency,
       })
       this.hideCreateModal()
     },
@@ -595,6 +624,7 @@ export default {
         targetAmount: goal.targetAmount ?? 0,
         currentAmount: cur,
         deadline: deadlineVal,
+        currency: goal.currency || 'USD',
       }
       this.editError = ''
       this.showEditModal = true
@@ -1216,191 +1246,91 @@ export default {
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .goals-table-container {
     padding: 1rem;
+    width: 100%;
+
     .header {
       flex-direction: column;
       align-items: stretch;
       gap: 0.75rem;
+      margin-bottom: 1.25rem;
     }
-    .header__title {
-      display: none;
+
+    .header__title,
+    .header__title-skeleton {
+      display: none !important;
     }
+
     .header__toolbar {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 0.75rem !important;
+      width: 100% !important;
     }
-    .toolbar-actions {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-    }
-    .toolbar-actions .btn,
-    .toolbar-actions .btn-skeleton {
-      width: 100%;
-      min-height: 2.75rem;
-      font-size: 0.875rem;
-    }
-    .toolbar-actions .btn-skeleton {
-      height: auto;
-    }
+
+    .toolbar-actions,
     .toolbar-filters {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
+      display: contents !important;
     }
+
+    .btn,
+    .btn-skeleton,
     .filter-input,
     .filter-select,
     .filter-skeleton {
-      width: 100%;
-      min-width: 0;
+      width: 100% !important;
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+      margin: 0 !important;
     }
-    .filter-skeleton {
-      min-height: 2.75rem;
-      height: auto;
+
+    .filter-group {
+      width: 100% !important;
+      min-width: 0 !important;
     }
+
+    /* The Status filter (last item) spans 2 columns */
+    .toolbar-filters .filter-group:last-child,
+    .toolbar-filters .filter-skeleton:last-child {
+      grid-column: span 2 !important;
+    }
+
+    .filter-select :deep(.select-trigger) {
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+    }
+
     .table-header {
       display: none !important;
     }
+
     .table-row.goal-card,
     .table-row.skeleton-row {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
       padding: 1rem;
       border: 1px solid var(--border-color);
       border-radius: var(--border-radius);
       margin-bottom: 0.75rem;
+      gap: 0.5rem;
+
       .col {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
         width: 100%;
+        display: flex;
+        gap: 0.5rem;
       }
+
       .col-mobile-label {
         display: inline;
-        min-width: 5rem;
-        font-size: 0.75rem;
+        min-width: 6rem;
         font-weight: 600;
-        color: var(--normal-text-color);
-      }
-      .col-mobile-label-skeleton {
-        display: block;
-        width: 100px;
-        height: 1rem;
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
-      .col-actions {
-        margin-top: 0.5rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid var(--border-color);
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 0.35rem;
-
-        .row-action-btn {
-          flex-shrink: 0;
-        }
+        font-size: 0.75rem;
       }
     }
-  }
-}
-
-@media (max-width: 768px) {
-  .goals-table-container {
-    width: 100%;
-    min-height: 0;
-    height: auto;
-    padding: 1rem;
-  }
-
-  .header {
-    flex-direction: column;
-    align-items: stretch;
-    margin-bottom: 1rem;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .header__title {
-    display: none;
-  }
-
-  .header__toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .toolbar-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .toolbar-actions .btn,
-  .toolbar-actions .btn-skeleton {
-    width: 100%;
-    min-width: 0;
-    min-height: 2.75rem;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    box-sizing: border-box;
-  }
-  .toolbar-actions .btn-skeleton {
-    height: auto;
-  }
-
-  .toolbar-filters {
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .filter-group {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .filter-input,
-  .filter-select,
-  .filter-skeleton {
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    min-height: 2.75rem;
-    font-size: 1rem;
-    box-sizing: border-box;
-  }
-  .filter-skeleton {
-    height: auto;
-  }
-
-  .table-wrap {
-    overflow: visible;
-  }
-
-  .empty-state {
-    min-height: 14rem;
-    padding: 2rem 1.5rem;
-  }
-
-  .modal-content {
-    width: 90%;
-    max-width: none;
   }
 }
 </style>

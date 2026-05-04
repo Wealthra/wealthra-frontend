@@ -103,7 +103,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatInt(revenue?.monthlyRecurringRevenue || 0) }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(revenue?.monthlyRecurringRevenue || 0) }}</div>
               </div>
             </div>
             <!-- CURRENCY -->
@@ -120,7 +120,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ revenue?.mrrCurrency }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : (revenue?.mrrCurrency || '---') }}</div>
               </div>
             </div>
             <!-- SUBSCRIBERS -->
@@ -137,7 +137,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatInt(revenue?.payingSubscribers || 0) }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(revenue?.payingSubscribers || 0) }}</div>
               </div>
             </div>
             <!-- ARPU -->
@@ -154,7 +154,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatMoney(revenue?.averageRevenuePerUser || 0, revenue?.mrrCurrency || 'USD') }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : formatMoney(revenue?.averageRevenuePerUser || 0, revenue?.mrrCurrency || 'USD') }}</div>
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatInt(growth?.dauYesterday || 0) }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(growth?.dauYesterday || 0) }}</div>
               </div>
             </div>
             <!-- MAU -->
@@ -200,7 +200,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatInt(growth?.mauLast30Days || 0) }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(growth?.mauLast30Days || 0) }}</div>
               </div>
             </div>
             <!-- CHURN -->
@@ -217,7 +217,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatChurn(growth?.churnRatioLast30Days || 0) }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••%' : formatChurn(growth?.churnRatioLast30Days || 0) }}</div>
               </div>
             </div>
           </div>
@@ -246,7 +246,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatInt(growth?.featureTotalsLast30Days.totalOcr || 0) }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(growth?.featureTotalsLast30Days.totalOcr || 0) }}</div>
               </div>
             </div>
             <!-- STT -->
@@ -263,7 +263,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatInt(growth?.featureTotalsLast30Days.totalStt || 0) }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(growth?.featureTotalsLast30Days.totalStt || 0) }}</div>
               </div>
             </div>
             <!-- COPILOT -->
@@ -280,7 +280,7 @@
                     />
                   </div>
                 </div>
-                <div class="stat-value">{{ formatInt(growth?.featureTotalsLast30Days.totalCopilot || 0) }}</div>
+                <div class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(growth?.featureTotalsLast30Days.totalCopilot || 0) }}</div>
               </div>
             </div>
           </div>
@@ -339,6 +339,7 @@ import {
 import { adminService } from '@/services/api/admin/admin.service'
 import type { RevenueAnalytics, GrowthAnalytics } from '@/services/api/admin/admin.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
+import { useCurrency } from '@/composables/useCurrency'
 
 ChartJS.register(Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale, Filler)
 
@@ -361,6 +362,7 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const { isPrivacyMode } = useCurrency()
     const isLoading = ref(true)
     const loadError = ref(false)
     const revenue = ref<RevenueAnalytics | null>(null)
@@ -484,7 +486,7 @@ export default defineComponent({
         datasets: [
           {
             label,
-            data: series.map(r => r.activeUsers),
+            data: isPrivacyMode.value ? series.map(() => 0) : series.map(r => r.activeUsers),
             borderColor: green,
             backgroundColor: hexToRgba(green, 0.15),
             fill: true,
@@ -619,6 +621,7 @@ export default defineComponent({
       tooltip,
       showTooltip,
       hideTooltip,
+      isPrivacyMode,
     }
   },
 })

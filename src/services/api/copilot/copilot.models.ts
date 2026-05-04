@@ -3,6 +3,7 @@ export interface ExtractedExpenseItem {
   id: number
   description: string
   amount: number
+  currency: string
   paymentMethod: string
   isRecurring: boolean
   transactionDate: string
@@ -14,6 +15,7 @@ export interface ExtractedExpenseItem {
 export interface BulkExpenseRequest {
   description: string
   amount: number
+  currency: string
   paymentMethod: string
   isRecurring: boolean
   categoryId: number

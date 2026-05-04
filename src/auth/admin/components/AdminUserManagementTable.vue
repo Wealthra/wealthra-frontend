@@ -296,7 +296,6 @@ export default defineComponent({
 
     const promptEditRoles = (user: AdminUser) => {
       // Implementation for roles management
-      console.log('Edit roles for', user.email)
     }
 
     const promptLockUser = async (user: AdminUser) => {

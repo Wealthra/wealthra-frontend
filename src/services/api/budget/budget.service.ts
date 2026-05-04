@@ -14,8 +14,9 @@ export const budgetService = {
 
   // New plural /api/Budgets endpoints
 
-  async getBudgets(): Promise<BudgetApiModel[]> {
-    return apiRequest<BudgetApiModel[]>('Budgets', {
+  async getBudgets(currency?: string): Promise<BudgetApiModel[]> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<BudgetApiModel[]>(`Budgets${query}`, {
       method: 'GET',
     })
   },
@@ -27,8 +28,9 @@ export const budgetService = {
     })
   },
 
-  async getBudgetById(id: number): Promise<BudgetApiModel> {
-    return apiRequest<BudgetApiModel>(`Budgets/${id}`, {
+  async getBudgetById(id: number, currency?: string): Promise<BudgetApiModel> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<BudgetApiModel>(`Budgets/${id}${query}`, {
       method: 'GET',
     })
   },
@@ -53,8 +55,9 @@ export const budgetService = {
     })
   },
 
-  async getBudgetsMonthly(): Promise<BudgetsMonthlyResponse> {
-    return apiRequest<BudgetsMonthlyResponse>('Budgets/monthly', {
+  async getBudgetsMonthly(currency?: string): Promise<BudgetsMonthlyResponse> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<BudgetsMonthlyResponse>(`Budgets/monthly${query}`, {
       method: 'GET',
     })
   },

@@ -251,13 +251,24 @@ export default defineComponent({
       }
     }
 
+    const handleNewNotification = (event: any) => {
+      const notification = event.detail
+      // If we are showing all notifications or the new one is unread and we are in unread mode
+      if (!unreadOnly.value || !notification.isRead) {
+        notifications.value.unshift(notification)
+        updateUnreadCount()
+      }
+    }
+
     onMounted(() => {
       fetchNotifications()
       window.addEventListener('app:refetch', fetchNotifications)
+      window.addEventListener('new-notification', handleNewNotification)
     })
 
     onBeforeUnmount(() => {
       window.removeEventListener('app:refetch', fetchNotifications)
+      window.removeEventListener('new-notification', handleNewNotification)
     })
 
     return {
@@ -505,29 +516,51 @@ export default defineComponent({
   }
 
   .custom-checkbox {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--border-color);
     appearance: none;
     background-color: var(--background-color);
     cursor: pointer;
     position: relative;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &:hover {
+      border-color: var(--primary-green-color);
+      background-color: rgba(92, 184, 92, 0.05);
+    }
 
     &:checked {
       background-color: var(--primary-green-color);
       border-color: var(--primary-green-color);
+      box-shadow: 0 2px 4px rgba(92, 184, 92, 0.2);
 
       &::after {
-        content: '';
-        position: absolute;
-        left: 4px;
-        top: 1px;
-        width: 4px;
-        height: 8px;
+        content: "";
+        width: 6px;
+        height: 11px;
         border: solid white;
-        border-width: 0 2px 2px 0;
+        border-width: 0 2.5px 2.5px 0;
         transform: rotate(45deg);
+        margin-bottom: 2px;
+        display: block;
+        animation: checkmark-anim 0.2s ease-out;
+      }
+    }
+
+    @keyframes checkmark-anim {
+      from {
+        opacity: 0;
+        transform: rotate(45deg) scale(0.5);
+      }
+      to {
+        opacity: 1;
+        transform: rotate(45deg) scale(1);
       }
     }
 
@@ -537,12 +570,11 @@ export default defineComponent({
 
       &::after {
         content: '';
-        position: absolute;
-        left: 3px;
-        top: 6px;
-        width: 8px;
+        width: 10px;
         height: 2px;
         background-color: white;
+        border-radius: 1px;
+        display: block;
       }
     }
   }

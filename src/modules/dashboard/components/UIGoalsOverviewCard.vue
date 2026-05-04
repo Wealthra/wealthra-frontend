@@ -25,7 +25,7 @@
             class="radial-chart"
           />
           <div class="radial-center-content">
-            <span class="percentage-value">{{ displayPercentage }}</span>
+            <span class="percentage-value">{{ isPrivacyMode ? '••%' : displayPercentage }}</span>
             <span class="percentage-label">{{
               selectedLanguage === 'English' ? 'Saved' : 'Birikim'
             }}</span>
@@ -69,8 +69,8 @@ export default {
     Doughnut,
   },
   setup() {
-    const { formatCurrency, currencySymbol } = useCurrency()
-    return { formatCurrency, currencySymbol }
+    const { formatCurrency, currencySymbol, isPrivacyMode } = useCurrency()
+    return { formatCurrency, currencySymbol, isPrivacyMode }
   },
   props: {
     loading: {
@@ -153,13 +153,13 @@ export default {
         labels: ['Saved', 'Remaining'],
         datasets: [
           {
-            data: [used, remaining],
-            backgroundColor: [primaryColor, softColor],
+            data: this.isPrivacyMode ? [0, 100] : [used, remaining],
+            backgroundColor: this.isPrivacyMode ? [softColor, softColor] : [primaryColor, softColor],
             borderWidth: 0,
             circumference: 360,
             rotation: 0,
             cutout: '82%',
-            borderRadius: used > 0 ? 10 : 0,
+            borderRadius: (!this.isPrivacyMode && used > 0) ? 10 : 0,
           },
         ],
       }

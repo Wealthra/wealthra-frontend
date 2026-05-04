@@ -117,6 +117,10 @@ export default {
     UIIncomeSourcesComponent,
     UIIncomeSummaryPanel,
   },
+  setup() {
+    const { currency } = useCurrency()
+    return { currency }
+  },
   data() {
     const { start, end } = getDefaultIncomeDateRange()
     return {
@@ -128,7 +132,6 @@ export default {
       pageSizeIncome: 10,
       startDateIncome: start as string | null,
       endDateIncome: end as string | null,
-      currencyHelper: useCurrency(),
       isIncomeSummaryOpen: false,
       incomeSummaryLoading: false,
       incomeSummaryItems: [] as IncomeSummaryItem[],
@@ -136,10 +139,14 @@ export default {
     }
   },
   watch: {
-    'currencyHelper.currency'() {
+    currency() {
+      this.loadAppropriateData()
       if (this.isIncomeSummaryOpen) {
         void this.fetchIncomeSummary()
       }
+    },
+    selectedLanguage() {
+      this.loadAppropriateData()
     },
   },
   methods: {
@@ -164,6 +171,7 @@ export default {
       isRecurring: boolean
       method: string
       transactionDate: string
+      currency: string
     }) {
       this.handleAddIncomeSource(source)
     },
@@ -190,6 +198,7 @@ export default {
       isRecurring: boolean
       method: string
       transactionDate: string
+      currency: string
     }) {
       try {
         await incomeService.createIncome({
@@ -198,7 +207,7 @@ export default {
           method: source.method,
           isRecurring: source.isRecurring,
           transactionDate: new Date(source.transactionDate).toISOString(),
-          currency: this.currencyHelper.currency,
+          currency: source.currency || this.currency,
         })
         await this.loadAppropriateData()
       } catch (error) {
@@ -214,6 +223,7 @@ export default {
         isRecurring: boolean
         method: string
         transactionDate: string
+        currency: string
       }
     ) {
       try {
@@ -223,7 +233,7 @@ export default {
           method: data.method,
           isRecurring: data.isRecurring,
           transactionDate: new Date(data.transactionDate).toISOString(),
-          currency: this.currencyHelper.currency,
+          currency: data.currency || this.currency,
         })
         await this.loadAppropriateData()
       } catch (error) {
@@ -238,9 +248,11 @@ export default {
           PageSize: number
           StartDate?: string
           EndDate?: string
+          currency?: string
         } = {
           PageNumber: this.page,
           PageSize: this.pageSizeIncome,
+          currency: this.currency,
         }
         if (this.startDateIncome) params.StartDate = this.startDateIncome
         if (this.endDateIncome) params.EndDate = this.endDateIncome
@@ -251,6 +263,7 @@ export default {
           id: item.id!,
           name: item.name,
           amount: item.amount,
+          currency: item.currency,
           isRecurring: item.isRecurring,
           method: item.method,
         }))
@@ -269,7 +282,7 @@ export default {
       this.hasError = false
 
       try {
-        const data = await incomeService.getIncomeGeneralInfo(this.currencyHelper.currency)
+        const data = await incomeService.getIncomeGeneralInfo(this.currency)
 
         this.financialData.weeklyTotalIncome = data.weeklyTotal
         this.financialData.monthlyTotalIncome = data.monthlyTotal
@@ -319,7 +332,7 @@ export default {
       try {
         const rows = await incomeService.getIncomeSummary(
           this.incomeSummaryPeriod,
-          this.currencyHelper.currency,
+          this.currency,
         )
         this.incomeSummaryItems = Array.isArray(rows) ? rows : []
       } catch {

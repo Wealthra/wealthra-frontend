@@ -62,7 +62,7 @@
             <span class="category-name">{{ category.name }}</span>
           </div>
           <div class="legend-stats">
-            <span class="category-pct">{{ calculatePercentage(category.value) }}</span>
+            <span class="category-pct">{{ isPrivacyMode ? '••%' : calculatePercentage(category.value) }}</span>
             <span class="category-val">{{ formatCurrency(category.value) }}</span>
           </div>
         </div>
@@ -123,7 +123,7 @@ export default {
       return this.categoriesData.reduce((sum, cat) => sum + cat.value, 0)
     },
     total(): string {
-      return this.formatCurrency(this.totalRaw, 0)
+      return this.formatCurrency(this.totalRaw)
     },
     chartData() {
       return {
@@ -164,10 +164,8 @@ export default {
       if (this.totalRaw === 0) return '0%'
       return ((value / this.totalRaw) * 100).toFixed(0) + '%'
     },
-    formatCurrency(value: number): string {
-      const { formatCurrency: fmt } = useCurrency()
-      return fmt(value, 0)
-    },
+    handleChartClick() { /* logic if needed */ },
+    hoverSegment(index: number | null) { /* hover logic */ },
     processCategoriesData() {
       if (!this.categories) {
         this.categoriesData = []
@@ -183,8 +181,6 @@ export default {
       )
       this.categoriesData.sort((a, b) => b.value - a.value)
     },
-    handleChartClick() { /* logic if needed */ },
-    hoverSegment(index: number | null) { /* hover logic */ }
   },
   mounted() {
     this.processCategoriesData()

@@ -46,7 +46,7 @@
 
           <div class="tx-side">
             <span class="tx-amount" :class="tx.type === 'Income' ? 'income' : 'expense'">
-              {{ tx.type === 'Income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
+              {{ tx.type === 'Income' ? '+' : '-' }}{{ formatCurrencyValue(tx.amount) }}
             </span>
             <span class="tx-time">{{ formatTime(tx.transactionDate) }}</span>
           </div>
@@ -139,7 +139,7 @@ export default {
       const locale = this.selectedLanguage === 'Turkish' ? 'tr-TR' : 'en-US'
       return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
     },
-    formatCurrency(amount: number) {
+    formatCurrencyValue(amount: number) {
       return this.formatCurrency(amount)
     },
     getCategoryColor(categoryName: string): string {

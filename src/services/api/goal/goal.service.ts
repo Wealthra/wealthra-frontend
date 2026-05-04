@@ -9,9 +9,9 @@ import type {
 } from './goal.models'
 
 export const goalService = {
-  /** GET /api/Goals - list all goals */
-  async getGoals(): Promise<Goal[]> {
-    return apiRequest<GoalsApiListResponse>('Goals', { method: 'GET' })
+  async getGoals(currency?: string): Promise<Goal[]> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<Goal[]>(`Goals${query}`, { method: 'GET' })
   },
 
   /** POST /api/Goals - body: name, targetAmount, currentAmount, deadline */
@@ -54,11 +54,14 @@ export const goalService = {
   },
 
   /** GET /api/Goals/user - paginated list */
-  async getGoalsUser(pageNumber: number = 1, pageSize: number = 10): Promise<GoalsUserResponse> {
-    return apiRequest<GoalsUserResponse>(
-      `Goals/user?pageNumber=${pageNumber}&pageSize=${pageSize}`,
-      { method: 'GET' }
-    )
+  async getGoalsUser(
+    pageNumber: number = 1,
+    pageSize: number = 10,
+    currency?: string
+  ): Promise<GoalsUserResponse> {
+    let url = `Goals/user?pageNumber=${pageNumber}&pageSize=${pageSize}`
+    if (currency) url += `&currency=${encodeURIComponent(currency)}`
+    return apiRequest<GoalsUserResponse>(url, { method: 'GET' })
   },
 
   /** GET /api/Goals/total */

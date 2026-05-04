@@ -13,15 +13,15 @@
       <div class="detail-name">{{ goal.name }}</div>
       <div class="detail-row">
         <span class="lbl">{{ t('targetAmount') }}</span>
-        <span class="val">{{ formatCurrency(goal.targetAmount) }}</span>
+        <span class="val">{{ isPrivacyMode ? '••' : formatCurrency(goal.targetAmount) }}</span>
       </div>
       <div class="detail-row">
         <span class="lbl">{{ t('currentAmount') }}</span>
-        <span class="val">{{ formatCurrency(goal.currentAmount ?? 0) }}</span>
+        <span class="val">{{ isPrivacyMode ? '••' : formatCurrency(goal.currentAmount ?? 0) }}</span>
       </div>
       <div class="detail-row">
         <span class="lbl">{{ t('goalProgress') }}</span>
-        <span class="val">{{ progressLabel(goal) }}</span>
+        <span class="val">{{ isPrivacyMode ? '••%' : progressLabel(goal) }}</span>
       </div>
       <div class="detail-row">
         <span class="lbl">{{ t('goalDeadline') }}</span>
@@ -66,8 +66,8 @@ export default defineComponent({
   },
   emits: ['close'],
   setup() {
-    const { formatCurrency } = useCurrency()
-    return { formatCurrency }
+    const { formatCurrency, isPrivacyMode } = useCurrency()
+    return { formatCurrency, isPrivacyMode }
   },
   methods: {
     t(key: keyof typeof goalsTexts.English) {

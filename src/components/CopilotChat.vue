@@ -13,361 +13,379 @@
 
     <!-- Chat Window -->
     <Transition name="copilot-slide">
-      <div v-if="isOpen" class="copilot-window">
-        <!-- Header -->
-        <div class="copilot-header" @click="closeChat">
-          <div class="copilot-header__left">
-            <div class="copilot-header__avatar">
-              <font-awesome-icon icon="robot" />
+      <div
+        v-if="isOpen"
+        class="copilot-window"
+        :style="{ width: windowWidth + 'px', height: windowHeight + 'px' }"
+      >
+        <!-- Resize Handle (Top-Left) -->
+        <div
+          class="copilot-resize-handle"
+          @mousedown="startResize"
+          @touchstart.passive="startResize"
+        ></div>
+
+        <div class="copilot-window-inner">
+          <!-- Header -->
+          <div class="copilot-header" @click="closeChat">
+            <div class="copilot-header__left">
+              <div class="copilot-header__avatar">
+                <font-awesome-icon icon="robot" />
+              </div>
+              <div class="copilot-header__info">
+                <span class="copilot-header__title">Owlaris Copilot</span>
+                <span class="copilot-header__status">{{ t.online }}</span>
+              </div>
             </div>
-            <div class="copilot-header__info">
-              <span class="copilot-header__title">Owlaris Copilot</span>
-              <span class="copilot-header__status">{{ t.online }}</span>
-            </div>
+            <button class="copilot-header__close">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </div>
-          <button class="copilot-header__close">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+
+          <!-- Messages Area -->
+          <div class="copilot-messages" ref="messagesContainerRef">
+            <div
+              v-for="msg in messages"
+              :key="msg.id"
+              class="copilot-msg"
+              :class="{
+                'copilot-msg--bot': msg.sender === 'bot',
+                'copilot-msg--user': msg.sender === 'user',
+              }"
             >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Messages Area -->
-        <div class="copilot-messages" ref="messagesContainerRef">
-          <div
-            v-for="msg in messages"
-            :key="msg.id"
-            class="copilot-msg"
-            :class="{
-              'copilot-msg--bot': msg.sender === 'bot',
-              'copilot-msg--user': msg.sender === 'user',
-            }"
-          >
-            <!-- Avatar -->
-            <div class="copilot-msg__avatar">
-              <img v-if="msg.sender === 'bot'" src="../icons/owl.png" alt="Bot" />
-              <div v-else class="copilot-msg__avatar-user">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-            </div>
-
-            <!-- Content -->
-            <div class="copilot-msg__body">
-              <span class="copilot-msg__sender">{{
-                msg.sender === 'bot' ? 'Owlaris' : t.you
-              }}</span>
-
-              <!-- Text Message -->
-              <div
-                v-if="msg.type === 'text'"
-                class="copilot-bubble"
-                :class="msg.sender === 'bot' ? 'copilot-bubble--bot' : 'copilot-bubble--user'"
-                v-html="parseMarkdown(msg.content)"
-              ></div>
-
-              <!-- Audio Message -->
-              <div v-else-if="msg.type === 'audio'" class="copilot-bubble copilot-bubble--audio">
-                <button class="copilot-audio__btn" @click="toggleAudioPlayback(msg)">
+              <!-- Avatar -->
+              <div class="copilot-msg__avatar">
+                <img v-if="msg.sender === 'bot'" src="../icons/owl.png" alt="Bot" />
+                <div v-else class="copilot-msg__avatar-user">
                   <svg
-                    v-if="!msg.isPlaying"
-                    width="12"
-                    height="12"
+                    width="16"
+                    height="16"
                     viewBox="0 0 24 24"
-                    fill="currentColor"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   >
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                  <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                    <rect x="6" y="4" width="4" height="16"></rect>
-                    <rect x="14" y="4" width="4" height="16"></rect>
-                  </svg>
-                </button>
-                <div class="copilot-audio__track">
-                  <div
-                    class="copilot-audio__progress"
-                    :style="{ width: (msg.audioProgress || 0) + '%' }"
-                  ></div>
                 </div>
-                <span class="copilot-audio__time">{{
-                  formatDuration(msg.audioDuration || 0)
+              </div>
+
+              <!-- Content -->
+              <div class="copilot-msg__body">
+                <span class="copilot-msg__sender">{{
+                  msg.sender === 'bot' ? 'Owlaris' : t.you
                 }}</span>
-              </div>
 
-              <!-- Image Message -->
-              <div
-                v-else-if="msg.type === 'image'"
-                class="copilot-bubble copilot-bubble--image"
-                @click="openImageViewer(msg.content)"
-              >
-                <img :src="msg.content" alt="Uploaded" />
-              </div>
+                <!-- Text Message -->
+                <div
+                  v-if="msg.type === 'text'"
+                  class="copilot-bubble"
+                  :class="msg.sender === 'bot' ? 'copilot-bubble--bot' : 'copilot-bubble--user'"
+                  v-html="parseMarkdown(msg.content)"
+                ></div>
 
-              <!-- Interactive Items Message -->
-              <div
-                v-else-if="msg.type === 'interactive'"
-                class="copilot-bubble copilot-bubble--bot copilot-bubble--interactive"
-              >
-                <p class="copilot-interactive__text">{{ msg.content }}</p>
-
-                <div class="copilot-items">
-                  <div class="copilot-items__header">
-                    <span class="copilot-items__count"
-                      >{{ msg.itemData?.length || 0 }} {{ t.itemsExtracted }}</span
+                <!-- Audio Message -->
+                <div v-else-if="msg.type === 'audio'" class="copilot-bubble copilot-bubble--audio">
+                  <button class="copilot-audio__btn" @click="toggleAudioPlayback(msg)">
+                    <svg
+                      v-if="!msg.isPlaying"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
                     >
-                  </div>
-
-                  <div class="copilot-items__list">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="6" y="4" width="4" height="16"></rect>
+                      <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                  </button>
+                  <div class="copilot-audio__track">
                     <div
-                      v-for="(item, idx) in msg.itemData"
-                      :key="item.id ?? idx"
-                      class="copilot-item"
-                    >
-                      <!-- View Mode -->
-                      <template v-if="editingItemKey !== `${msg.id}-${idx}`">
-                        <div class="copilot-item__info">
-                          <p class="copilot-item__name">{{ item.description }}</p>
-                          <div class="copilot-item__meta">
-                            <span class="copilot-item__category">{{ item.categoryName }}</span>
-                            <span class="copilot-item__amount">{{
-                              formatCurrency(item.amount)
-                            }}</span>
-                          </div>
-                        </div>
-                        <div class="copilot-item__actions-view">
-                          <button
-                            class="copilot-item__edit-btn"
-                            @click="startEditItem(msg.id, idx, item)"
-                            :title="t.edit"
-                          >
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            >
-                              <path
-                                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                              ></path>
-                              <path
-                                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                              ></path>
-                            </svg>
-                          </button>
-                          <button
-                            class="copilot-item__delete-btn"
-                            @click="removeItem(msg.id, idx)"
-                            :title="t.remove"
-                          >
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2.5"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            >
-                              <line x1="18" y1="6" x2="6" y2="18"></line>
-                              <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                          </button>
-                        </div>
-                      </template>
-
-                      <!-- Edit Mode -->
-                      <template v-else>
-                        <div class="copilot-item__edit-form">
-                          <input
-                            v-model="editForm.description"
-                            class="copilot-item__input"
-                            :placeholder="t.description"
-                          />
-                          <UISelect
-                            v-model="editForm.categoryId"
-                            class="copilot-item__select"
-                            :options="categories.map(cat => ({ label: cat.categoryName, value: cat.id }))"
-                          />
-                          <div class="copilot-item__price-wrap">
-                            <span class="copilot-item__currency">{{ currencySymbol }}</span>
-                            <input
-                              v-model.number="editForm.amount"
-                              type="number"
-                              step="0.01"
-                              class="copilot-item__input copilot-item__input--price"
-                              :placeholder="t.amount"
-                            />
-                          </div>
-                          <div class="copilot-item__actions">
-                            <button
-                              class="copilot-item__save-btn"
-                              @click="saveEditItem(msg.id, idx)"
-                            >
-                              {{ t.save }}
-                            </button>
-                            <button class="copilot-item__cancel-btn" @click="cancelEditItem">
-                              {{ t.cancel }}
-                            </button>
-                          </div>
-                        </div>
-                      </template>
-                    </div>
+                      class="copilot-audio__progress"
+                      :style="{ width: (msg.audioProgress || 0) + '%' }"
+                    ></div>
                   </div>
+                  <span class="copilot-audio__time">{{
+                    formatDuration(msg.audioDuration || 0)
+                  }}</span>
+                </div>
 
-                  <!-- Save All Button -->
-                  <button
-                    v-if="!msg.saved && msg.itemData && msg.itemData.length > 0"
-                    class="copilot-items__save-all"
-                    :disabled="msg.saving"
-                    @click="handleSaveAll(msg)"
-                  >
-                    <template v-if="msg.saving">
-                      <span class="copilot-items__spinner"></span>
-                      {{ t.saving }}
-                    </template>
-                    <template v-else>
+                <!-- Image Message -->
+                <div
+                  v-else-if="msg.type === 'image'"
+                  class="copilot-bubble copilot-bubble--image"
+                  @click="openImageViewer(msg.content)"
+                >
+                  <img :src="msg.content" alt="Uploaded" />
+                </div>
+
+                <!-- Interactive Items Message -->
+                <div
+                  v-else-if="msg.type === 'interactive'"
+                  class="copilot-bubble copilot-bubble--bot copilot-bubble--interactive"
+                >
+                  <p class="copilot-interactive__text">{{ msg.content }}</p>
+
+                  <div class="copilot-items">
+                    <div class="copilot-items__header">
+                      <span class="copilot-items__count"
+                        >{{ msg.itemData?.length || 0 }} {{ t.itemsExtracted }}</span
+                      >
+                    </div>
+
+                    <div class="copilot-items__list">
+                      <div
+                        v-for="(item, idx) in msg.itemData"
+                        :key="item.id ?? idx"
+                        class="copilot-item"
+                      >
+                        <!-- View Mode -->
+                        <template v-if="editingItemKey !== `${msg.id}-${idx}`">
+                          <div class="copilot-item__info">
+                            <p class="copilot-item__name">{{ item.description }}</p>
+                            <div class="copilot-item__meta">
+                              <span class="copilot-item__category">{{ item.categoryName }}</span>
+                              <span class="copilot-item__amount">{{
+                                formatCurrency(item.amount, 0, item.currency as any)
+                              }}</span>
+                            </div>
+                          </div>
+                          <div class="copilot-item__actions-view">
+                            <button
+                              class="copilot-item__edit-btn"
+                              @click="startEditItem(msg.id, idx, item)"
+                              :title="t.edit"
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path
+                                  d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                ></path>
+                                <path
+                                  d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                                ></path>
+                              </svg>
+                            </button>
+                            <button
+                              class="copilot-item__delete-btn"
+                              @click="removeItem(msg.id, idx)"
+                              :title="t.remove"
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                              </svg>
+                            </button>
+                          </div>
+                        </template>
+
+                        <!-- Edit Mode -->
+                        <template v-else>
+                          <div class="copilot-item__edit-form">
+                            <input
+                              v-model="editForm.description"
+                              class="copilot-item__input"
+                              :placeholder="t.description"
+                            />
+                            <UISelect
+                              v-model="editForm.categoryId"
+                              class="copilot-item__select"
+                              :options="
+                                categories.map(cat => ({ label: cat.categoryName, value: cat.id }))
+                              "
+                            />
+                            <div class="copilot-item__price-wrap">
+                              <span class="copilot-item__currency">{{ editForm.currency }}</span>
+                              <input
+                                v-model.number="editForm.amount"
+                                type="number"
+                                step="0.01"
+                                class="copilot-item__input copilot-item__input--price"
+                                :placeholder="t.amount"
+                              />
+                            </div>
+                            <div class="copilot-item__actions">
+                              <button
+                                class="copilot-item__save-btn"
+                                @click="saveEditItem(msg.id, idx)"
+                              >
+                                {{ t.save }}
+                              </button>
+                              <button class="copilot-item__cancel-btn" @click="cancelEditItem">
+                                {{ t.cancel }}
+                              </button>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+
+                    <!-- Save All Button -->
+                    <button
+                      v-if="!msg.saved && msg.itemData && msg.itemData.length > 0"
+                      class="copilot-items__save-all"
+                      :disabled="msg.saving"
+                      @click="handleSaveAll(msg)"
+                    >
+                      <template v-if="msg.saving">
+                        <span class="copilot-items__spinner"></span>
+                        {{ t.saving }}
+                      </template>
+                      <template v-else>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        {{ t.saveAll }}
+                      </template>
+                    </button>
+                    <div v-else class="copilot-items__saved-badge">
                       <svg
                         width="12"
                         height="12"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2"
+                        stroke-width="3"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                       >
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
-                      {{ t.saveAll }}
-                    </template>
-                  </button>
-                  <div v-else class="copilot-items__saved-badge">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    {{ t.saved }}
+                      {{ t.saved }}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Timestamp -->
-              <span class="copilot-msg__time">{{ formatTime(msg.timestamp) }}</span>
-            </div>
-          </div>
-
-          <!-- Typing Indicator -->
-          <div v-if="isTyping" class="copilot-msg copilot-msg--bot">
-            <div class="copilot-msg__avatar">
-              <img src="../icons/owl.png" alt="Bot" />
-            </div>
-            <div class="copilot-msg__body">
-              <span class="copilot-msg__sender">Owlaris</span>
-              <div class="copilot-typing">
-                <span class="copilot-typing__dot" style="animation-delay: 0ms"></span>
-                <span class="copilot-typing__dot" style="animation-delay: 150ms"></span>
-                <span class="copilot-typing__dot" style="animation-delay: 300ms"></span>
+                <!-- Timestamp -->
+                <span class="copilot-msg__time">{{ formatTime(msg.timestamp) }}</span>
               </div>
             </div>
-          </div>
 
-          <div ref="messagesEndRef"></div>
-        </div>
-
-        <!-- Input Area (Redesigned) -->
-        <div class="copilot-input-area">
-          <!-- Recording State -->
-          <div v-if="isRecording" class="copilot-recording-box">
-            <div class="copilot-recording__indicator">
-              <span class="copilot-recording__dot"></span>
-              <span class="copilot-recording__time">{{ formatDuration(recordingTime) }}</span>
+            <!-- Typing Indicator -->
+            <div v-if="isTyping" class="copilot-msg copilot-msg--bot">
+              <div class="copilot-msg__avatar">
+                <img src="../icons/owl.png" alt="Bot" />
+              </div>
+              <div class="copilot-msg__body">
+                <span class="copilot-msg__sender">Owlaris</span>
+                <div class="copilot-typing">
+                  <span class="copilot-typing__dot" style="animation-delay: 0ms"></span>
+                  <span class="copilot-typing__dot" style="animation-delay: 150ms"></span>
+                  <span class="copilot-typing__dot" style="animation-delay: 300ms"></span>
+                </div>
+              </div>
             </div>
-            <button class="copilot-recording__stop" @click="stopRecording">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-              </svg>
-            </button>
+
+            <div ref="messagesEndRef"></div>
           </div>
 
-          <!-- Default State: Pill-shaped Chat Input Wrapper -->
-          <div v-else class="copilot-input-box">
-            <button
-              class="copilot-icon-btn"
-              @click="triggerImageUpload"
-              :title="t.image"
-              :disabled="isOcrLimitReached"
-            >
-              <font-awesome-icon icon="image" :class="{ 'icon-disabled': isOcrLimitReached }" />
-            </button>
+          <!-- Input Area (Redesigned) -->
+          <div class="copilot-input-area">
+            <!-- Recording State -->
+            <div v-if="isRecording" class="copilot-recording-box">
+              <div class="copilot-recording__indicator">
+                <span class="copilot-recording__dot"></span>
+                <span class="copilot-recording__time">{{ formatDuration(recordingTime) }}</span>
+              </div>
+              <button class="copilot-recording__stop" @click="stopRecording">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                </svg>
+              </button>
+            </div>
 
-            <textarea
-              ref="chatInputRef"
-              v-model="chatMessage"
-              class="copilot-chat-input"
-              :placeholder="t.typeMessagePlaceholder"
-              @keydown.enter.exact.prevent="sendTextMessage"
-              rows="1"
-            ></textarea>
+            <!-- Default State: Pill-shaped Chat Input Wrapper -->
+            <div v-else class="copilot-input-box">
+              <button
+                class="copilot-icon-btn"
+                @click="triggerImageUpload"
+                :title="t.image"
+                :disabled="isOcrLimitReached"
+              >
+                <font-awesome-icon icon="image" :class="{ 'icon-disabled': isOcrLimitReached }" />
+              </button>
 
-            <button
-              v-if="chatMessage.trim().length > 0"
-              class="copilot-send-btn"
-              @click="sendTextMessage"
-              :title="t.send"
-            >
-              <font-awesome-icon icon="paper-plane" />
-            </button>
-            <button
-              v-else
-              class="copilot-icon-btn copilot-icon-btn--mic"
-              @click="startRecording"
-              :title="t.voice"
-              :disabled="isSttLimitReached"
-            >
-              <font-awesome-icon icon="microphone" :class="{ 'icon-disabled': isSttLimitReached }" />
-            </button>
+              <textarea
+                ref="chatInputRef"
+                v-model="chatMessage"
+                class="copilot-chat-input"
+                :placeholder="t.typeMessagePlaceholder"
+                @keydown.enter.exact.prevent="sendTextMessage"
+                rows="1"
+              ></textarea>
+
+              <button
+                v-if="chatMessage.trim().length > 0"
+                class="copilot-send-btn"
+                @click="sendTextMessage"
+                :title="t.send"
+              >
+                <font-awesome-icon icon="paper-plane" />
+              </button>
+              <button
+                v-else
+                class="copilot-icon-btn copilot-icon-btn--mic"
+                @click="startRecording"
+                :title="t.voice"
+                :disabled="isSttLimitReached"
+              >
+                <font-awesome-icon
+                  icon="microphone"
+                  :class="{ 'icon-disabled': isSttLimitReached }"
+                />
+              </button>
+            </div>
+
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="image/*"
+              class="copilot-hidden-input"
+              @change="handleImageUpload"
+            />
           </div>
-
-          <input
-            ref="fileInputRef"
-            type="file"
-            accept="image/*"
-            class="copilot-hidden-input"
-            @change="handleImageUpload"
-          />
         </div>
       </div>
     </Transition>
@@ -388,7 +406,8 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue'
+import { marked } from 'marked'
 import { copilotService } from '@/services/api/copilot/copilot.service'
 import { categoryService } from '@/services/api/category/category.service'
 import type {
@@ -423,7 +442,7 @@ const generateId = () => Math.random().toString(36).substr(2, 9)
 export default defineComponent({
   name: 'CopilotChat',
   components: {
-    UISelect
+    UISelect,
   },
   props: {
     selectedLanguage: {
@@ -433,21 +452,103 @@ export default defineComponent({
     usageData: {
       type: Object as () => any | null,
       default: null,
-    }
+    },
   },
   setup(props) {
     const { currencySymbol, formatCurrency } = useCurrency()
-    
+
+    // ── Resizing ──
+    const windowWidth = ref(Number(localStorage.getItem('copilot-width')) || 380)
+    const windowHeight = ref(Number(localStorage.getItem('copilot-height')) || 600)
+
+    const checkBounds = () => {
+      // Safety check to prevent window from being larger than viewport
+      const maxW = window.innerWidth - 48
+      const maxH = window.innerHeight - 48
+
+      if (windowWidth.value > maxW) windowWidth.value = Math.max(320, maxW)
+      if (windowHeight.value > maxH) windowHeight.value = Math.max(400, maxH)
+    }
+
+    onMounted(() => {
+      window.addEventListener('resize', checkBounds)
+      checkBounds()
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', checkBounds)
+    })
+    let isResizing = false
+    let startX = 0
+    let startY = 0
+    let startW = 0
+    let startH = 0
+
+    const startResize = (e: MouseEvent | TouchEvent) => {
+      isResizing = true
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+
+      startX = clientX
+      startY = clientY
+      startW = windowWidth.value
+      startH = windowHeight.value
+
+      document.addEventListener('mousemove', doResize)
+      document.addEventListener('mouseup', stopResize)
+      document.addEventListener('touchmove', doResize, { passive: false })
+      document.addEventListener('touchend', stopResize)
+
+      document.body.style.cursor = 'nwse-resize'
+      document.body.style.userSelect = 'none'
+    }
+
+    const doResize = (e: MouseEvent | TouchEvent) => {
+      if (!isResizing) return
+      if ('touches' in e) e.preventDefault()
+
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+
+      // Since window is bottom-right, dragging top-left increases size
+      const deltaX = startX - clientX
+      const deltaY = startY - clientY
+
+      const newW = Math.max(320, Math.min(window.innerWidth - 48, startW + deltaX))
+      const newH = Math.max(400, Math.min(window.innerHeight - 100, startH + deltaY))
+
+      windowWidth.value = newW
+      windowHeight.value = newH
+    }
+
+    const stopResize = () => {
+      isResizing = false
+      document.removeEventListener('mousemove', doResize)
+      document.removeEventListener('mouseup', stopResize)
+      document.removeEventListener('touchmove', doResize)
+      document.removeEventListener('touchend', stopResize)
+
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+
+      localStorage.setItem('copilot-width', windowWidth.value.toString())
+      localStorage.setItem('copilot-height', windowHeight.value.toString())
+    }
+
     const isOcrLimitReached = computed(() => {
       if (!props.usageData) return false
-      return props.usageData.monthlyOcrLimit !== null && 
-             props.usageData.ocrRequestsThisMonth >= props.usageData.monthlyOcrLimit
+      return (
+        props.usageData.monthlyOcrLimit !== null &&
+        props.usageData.ocrRequestsThisMonth >= props.usageData.monthlyOcrLimit
+      )
     })
 
     const isSttLimitReached = computed(() => {
       if (!props.usageData) return false
-      return props.usageData.monthlySttLimit !== null && 
-             props.usageData.sttRequestsThisMonth >= props.usageData.monthlySttLimit
+      return (
+        props.usageData.monthlySttLimit !== null &&
+        props.usageData.sttRequestsThisMonth >= props.usageData.monthlySttLimit
+      )
     })
     // ── State ──
     const isOpen = ref(false)
@@ -461,15 +562,10 @@ export default defineComponent({
 
     const parseMarkdown = (text: string) => {
       if (!text) return ''
-
-      const div = document.createElement('div')
-      div.innerText = text
-      const escaped = div.innerHTML
-
-      return escaped
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/\n/g, '<br/>')
+      return marked.parse(text, {
+        breaks: true,
+        gfm: true,
+      })
     }
 
     // Editing
@@ -479,6 +575,7 @@ export default defineComponent({
       categoryId: 0,
       categoryName: '',
       amount: 0,
+      currency: '',
     })
 
     // Refs
@@ -899,6 +996,7 @@ export default defineComponent({
         categoryId: item.categoryId,
         categoryName: item.categoryName,
         amount: item.amount,
+        currency: item.currency,
       }
     }
 
@@ -907,6 +1005,7 @@ export default defineComponent({
       if (msg?.itemData && msg.itemData[idx]) {
         msg.itemData[idx].description = editForm.value.description
         msg.itemData[idx].amount = editForm.value.amount
+        msg.itemData[idx].currency = editForm.value.currency
         msg.itemData[idx].categoryId = editForm.value.categoryId
         // Update category name from the categories list
         const cat = categories.value.find(c => c.id === editForm.value.categoryId)
@@ -925,9 +1024,10 @@ export default defineComponent({
         msg.itemData.splice(idx, 1)
         // If no items left, we could potentially remove the whole interactive message or show a state
         if (msg.itemData.length === 0) {
-          msg.content = props.selectedLanguage === 'Turkish' 
-            ? 'Tüm öğeler kaldırıldı.' 
-            : 'All items have been removed.'
+          msg.content =
+            props.selectedLanguage === 'Turkish'
+              ? 'Tüm öğeler kaldırıldı.'
+              : 'All items have been removed.'
         }
       }
     }
@@ -941,6 +1041,7 @@ export default defineComponent({
         const payload: BulkExpenseRequest[] = msg.itemData.map(item => ({
           description: item.description,
           amount: item.amount,
+          currency: item.currency,
           paymentMethod: item.paymentMethod || 'Other',
           isRecurring: item.isRecurring || false,
           categoryId: item.categoryId,
@@ -1008,6 +1109,10 @@ export default defineComponent({
       currencySymbol,
       isOcrLimitReached,
       isSttLimitReached,
+      // Resize
+      windowWidth,
+      windowHeight,
+      startResize,
     }
   },
 })
@@ -1090,14 +1195,53 @@ export default defineComponent({
   position: fixed;
   bottom: 24px;
   right: 24px;
-  width: 420px;
-  height: 650px;
-  background: var(--background-color);
-  border-radius: 16px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+  background: transparent; /* Background moved to inner */
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
+  z-index: var(--z-copilot, 1000);
+}
+
+.copilot-window-inner {
+  width: 100%;
+  height: 100%;
+  background: var(--background-color);
+  border-radius: 24px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Restores the rounded corners */
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(20px);
+}
+
+.copilot-resize-handle {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 32px;
+  height: 32px;
+  cursor: nwse-resize;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-top: 3px solid var(--primary-green-color);
+    border-left: 3px solid var(--primary-green-color);
+    border-top-left-radius: 4px;
+    opacity: 0;
+    transition: all 0.2s;
+  }
+
+  &:hover::after {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
 }
 
 /* Slide transition */
@@ -1124,6 +1268,8 @@ export default defineComponent({
   background: var(--primary-green-color);
   cursor: pointer;
   flex-shrink: 0;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
 
   .copilot-header__left {
     display: flex;
@@ -1265,16 +1411,86 @@ export default defineComponent({
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   word-break: break-word;
 
-  &.copilot-bubble--bot {
+  & p {
+    margin: 0 0 0.5rem 0;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul,
+  ol {
+    margin: 0.5rem 0;
+    padding-left: 1.25rem;
+    li {
+      margin-bottom: 0.25rem;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+  }
+
+  pre {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.75rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+    code {
+      background: none;
+      padding: 0;
+    }
+  }
+
+  strong {
+    font-weight: 700;
+  }
+  em {
+    font-style: italic;
+  }
+
+  a {
+    color: var(--primary-green-color);
+    text-decoration: underline;
+    &:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  &--bot {
     background: var(--background-color-soft);
     color: var(--header-text-color);
     border-top-left-radius: 4px;
+    border: 1px solid var(--border-color);
+
+    code,
+    pre {
+      background: rgba(0, 0, 0, 0.03);
+    }
   }
 
-  &.copilot-bubble--user {
+  &--user {
     background: var(--primary-green-color);
     color: #fff;
     border-top-right-radius: 4px;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+
+    code,
+    pre {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+    a {
+      color: #fff;
+    }
   }
 
   &.copilot-bubble--audio {
@@ -1522,8 +1738,14 @@ export default defineComponent({
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .copilot-item__input {
@@ -1555,12 +1777,12 @@ export default defineComponent({
 .copilot-item__select {
   flex: 1;
   min-width: 0;
-  
+
   /* UISelect handles its own border and padding internally */
   :deep(.select-trigger) {
     background: var(--background-color-soft);
     height: 42px; /* Matching the height of other inputs */
-    
+
     &:focus {
       background: var(--background-color);
     }
@@ -1611,7 +1833,7 @@ export default defineComponent({
   &:hover {
     transform: translateY(-2px);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
@@ -1693,7 +1915,6 @@ export default defineComponent({
   font-size: 12px;
   font-weight: 600;
 }
-
 
 /* ============================
    Redesigned Input Area
@@ -1949,18 +2170,41 @@ export default defineComponent({
 /* ============================
    Responsive
    ============================ */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .copilot-window {
-    width: calc(100vw - 16px);
-    height: calc(100vh - 80px);
-    bottom: 8px;
-    right: 8px;
-    border-radius: 12px;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+    z-index: 10000;
+
+    .copilot-window-inner {
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+  }
+
+  .copilot-resize-handle {
+    display: none;
   }
 
   .copilot-root {
-    bottom: 16px;
-    right: 16px;
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .copilot-header {
+    padding: 16px 20px;
+    height: 70px;
+    border-radius: 0 !important;
+  }
+
+  .copilot-input-area {
+    padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 }
 .copilot-icon-btn:disabled {

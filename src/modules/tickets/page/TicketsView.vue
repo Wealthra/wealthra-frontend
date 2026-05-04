@@ -30,13 +30,12 @@
               <div class="filter-group">
                 <UISelect
                   :model-value="statusFilter || 'all-status'"
-                  @update:model-value="val => (statusFilter = val === 'all-status' ? '' : String(val))"
+                  @update:model-value="
+                    val => (statusFilter = val === 'all-status' ? '' : String(val))
+                  "
                   class="filter-select"
                   compact
-                  :options="[
-                    { label: t('allStatuses'), value: 'all-status' },
-                    ...statusOptions,
-                  ]"
+                  :options="[{ label: t('allStatuses'), value: 'all-status' }, ...statusOptions]"
                 />
               </div>
             </template>
@@ -48,19 +47,46 @@
         <!-- Skeleton State -->
         <div v-if="isLoading" class="table" role="table">
           <div class="table-header" role="row">
-            <div class="col col-id" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-            <div class="col col-subject" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-            <div class="col col-status" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-            <div class="col col-date" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-            <div class="col col-date" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
-            <div class="col col-actions" role="columnheader"><div class="skeleton-box header-skeleton"></div></div>
+            <div class="col col-id" role="columnheader">
+              <div class="skeleton-box header-skeleton"></div>
+            </div>
+            <div class="col col-subject" role="columnheader">
+              <div class="skeleton-box header-skeleton"></div>
+            </div>
+            <div class="col col-status" role="columnheader">
+              <div class="skeleton-box header-skeleton"></div>
+            </div>
+            <div class="col col-date" role="columnheader">
+              <div class="skeleton-box header-skeleton"></div>
+            </div>
+            <div class="col col-date" role="columnheader">
+              <div class="skeleton-box header-skeleton"></div>
+            </div>
+            <div class="col col-actions" role="columnheader">
+              <div class="skeleton-box header-skeleton"></div>
+            </div>
           </div>
           <div v-for="i in 5" :key="i" class="table-row ticket-row skeleton-row" role="row">
-            <div class="col col-id"><div class="skeleton-box col-mobile-label-skeleton"></div><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-subject"><div class="skeleton-box col-mobile-label-skeleton"></div><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-status"><div class="skeleton-box col-mobile-label-skeleton"></div><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-date"><div class="skeleton-box col-mobile-label-skeleton"></div><div class="skeleton-box row-skeleton"></div></div>
-            <div class="col col-date"><div class="skeleton-box col-mobile-label-skeleton"></div><div class="skeleton-box row-skeleton"></div></div>
+            <div class="col col-id">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-subject">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-status">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-date">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
+            <div class="col col-date">
+              <div class="skeleton-box col-mobile-label-skeleton"></div>
+              <div class="skeleton-box row-skeleton"></div>
+            </div>
             <div class="col col-actions">
               <div class="skeleton-box action-icon-skeleton"></div>
             </div>
@@ -77,11 +103,11 @@
             <div class="col col-date" role="columnheader">{{ t('lastModifiedOn') }}</div>
             <div class="col col-actions" role="columnheader"></div>
           </div>
-          
+
           <template v-for="ticket in filteredTickets" :key="ticket.id">
             <div
               class="table-row ticket-row"
-              :class="{ 'expanded': expandedTicketId === ticket.id }"
+              :class="{ expanded: expandedTicketId === ticket.id }"
               @click="toggleExpand(ticket.id)"
               role="row"
             >
@@ -95,7 +121,9 @@
               </div>
               <div class="col col-status">
                 <span class="col-mobile-label">{{ t('status') }}</span>
-                <span class="status-badge" :class="statusClass(ticket.status)">{{ getStatusLabel(ticket.status) }}</span>
+                <span class="status-badge" :class="statusClass(ticket.status)">{{
+                  getStatusLabel(ticket.status)
+                }}</span>
               </div>
               <div class="col col-date">
                 <span class="col-mobile-label">{{ t('createdOn') }}</span>
@@ -103,17 +131,18 @@
               </div>
               <div class="col col-date">
                 <span class="col-mobile-label">{{ t('lastModifiedOn') }}</span>
-                <span class="col-value">{{ formatDate(ticket.lastModifiedOn || ticket.createdOn) }}</span>
+                <span class="col-value">{{
+                  formatDate(ticket.lastModifiedOn || ticket.createdOn)
+                }}</span>
               </div>
               <div class="col col-actions">
-
-                <font-awesome-icon 
-                  :icon="expandedTicketId === ticket.id ? arrowIcons.up : arrowIcons.down" 
-                  class="expand-icon" 
+                <font-awesome-icon
+                  :icon="expandedTicketId === ticket.id ? arrowIcons.up : arrowIcons.down"
+                  class="expand-icon"
                 />
               </div>
             </div>
-            
+
             <!-- Expanded Details -->
             <div v-if="expandedTicketId === ticket.id" class="ticket-expanded-row">
               <div class="interaction-card">
@@ -127,7 +156,10 @@
                   <div class="interaction-body">
                     <p>{{ ticket.body || t('noMessageProvided') }}</p>
                   </div>
-                  <div class="interaction-reply" v-if="ticket.adminReply || ticket.status === 3 || ticket.status === 2">
+                  <div
+                    class="interaction-reply"
+                    v-if="ticket.adminReply || ticket.status === 3 || ticket.status === 2"
+                  >
                     <div class="reply-header">
                       <font-awesome-icon icon="circle-exclamation" class="icon-alert" />
                       <span>{{ t('adminReplyHeading') }}</span>
@@ -196,7 +228,10 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { supportService } from '@/services/api/support/support.service'
-import type { SupportTicket, CreateSupportTicketRequest } from '@/services/api/support/support.models'
+import type {
+  SupportTicket,
+  CreateSupportTicketRequest,
+} from '@/services/api/support/support.models'
 import UISelect from '@/components/UISelect.vue'
 import { arrowIcons } from '@/icons/fontawesome-icons'
 
@@ -215,11 +250,11 @@ export default defineComponent({
     const tickets = ref<SupportTicket[]>([])
     const statusFilter = ref('')
     const searchQuery = ref('')
-    
+
     const showCreateModal = ref(false)
     const newTicket = ref<CreateSupportTicketRequest>({ subject: '', body: '' })
     const createError = ref('')
-    
+
     const expandedTicketId = ref<number | null>(null)
 
     const texts = {
@@ -411,7 +446,7 @@ export default defineComponent({
       hideCreateModal,
       submitCreate,
     }
-  }
+  },
 })
 </script>
 
@@ -520,13 +555,13 @@ export default defineComponent({
     background-color: var(--background-color);
     padding-right: 0.75rem;
   }
-  
+
   .table {
     width: 100%;
     display: flex;
     flex-direction: column;
   }
-  
+
   .table-header {
     display: grid;
     grid-template-columns: 4rem minmax(0, 1fr) 7rem 7rem 7rem 3rem;
@@ -539,7 +574,7 @@ export default defineComponent({
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  
+
   .table-row {
     display: grid;
     grid-template-columns: 4rem minmax(0, 1fr) 7rem 7rem 7rem 3rem;
@@ -549,11 +584,11 @@ export default defineComponent({
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s ease;
-    
+
     &:hover {
       background-color: var(--background-color-soft);
     }
-    
+
     &.expanded {
       border-bottom: none;
       background-color: var(--background-color-soft);
@@ -581,18 +616,18 @@ export default defineComponent({
   .col-mobile-label-skeleton {
     display: none;
   }
-  
+
   .subject-name {
     font-weight: 600;
     color: var(--header-text-color);
     font-size: 0.8rem;
   }
-  
+
   .col-value {
     font-size: 0.75rem;
     color: var(--normal-text-color);
   }
-  
+
   .status-badge {
     display: inline-block;
     padding: 0.25rem 0.625rem;
@@ -620,109 +655,124 @@ export default defineComponent({
 
   .ticket-expanded-row {
     padding: 0 1rem 1.5rem 1rem;
+    padding-top: 1rem;
     border-bottom: 1px solid var(--border-color);
-    background-color: var(--background-color-soft);
-    @media (max-width: 1024px) {
-      border: 1px solid var(--border-color);
-      border-top: none;
-      border-bottom-left-radius: var(--border-radius);
-      border-bottom-right-radius: var(--border-radius);
-      margin-bottom: 0.75rem;
-    }
   }
 
-  /* Interaction Card styling mimicking the provided image */
+  /* Interaction Card styling mimicking a premium thread/conversation look */
   .interaction-card {
-    background: #fdfdfd;
-    border: 1px solid #eaeaea;
-    border-radius: 12px;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
-    padding: 1rem;
-    gap: 1rem;
-    
+    padding: 1.25rem;
+    gap: 1.25rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+
+    @media (max-width: 600px) {
+      padding: 1rem;
+      gap: 1rem;
+    }
+
     .interaction-header {
       display: flex;
       justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.75rem;
+      margin-bottom: -0.25rem;
     }
-    
+
     .interaction-title {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.75rem;
+      gap: 0.625rem;
+      font-size: 0.8125rem;
       font-weight: 700;
-      color: #6b4c9a; /* Purple theme */
-      
+      color: var(--primary-green-color);
+
       .icon-message {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        opacity: 0.8;
       }
     }
-    
+
     .interaction-content {
       display: flex;
       gap: 1.5rem;
-      @media (max-width: 768px) {
+
+      @media (max-width: 900px) {
         flex-direction: column;
+        gap: 1.25rem;
       }
     }
-    
+
     .interaction-body {
       flex: 1;
-      background: #f7f7fa;
-      border-radius: 8px;
-      padding: 1rem;
+      background: var(--background-color-soft);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid var(--border-color);
+
       p {
         margin: 0;
-        font-size: 0.8125rem;
-        color: #5c6270;
-        line-height: 1.5;
+        font-size: 0.875rem;
+        color: var(--header-text-color);
+        line-height: 1.6;
+        white-space: pre-wrap;
       }
     }
-    
+
     .interaction-reply {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      
+      gap: 0.75rem;
+      background: rgba(92, 184, 92, 0.03);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid rgba(92, 184, 92, 0.2);
+
       .reply-header {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 0.75rem;
+        gap: 0.625rem;
+        font-size: 0.8125rem;
         font-weight: 700;
-        color: #6b4c9a;
+        color: var(--primary-green-color);
       }
-      
+
       .reply-list {
         margin: 0;
-        padding-left: 1.25rem;
-        font-size: 0.8125rem;
-        color: #5c6270;
+        padding-left: 0;
+        list-style: none;
+        font-size: 0.875rem;
+        color: var(--header-text-color);
+        line-height: 1.6;
+
         li {
-          margin-bottom: 0.5rem;
-          &::marker {
+          position: relative;
+          padding-left: 1.25rem;
+
+          &::before {
+            content: '•';
+            position: absolute;
+            left: 0;
             color: #f5a623;
+            font-weight: bold;
           }
         }
       }
     }
   }
 
-  /* Dark mode overrides for interaction card */
-  :global(body.dark) .interaction-card {
-    background: var(--background-color);
-    border-color: var(--border-color);
-    .interaction-body {
-      background: rgba(255, 255, 255, 0.03);
-      p { color: var(--normal-text-color); }
-    }
-    .interaction-title, .reply-header {
-      color: #b08ee6;
-    }
-    .reply-list li {
-      color: var(--normal-text-color);
+  /* Dark mode specific fine-tuning */
+  :root[data-theme='dark'] .interaction-card {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+
+    .interaction-reply {
+      background: rgba(92, 184, 92, 0.05);
+      border-color: rgba(92, 184, 92, 0.3);
     }
   }
 
@@ -763,7 +813,10 @@ export default defineComponent({
 
   .modal-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
@@ -777,30 +830,45 @@ export default defineComponent({
     max-width: 28rem;
     display: flex;
     flex-direction: column;
-    
+
     .modal-header {
       padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      h3 { margin: 0; font-size: 1.25rem; color: var(--header-text-color); }
-      .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--normal-text-color); }
+      h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--header-text-color);
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--normal-text-color);
+      }
     }
     .modal-body {
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
-      
+
       .form-group {
         display: flex;
         flex-direction: column;
         gap: 0.375rem;
-        label { font-size: 0.75rem; font-weight: 600; color: var(--normal-text-color); }
+        label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--normal-text-color);
+        }
       }
-      
-      .modal-input, .modal-textarea {
+
+      .modal-input,
+      .modal-textarea {
         width: 100%;
         padding: 0.75rem 1rem;
         border: 1px solid var(--border-color);
@@ -815,11 +883,11 @@ export default defineComponent({
           box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2);
         }
       }
-      
+
       .modal-textarea {
         resize: vertical;
       }
-      
+
       .error-message {
         color: #dc3545;
         font-size: 0.85rem;
@@ -828,7 +896,7 @@ export default defineComponent({
         padding: 0.5rem;
         border-radius: var(--border-radius);
       }
-      
+
       .add-btn {
         width: 100%;
         padding: 0.75rem 1rem;
@@ -850,19 +918,45 @@ export default defineComponent({
 }
 
 @keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 0.3; }
-  100% { opacity: 0.6; }
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.6;
+  }
 }
 
-.header-skeleton { height: 0.75rem; width: 80%; }
-.row-skeleton { height: 1rem; width: 80%; }
-.action-icon-skeleton { width: 1.5rem; height: 1.5rem; border-radius: 4px; }
-.btn-skeleton { width: 100px; height: 2.25rem; border-radius: var(--border-radius); }
-.filter-skeleton { width: 10rem; height: 2.25rem; border-radius: var(--border-radius); }
-.search-skeleton { width: 12rem; }
+.header-skeleton {
+  height: 0.75rem;
+  width: 80%;
+}
+.row-skeleton {
+  height: 1rem;
+  width: 80%;
+}
+.action-icon-skeleton {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 4px;
+}
+.btn-skeleton {
+  width: 100px;
+  height: 2.25rem;
+  border-radius: var(--border-radius);
+}
+.filter-skeleton {
+  width: 10rem;
+  height: 2.25rem;
+  border-radius: var(--border-radius);
+}
+.search-skeleton {
+  width: 12rem;
+}
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .tickets-table-container {
     padding: 1rem;
     .header {
@@ -870,41 +964,51 @@ export default defineComponent({
       align-items: stretch;
       gap: 0.75rem;
     }
-    .header__title {
-      display: none;
+    .header__title,
+    .header__title-skeleton {
+      display: none !important;
     }
     .header__toolbar {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 0.75rem !important;
+      width: 100% !important;
     }
-    .toolbar-actions {
-      display: grid;
-      grid-template-columns: 1fr;
+    .toolbar-actions,
+    .toolbar-filters {
+      display: contents !important;
     }
     .btn,
-    .btn-skeleton {
-      min-height: 2.75rem;
-      font-size: 0.875rem;
-    }
-    .btn-skeleton {
-      width: 100%;
-      height: auto;
-    }
-    .toolbar-filters {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-    }
+    .btn-skeleton,
     .filter-input,
     .filter-select,
     .filter-skeleton {
-      width: 100%;
-      min-width: 0;
+      width: 100% !important;
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
     }
+
+    .filter-select :deep(.select-trigger) {
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+      border-radius: 10px;
+    }
+
+    /* The Status filter (last item) spans 2 columns */
+    .filter-group:last-child,
+    .filter-skeleton:last-child {
+      grid-column: span 2 !important;
+    }
+
     .filter-skeleton {
-      min-height: 2.75rem;
-      height: auto;
+      height: 2.75rem !important;
+      background-color: var(--background-color-soft) !important;
     }
     .table-header {
       display: none;

@@ -1,13 +1,6 @@
 <template>
   <div class="dashboard-page">
-    <div class="dashboard-header">
-      <div class="header-left">
-        <!-- Optional extra info could go here -->
-      </div>
-      <div class="header-right">
-        <!-- Export button moved to layout -->
-      </div>
-    </div>
+
 
     <div v-if="hasError" class="error-container">
       <div class="error-message">
@@ -161,8 +154,8 @@
               <span v-if="rec.severity" class="severity-pill">{{ rec.severity }}</span>
             </div>
             <div class="rec-content">
-              <div class="rec-title">{{ rec.title }}</div>
-              <div class="rec-desc">{{ rec.description }}</div>
+              <div class="rec-title">{{ maskSensitiveText(rec.title) }}</div>
+              <div class="rec-desc">{{ maskSensitiveText(rec.description) }}</div>
             </div>
           </li>
         </ul>
@@ -230,6 +223,7 @@ import UIRecentTransactionsCard from '../components/UIRecentTransactionsCard.vue
 import UIBudgetAlertsCard from '../components/UIBudgetAlertsCard.vue'
 import UIGoalsOverviewCard from '../components/UIGoalsOverviewCard.vue'
 import { emptyStateIcons } from '@/icons/fontawesome-icons'
+import { dashboardTexts } from '@/data/dashboardTexts'
 
 import type { Spendings } from '@/interfaces/Spendings'
 import type {
@@ -242,9 +236,9 @@ import type {
   IncomeExpenseTrendPoint,
 } from '@/services/api/summary/summary.models'
 import { summaryService } from '@/services/api/summary/summary.service'
-import { dashboardTexts } from '@/data/dashboardTexts'
 import { getCategoryColorByIndex } from '@/utils/chartCategoryPalette'
 import { useCurrency } from '@/composables/useCurrency'
+import UISelect from '@/components/UISelect.vue'
 
 export default {
   name: 'DashboardView',
@@ -262,6 +256,7 @@ export default {
     UIRecentTransactionsCard,
     UIBudgetAlertsCard,
     UIGoalsOverviewCard,
+    UISelect,
   },
   data() {
     return {
@@ -283,11 +278,16 @@ export default {
       goalsOverview: null as DashboardGoalsOverview | null,
       recommendations: [] as DashboardRecommendation[],
       categorySpending: {} as Record<string, number>,
-      topSpendings: [] as Spendings[],
+      topSpendings: [] as {
+        categoryId: number
+        categoryName: string
+        totalAmount: number
+        transactionCount: number
+        color: string
+      }[],
       dashboardTexts: dashboardTexts,
       emptySavingsIcon: emptyStateIcons.incomeSources,
       emptyRecommendationsIcon: emptyStateIcons.transactions,
-      currencyHelper: useCurrency(),
       currentRecIndex: 0,
     }
   },
@@ -355,9 +355,16 @@ export default {
     },
   },
   watch: {
-    'currencyHelper.currency'() {
+    currency() {
       this.fetchFinancialData()
     },
+    selectedLanguage() {
+      this.fetchFinancialData()
+    },
+  },
+  setup() {
+    const { currency, setCurrency, isPrivacyMode, maskSensitiveText } = useCurrency()
+    return { currency, setCurrency, isPrivacyMode, maskSensitiveText }
   },
   methods: {
     sortMonthKeys(byMonth: Record<string, number>): Record<string, number> {
@@ -380,7 +387,7 @@ export default {
 
       try {
         const data = await summaryService.getDashboardSummary({
-          currency: this.currencyHelper.currency,
+          currency: this.currency,
         })
 
         this.dashboardSummary = data

@@ -10,7 +10,7 @@
             {{ selectedLanguage === 'English' ? 'Total Transactions' : 'Toplam İşlemler' }}
           </div>
           <div class="card-wrapper-context">
-            {{ totalTransactionCountNow }}
+            {{ formatAmount(totalTransactionCountNow) }}
           </div>
         </div>
         <div class="card-wrapper">
@@ -18,20 +18,20 @@
             {{ selectedLanguage === 'English' ? 'Total Users' : 'Toplam Kullanıcılar' }}
           </div>
           <div class="card-wrapper-context">
-            {{ totalUserCountNow }}
+            {{ formatAmount(totalUserCountNow) }}
           </div>
         </div>
         <div class="card-wrapper">
           <div class="card-wrapper-title">
             {{ selectedLanguage === 'English' ? 'Average Response Time' : 'Ortalama Yanıt Süresi' }}
           </div>
-          <div class="card-wrapper-context">{{ averageResponseTimeMs?.toFixed(2) }} ms</div>
+          <div class="card-wrapper-context">{{ isPrivacyMode ? '••••' : averageResponseTimeMs?.toFixed(2) }} ms</div>
         </div>
         <div class="card-wrapper">
           <div class="card-wrapper-title">
             {{ selectedLanguage === 'English' ? 'Error Rate' : 'Hata Oranı' }}
           </div>
-          <div class="card-wrapper-context">{{ errorRate?.toFixed(2) }} %</div>
+          <div class="card-wrapper-context">{{ isPrivacyMode ? '••••' : errorRate?.toFixed(2) }} %</div>
         </div>
       </div>
     </div>
@@ -41,6 +41,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { Bar } from 'vue-chartjs'
+import { useCurrency } from '@/composables/useCurrency'
 import {
   Chart as ChartJS,
   Title,
@@ -69,8 +70,17 @@ export default defineComponent({
     dailyActiveUserCount: { type: Number, required: true },
     selectedLanguage: { type: String, required: true },
   },
+  setup(props) {
+    const { formatAmount, isPrivacyMode } = useCurrency()
+    return { formatAmount, isPrivacyMode }
+  },
   computed: {
     chartData() {
+      const transNow = this.isPrivacyMode ? 0 : this.totalTransactionCountNow
+      const transLast = this.isPrivacyMode ? 0 : this.totalTransactionCountLastMonth
+      const userNow = this.isPrivacyMode ? 0 : this.totalUserCountNow
+      const userLast = this.isPrivacyMode ? 0 : this.totalUserCountLastMonth
+
       return {
         labels:
           this.selectedLanguage === 'English'
@@ -80,12 +90,12 @@ export default defineComponent({
           {
             label: this.selectedLanguage === 'English' ? 'Last Month' : 'Geçen Ay',
             backgroundColor: '#42b983',
-            data: [this.totalTransactionCountLastMonth, this.totalUserCountLastMonth],
+            data: [transLast, userLast],
           },
           {
             label: this.selectedLanguage === 'English' ? 'Now' : 'Şimdi',
             backgroundColor: '#ff6384',
-            data: [this.totalTransactionCountNow, this.totalUserCountNow],
+            data: [transNow, userNow],
           },
         ],
       }
@@ -103,6 +113,9 @@ export default defineComponent({
                 ? 'Performance Comparison'
                 : 'Performans Karşılaştırması',
           },
+          tooltip: {
+            enabled: !this.isPrivacyMode
+          }
         },
       }
     },

@@ -6,18 +6,22 @@
         {{ selectedLanguage == 'English' ? 'Income Sources' : 'Gelir Kaynakları' }}
       </h1>
       <div v-if="loading" class="header-actions">
-        <div class="skeleton-box summary-btn-skeleton"></div>
-        <div class="skeleton-box btn-skeleton"></div>
+        <div class="header-buttons">
+          <div class="skeleton-box summary-btn-skeleton"></div>
+          <div class="skeleton-box btn-skeleton"></div>
+        </div>
         <div class="skeleton-box date-skeleton"></div>
       </div>
       <div v-else class="header-actions">
-        <button type="button" class="summary-trigger-btn" @click="$emit('openSummary')">
-          <font-awesome-icon icon="chart-simple" />
-          {{ summaryLabel }}
-        </button>
-        <button class="add-source-btn" @click="showAddModal">
-          {{ selectedLanguage == 'English' ? 'Add Source' : 'Kaynak Ekle' }}
-        </button>
+        <div class="header-buttons">
+          <button type="button" class="summary-trigger-btn" @click="$emit('openSummary')">
+            <font-awesome-icon icon="chart-simple" />
+            {{ summaryLabel }}
+          </button>
+          <button class="add-source-btn" @click="showAddModal">
+            {{ selectedLanguage == 'English' ? 'Add Source' : 'Kaynak Ekle' }}
+          </button>
+        </div>
         <div class="date-range-picker-wrap">
           <Datepicker
             :value="dateRangeModel"
@@ -270,7 +274,7 @@
               selectedLanguage == 'English' ? 'Amount' : 'Miktar'
             }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">{{ currencySymbol }}</span>
+              <span class="input-prefix">{{ SYMBOLS[newSource.currency as any] || currencySymbol }}</span>
               <input
                 id="income-source-amount"
                 type="number"
@@ -288,6 +292,18 @@
                 "
               />
             </div>
+          </div>
+          <div class="form-group">
+            <label for="income-source-currency">{{ selectedLanguage == 'English' ? 'Currency' : 'Para Birimi' }}</label>
+            <UISelect
+              id="income-source-currency"
+              v-model="newSource.currency"
+              :options="[
+                { label: 'USD ($)', value: 'USD' },
+                { label: 'EUR (€)', value: 'EUR' },
+                { label: 'TRY (₺)', value: 'TRY' },
+              ]"
+            />
           </div>
           <div class="form-group">
             <label for="income-source-method">{{
@@ -363,6 +379,7 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue'
 import { incomeTexts } from '@/data/incomeTexts'
 import type { IncomeSource } from '@/interfaces/IncomeSources'
 import {
@@ -376,7 +393,7 @@ import Datepicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 import UISelect from '@/components/UISelect.vue'
 
-export default {
+export default defineComponent({
   name: 'UIIncomeSourcesComponent',
   emits: [
     'openSummary',
@@ -392,8 +409,13 @@ export default {
     UISelect,
   },
   setup() {
-    const { formatCurrency, currencySymbol } = useCurrency()
-    return { formatCurrency, currencySymbol }
+    const { formatCurrency, currencySymbol, currency, setCurrency } = useCurrency()
+    const SYMBOLS: Record<string, string> = {
+      USD: '$',
+      EUR: '€',
+      TRY: '₺',
+    }
+    return { formatCurrency, currencySymbol, currency, setCurrency, SYMBOLS }
   },
   data() {
     return {
@@ -401,10 +423,11 @@ export default {
       errorMessage: '',
       newSource: {
         name: '',
-        amount: null,
+        amount: null as number | null,
         isRecurring: false,
         method: '',
-        transactionDate: '',
+        transactionDate: '' as string | Date,
+        currency: '' as string,
       },
       arrowIcons,
       actionIcons,
@@ -420,6 +443,7 @@ export default {
         id: number
         name: string
         amount: number
+        currency: string
         isRecurring: boolean
         method: string
       }[],
@@ -653,7 +677,13 @@ export default {
       )
     },
   },
-
+  watch: {
+    currency(newVal) {
+      if (newVal && !this.editingSourceId) {
+        this.newSource.currency = newVal
+      }
+    },
+  },
   methods: {
     isRecurrent(source: IncomeSource) {
       if (this.selectedLanguage == 'Turkish') {
@@ -703,6 +733,8 @@ export default {
       this.$emit('deleteSource', source)
     },
     showAddModal() {
+      this.editingSourceId = null
+      this.resetNewSource()
       this.isAddModalVisible = true
     },
     hideAddModal() {
@@ -722,6 +754,7 @@ export default {
           isRecurring: data.isRecurring,
           method: data.method,
           transactionDate: (txDate ? new Date(txDate) : '') as string,
+          currency: data.currency,
         }
         this.isAddModalVisible = true
       } catch (e) {
@@ -735,6 +768,7 @@ export default {
         isRecurring: false,
         method: '',
         transactionDate: '',
+        currency: this.currency as any,
       }
     },
     submitIncomeSource() {
@@ -754,7 +788,7 @@ export default {
         return
       }
 
-      const amount = parseFloat(this.newSource.amount)
+      const amount = Number(this.newSource.amount)
       if (isNaN(amount) || amount <= 0) {
         this.errorMessage =
           this.selectedLanguage === 'English'
@@ -791,6 +825,7 @@ export default {
         isRecurring: this.newSource.isRecurring,
         method: this.newSource.method,
         transactionDate: transactionDateStr,
+        currency: this.newSource.currency,
       }
 
       if (this.editingSourceId != null) {
@@ -801,7 +836,7 @@ export default {
       this.hideAddModal()
     },
   },
-}
+})
 </script>
 
 <style scoped lang="scss">
@@ -840,6 +875,12 @@ export default {
     flex-shrink: 0;
   }
 
+  .header .header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   .header .summary-trigger-btn {
     display: inline-flex;
     align-items: center;
@@ -848,13 +889,15 @@ export default {
     background: var(--primary-green-color);
     color: white;
     border: none;
-    padding: 0.4rem 0.75rem;
-    border-radius: 12px;
+    height: 2.25rem;
+    padding: 0 1rem;
+    border-radius: 10px;
     font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     transition: filter 0.2s;
     white-space: nowrap;
+    box-sizing: border-box;
 
     &:hover {
       filter: brightness(1.08);
@@ -874,13 +917,15 @@ export default {
     flex-shrink: 0;
     background-color: var(--primary-green-color);
     color: white;
+    height: 2.25rem;
+    padding: 0 1rem;
     border: none;
-    border-radius: var(--border-radius);
-    padding: 0.4rem 0.75rem;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
     font-size: 0.75rem;
     white-space: nowrap;
+    box-sizing: border-box;
 
     &:hover {
       opacity: var(--hover-opacity);
@@ -911,9 +956,10 @@ export default {
   .date-skeleton {
     width: 12rem;
     height: 2.25rem;
-    border-radius: var(--border-radius);
-    @media screen and (max-width: 1024px) {
+    border-radius: 10px;
+    @media (max-width: 1024px) {
       width: 100%;
+      height: 2.75rem;
     }
   }
 
@@ -959,12 +1005,13 @@ export default {
 
     :deep(.mx-input) {
       width: 100%;
+      height: 2.25rem;
       min-width: 0;
       box-sizing: border-box;
       cursor: pointer;
-      font-size: 0.8125rem;
-      padding: 0.5rem 0.75rem;
-      border-radius: var(--border-radius);
+      font-size: 0.75rem;
+      padding: 0 0.75rem;
+      border-radius: 10px;
       border: 1px solid var(--border-color);
       background-color: var(--background-color);
       color: var(--header-text-color);
@@ -1520,23 +1567,35 @@ export default {
   }
 
   .header .header-actions {
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
     width: 100%;
     gap: 0.75rem;
   }
 
-  .header .summary-trigger-btn,
-  .header .summary-btn-skeleton,
-  .header .add-source-btn,
-  .header .btn-skeleton {
+  .header .header-buttons {
+    display: flex;
+    gap: 0.5rem;
     width: 100%;
-    min-height: 2.75rem;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
   }
+
+  .header .summary-trigger-btn,
+  .header .add-source-btn,
+  .header .summary-btn-skeleton,
   .header .btn-skeleton {
-    height: auto;
+    flex: 1;
+    min-width: 0;
+    height: 2.75rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header .summary-btn-skeleton,
+  .header .btn-skeleton {
+    display: block !important;
+    width: auto !important;
   }
 
   .header .date-range-picker-wrap,
@@ -1547,8 +1606,17 @@ export default {
     box-sizing: border-box;
   }
   .header .date-skeleton {
-    min-height: 2.75rem;
-    height: auto;
+    height: 2.25rem;
+    border-radius: 10px;
+    display: block;
+    width: 100%;
+    background-color: var(--background-color-soft);
+  }
+
+  @media (max-width: 1024px) {
+    .header .date-skeleton {
+      height: 2.75rem;
+    }
   }
 
   .header .date-range-picker-wrap :deep(.mx-datepicker) {
@@ -1645,7 +1713,7 @@ export default {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .income-sources-container {
     width: 100%;
     min-height: 0;
@@ -1660,52 +1728,61 @@ export default {
     gap: 0.75rem;
   }
 
-  .header .title {
-    display: none; /* Remove "Income Sources" header on mobile */
+  .header .title,
+  .header .title-skeleton {
+    display: none !important;
   }
 
   .header .header-actions {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
+    width: 100%;
+  }
+
+  .header .header-buttons {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
   }
 
   .header .summary-trigger-btn,
-  .header .summary-btn-skeleton,
   .header .add-source-btn,
+  .header .summary-btn-skeleton,
   .header .btn-skeleton {
-    width: 100%;
-    min-height: 2.75rem;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
+    flex: 1;
+    min-width: 0;
+    height: 2.75rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+
+  .header .summary-btn-skeleton,
   .header .btn-skeleton {
-    height: auto;
+    display: block !important;
   }
 
   .header .date-range-picker-wrap,
   .header .date-skeleton {
     width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    box-sizing: border-box;
+    height: 2.75rem;
+    border-radius: 10px;
   }
   .header .date-skeleton {
-    min-height: 2.75rem;
-    height: auto;
+    display: block !important;
+    background-color: var(--background-color-soft);
   }
 
   .header .date-range-picker-wrap :deep(.mx-datepicker) {
     width: 100%;
-    min-width: 0;
-    max-width: 100%;
   }
 
   .header .date-range-picker-wrap :deep(.mx-input) {
     width: 100%;
-    min-height: 2.75rem;
-    font-size: 1rem;
+    height: 2.75rem;
+    font-size: 0.875rem;
     padding: 0.625rem 0.75rem;
   }
 
@@ -1756,6 +1833,12 @@ export default {
     .datepicker-wrapper :deep(.mx-input) {
       height: 2.5rem;
       font-size: 0.875rem;
+    }
+
+    #income-source-currency {
+      width: auto;
+      min-width: 120px;
+      max-width: 150px;
     }
 
     .frequency-segmented .frequency-option {

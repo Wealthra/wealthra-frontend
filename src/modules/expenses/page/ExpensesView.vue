@@ -122,6 +122,10 @@ export default {
     UIExpenseHistoryComponent,
     UIExpenseSummaryPanel,
   },
+  setup() {
+    const { currency } = useCurrency()
+    return { currency }
+  },
   data() {
     const { start, end } = getDefaultExpenseDateRange()
     return {
@@ -135,7 +139,6 @@ export default {
       endDateExpense: end as string | null,
       categoryIdFilter: null as number | null,
       categories: [] as Category[],
-      currencyHelper: useCurrency(),
       isExpenseSummaryOpen: false,
       expenseSummaryLoading: false,
       expenseSummaryItems: [] as ExpenseSummaryItem[],
@@ -143,11 +146,15 @@ export default {
     }
   },
   watch: {
-    'currencyHelper.currency'() {
+    currency() {
       this.loadAppropriateData()
       if (this.isExpenseSummaryOpen) {
         void this.fetchExpenseSummary()
       }
+    },
+    selectedLanguage() {
+      this.fetchCategories()
+      this.loadAppropriateData()
     },
   },
   methods: {
@@ -202,7 +209,7 @@ export default {
       try {
         const rows = await expenseService.getExpenseSummary(
           this.expenseSummaryPeriod,
-          this.currencyHelper.currency,
+          this.currency,
         )
         this.expenseSummaryItems = Array.isArray(rows) ? rows : []
       } catch {
@@ -219,6 +226,7 @@ export default {
       isRecurring: boolean
       categoryId: number
       transactionDate: string
+      currency: string
     }) {
       try {
         await expenseService.createExpense({
@@ -228,7 +236,7 @@ export default {
           isRecurring: payload.isRecurring,
           categoryId: Number(payload.categoryId),
           transactionDate: payload.transactionDate,
-          currency: this.currencyHelper.currency,
+          currency: payload.currency || this.currency,
         })
         await this.loadAppropriateData()
       } catch {
@@ -245,6 +253,7 @@ export default {
         isRecurring: boolean
         categoryId: number
         transactionDate: string
+        currency: string
       }
     ) {
       try {
@@ -255,7 +264,7 @@ export default {
           isRecurring: payload.isRecurring,
           categoryId: Number(payload.categoryId),
           transactionDate: payload.transactionDate,
-          currency: this.currencyHelper.currency,
+          currency: payload.currency || this.currency,
         })
         await this.loadAppropriateData()
       } catch {
@@ -290,7 +299,7 @@ export default {
 
     async fetchExpenseGeneralInfo() {
       try {
-        const data = await expenseService.getExpenseGeneralInfo(this.currencyHelper.currency)
+        const data = await expenseService.getExpenseGeneralInfo(this.currency)
         return data
       } catch (error) {
         console.error('Error fetching expense general info:', error)
@@ -307,9 +316,11 @@ export default {
           StartDate?: string
           EndDate?: string
           CategoryId?: number
+          currency?: string
         } = {
           PageNumber: this.page,
           PageSize: this.pageSizeExpense,
+          currency: this.currency,
         }
         if (this.startDateExpense) params.StartDate = this.startDateExpense
         if (this.endDateExpense) params.EndDate = this.endDateExpense
@@ -321,6 +332,7 @@ export default {
           id: item.id,
           description: item.description,
           amount: item.amount,
+          currency: item.currency,
           paymentMethod: item.paymentMethod,
           isRecurring: item.isRecurring,
           categoryId: item.categoryId,

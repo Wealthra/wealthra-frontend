@@ -143,6 +143,13 @@
           :placeholder="selectedLanguage === 'English' ? 'Limit Amount' : 'Limit Tutarı'"
         />
 
+        <select v-model="newBudgetCategory.currency" class="budget-select">
+          <option value="">{{ selectedLanguage === 'English' ? 'Select Currency' : 'Para Birimi Seçin' }}</option>
+          <option value="USD">USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="TRY">TRY (₺)</option>
+        </select>
+
         <div class="add-new-category-button-wrapper">
           <button @click="addNewBudgetCategory">
             {{ selectedLanguage === 'English' ? 'Add' : 'Ekle' }}
@@ -156,6 +163,7 @@
 <script lang="ts">
 import { arrowIcons, actionIcons } from '@/icons/fontawesome-icons'
 import { useToast } from '@/stores/useToast'
+import { useCurrency } from '@/composables/useCurrency'
 
 const TRANSLATE_CATEGORY = {
   Food: 'Yiyecek',
@@ -172,7 +180,8 @@ export default {
   name: 'BudgetCategoriesComponent',
   setup() {
     const toast = useToast()
-    return { toast }
+    const { currency } = useCurrency()
+    return { toast, currency }
   },
   data() {
     return {
@@ -180,6 +189,7 @@ export default {
         categoryId: 0,
         limitAmount: null,
         currentAmount: null,
+        currency: '',
       },
       isModalOpen: false,
       isAvailableData: true,
@@ -303,6 +313,7 @@ export default {
         categoryId: this.newBudgetCategory.categoryId,
         limitAmount: this.newBudgetCategory.limitAmount,
         currentAmount: this.newBudgetCategory.currentAmount,
+        currency: this.newBudgetCategory.currency || this.currency,
       })
     },
     deleteBudgetCategoryItem(categoryId: number) {

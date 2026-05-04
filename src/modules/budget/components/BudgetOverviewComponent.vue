@@ -29,7 +29,7 @@
           <div v-if="!isMobile" class="budget-overview-component-progress-bar">
             <div
               class="budget-overview-component-progress-bar-fill"
-              :style="{ width: progressBarWidthPercentage + '%' }"
+              :style="{ width: isPrivacyMode ? '0%' : (progressBarWidthPercentage + '%') }"
             ></div>
           </div>
           <!-- Mobile only: doughnut chart + center text -->
@@ -41,10 +41,10 @@
               class="budget-overview-doughnut"
             />
             <div class="budget-overview-doughnut-center" aria-hidden="true">
-              {{ centerText }}
+              {{ isPrivacyMode ? '••••' : centerText }}
             </div>
           </div>
-          <div v-if="!isMobile" class="budget-overview-component-percentage">{{ displayPercentage }}</div>
+          <div v-if="!isMobile" class="budget-overview-component-percentage">{{ isPrivacyMode ? '••%' : displayPercentage }}</div>
         </template>
       </div>
     </div>
@@ -96,8 +96,8 @@ export default {
   },
 
   setup() {
-    const { formatCurrency } = useCurrency()
-    return { formatCurrency }
+    const { formatCurrency, isPrivacyMode } = useCurrency()
+    return { formatCurrency, isPrivacyMode }
   },
 
   data() {
@@ -153,8 +153,8 @@ export default {
         labels: ['Used', 'Remaining'],
         datasets: [
           {
-            data: [used, remaining],
-            backgroundColor: [usedColor, remainingColor],
+            data: this.isPrivacyMode ? [0, 100] : [used, remaining],
+            backgroundColor: this.isPrivacyMode ? [remainingColor, remainingColor] : [usedColor, remainingColor],
             borderWidth: 0,
             hoverOffset: 4,
           },
@@ -163,7 +163,7 @@ export default {
     },
 
     doughnutOptions() {
-      const fmt = (n: number) => n.toLocaleString('en-US')
+      void this.isPrivacyMode // Trigger reactivity
       const limit = this.limitAmount
       const used = this.currentAmount
       const remaining = Math.max(0, limit - used)

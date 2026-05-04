@@ -22,9 +22,10 @@
         <div class="toolbar-filters">
           <template v-if="loading">
             <div class="skeleton-box filter-skeleton"></div>
-            <div class="skeleton-box filter-skeleton date-skeleton"></div>
+            <div class="skeleton-box filter-skeleton"></div>
           </template>
           <template v-else>
+
             <div class="filter-group">
               <UISelect
                 :model-value="categoryId ?? 'all'"
@@ -129,7 +130,7 @@
           </div>
           <div class="col col-amount">
             <span class="col-mobile-label">{{ t('amount') }}</span>
-            <span class="col-value">{{ formatCurrency(expense.amount) }}</span>
+            <span class="col-value">{{ formatCurrency(expense.amount, undefined, expense.currency as any) }}</span>
           </div>
           <div class="col col-category">
             <span class="col-mobile-label">{{ t('category') }}</span>
@@ -273,7 +274,7 @@
           <div class="form-group">
             <label for="expense-amount">{{ t('amount') }}</label>
             <div class="input-with-prefix">
-              <span class="input-prefix">{{ currencySymbol }}</span>
+              <span class="input-prefix">{{ SYMBOLS[newExpense.currency as any] || currencySymbol }}</span>
               <input
                 id="expense-amount"
                 type="number"
@@ -284,6 +285,18 @@
                 step="0.01"
               />
             </div>
+          </div>
+          <div class="form-group">
+            <label for="expense-currency">{{ selectedLanguage === 'English' ? 'Currency' : 'Para Birimi' }}</label>
+            <UISelect
+              id="expense-currency"
+              v-model="newExpense.currency"
+              :options="[
+                { label: 'USD ($)', value: 'USD' },
+                { label: 'EUR (€)', value: 'EUR' },
+                { label: 'TRY (₺)', value: 'TRY' },
+              ]"
+            />
           </div>
           <div class="form-group">
             <label for="expense-method">{{ t('paymentMethod') }}</label>
@@ -347,6 +360,7 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue'
 import { expensesTexts } from '@/data/expensesTexts'
 import {
   arrowIcons,
@@ -364,6 +378,7 @@ type ExpenseItem = {
   id: number
   description: string
   amount: number
+  currency: string
   paymentMethod: string
   isRecurring: boolean
   categoryId: number
@@ -372,7 +387,7 @@ type ExpenseItem = {
   created?: string
 }
 
-export default {
+export default defineComponent({
   name: 'UIExpenseHistoryComponent',
   emits: [
     'openSummary',
@@ -401,8 +416,13 @@ export default {
     getExpenseById: { type: Function, required: true },
   },
   setup() {
-    const { formatCurrency, currencySymbol } = useCurrency()
-    return { formatCurrency, currencySymbol }
+    const { formatCurrency, currencySymbol, currency, setCurrency } = useCurrency()
+    const SYMBOLS: Record<string, string> = {
+      USD: '$',
+      EUR: '€',
+      TRY: '₺',
+    }
+    return { formatCurrency, currencySymbol, currency, setCurrency, SYMBOLS }
   },
   data() {
     return {
@@ -415,6 +435,7 @@ export default {
         isRecurring: false,
         categoryId: 0,
         transactionDate: '' as string | Date,
+        currency: '' as string,
       },
       arrowIcons,
       actionIcons,
@@ -508,6 +529,13 @@ export default {
       )
     },
   },
+  watch: {
+    currency(newVal) {
+      if (newVal && !this.editingExpenseId) {
+        this.newExpense.currency = newVal
+      }
+    },
+  },
   methods: {
     t(key: keyof typeof expensesTexts.English) {
       const texts = expensesTexts[this.selectedLanguage as 'English' | 'Turkish']
@@ -574,6 +602,7 @@ export default {
           isRecurring: data.isRecurring,
           categoryId: data.categoryId,
           transactionDate: txDate ? new Date(txDate) : '',
+          currency: data.currency,
         }
         this.isAddModalVisible = true
       } catch (e) {
@@ -588,6 +617,7 @@ export default {
         isRecurring: false,
         categoryId: 0,
         transactionDate: '',
+        currency: this.currency as any,
       }
     },
     submitExpense() {
@@ -623,6 +653,7 @@ export default {
         isRecurring: this.newExpense.isRecurring,
         categoryId: this.newExpense.categoryId,
         transactionDate: transactionDateStr,
+        currency: this.newExpense.currency,
       }
       if (this.editingExpenseId != null) {
         this.$emit('updateExpense', this.editingExpenseId, payload)
@@ -632,7 +663,7 @@ export default {
       this.hideAddModal()
     },
   },
-}
+})
 </script>
 
 <style scoped lang="scss">
@@ -696,13 +727,15 @@ export default {
     background: var(--primary-green-color);
     color: white;
     border: none;
-    padding: 0.4rem 0.75rem;
-    border-radius: 12px;
+    height: 2.25rem;
+    padding: 0 1rem;
+    border-radius: 10px;
     font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     transition: filter 0.2s;
     white-space: nowrap;
+    box-sizing: border-box;
 
     &:hover {
       filter: brightness(1.08);
@@ -712,21 +745,24 @@ export default {
   .summary-btn-skeleton {
     width: 100px;
     height: 2.25rem;
-    border-radius: 12px;
+    border-radius: 10px;
     flex-shrink: 0;
     @media (max-width: 1024px) {
       width: 100%;
+      height: 2.75rem;
     }
   }
 
   .btn {
-    padding: 0.4rem 0.75rem;
-    border-radius: var(--border-radius);
+    padding: 0 1.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     border: 1px solid transparent;
     transition: opacity 0.15s ease;
+    box-sizing: border-box;
     &:hover:not(:disabled) {
       opacity: var(--hover-opacity);
     }
@@ -751,22 +787,25 @@ export default {
   .filter-select {
     min-width: 10rem;
     :deep(.select-trigger) {
-      padding: 0.4rem 0.75rem;
-      border-radius: var(--border-radius);
+      padding: 0 0.75rem;
+      border-radius: 10px;
       border: 1px solid var(--border-color);
       background-color: var(--background-color);
       color: var(--header-text-color);
       font-size: 0.75rem;
-      height: auto;
-      min-height: auto;
+      height: 2.25rem;
       cursor: pointer;
+      box-sizing: border-box;
     }
   }
 
   .btn-skeleton {
     width: 100px;
     height: 2.25rem;
-    border-radius: var(--border-radius);
+    border-radius: 10px;
+    @media (max-width: 1024px) {
+      height: 2.75rem;
+    }
   }
 
   .row-skeleton {
@@ -786,13 +825,17 @@ export default {
   .filter-skeleton {
     width: 10rem;
     height: 2.25rem;
-    border-radius: var(--border-radius);
+    border-radius: 10px;
     &.date-skeleton {
       width: 12rem;
 
       @media (max-width: 1024px) {
         width: 100%;
+        height: 2.75rem;
       }
+    }
+    @media (max-width: 1024px) {
+      height: 2.75rem;
     }
   }
 
@@ -815,15 +858,16 @@ export default {
       cursor: pointer;
     }
     :deep(.mx-input) {
-      padding: 0.5rem 0.75rem;
-      border-radius: var(--border-radius);
+      padding: 0 0.75rem;
+      border-radius: 10px;
       border: 1px solid var(--border-color);
       background-color: var(--background-color);
       color: var(--header-text-color);
-      font-size: 0.8125rem;
+      font-size: 0.75rem;
       cursor: pointer;
       width: 100%;
-      height: auto;
+      height: 2.25rem;
+      box-sizing: border-box;
     }
   }
 
@@ -1247,31 +1291,45 @@ export default {
       gap: 0.75rem;
     }
     .toolbar-actions {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.75rem;
+      display: flex;
+      width: 100%;
+      gap: 0.5rem;
     }
     .summary-trigger-btn,
     .summary-btn-skeleton,
     .btn,
     .btn-skeleton {
-      width: 100%;
-      min-height: 2.75rem;
-      font-size: 0.875rem;
+      flex: 1;
+      min-width: 0;
+      height: 2.75rem;
+      padding: 0 0.75rem;
+      font-size: 0.75rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
     .btn-skeleton {
-      height: auto;
     }
     .toolbar-filters {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-    }
-    .filter-select,
-    .date-range-wrap,
-    .filter-skeleton {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.5rem;
       width: 100%;
+    }
+    .filter-group,
+    .filter-skeleton {
+      flex: 1 1 0%;
       min-width: 0;
+    }
+    .filter-select :deep(.select-trigger) {
+      height: 2.75rem;
+      border-radius: 10px;
+    }
+    .date-range-wrap :deep(.mx-datepicker) {
+      width: 100%;
     }
     .filter-skeleton {
       min-height: 2.75rem;
@@ -1279,7 +1337,7 @@ export default {
     }
     .date-range-wrap :deep(.mx-input) {
       min-height: 2.75rem;
-      font-size: 1rem;
+      font-size: 0.8125rem; /* Smaller font for side-by-side */
     }
     .table-header {
       display: none;
@@ -1329,7 +1387,7 @@ export default {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .expense-sources-container {
     padding: 1rem;
     .header {
@@ -1337,48 +1395,52 @@ export default {
       align-items: stretch;
       gap: 0.75rem;
     }
-    .header__title {
-      display: none;
+    .header__title,
+    .header__title-skeleton {
+      display: none !important;
     }
     .header__toolbar {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 0.75rem !important;
+      width: 100% !important;
     }
-    .toolbar-actions {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.75rem;
+    .toolbar-actions,
+    .toolbar-filters {
+      display: contents !important;
     }
     .summary-trigger-btn,
     .summary-btn-skeleton,
     .btn,
-    .btn-skeleton {
-      width: 100%;
-      min-height: 2.75rem;
-      font-size: 0.875rem;
-    }
-    .btn-skeleton {
-      height: auto;
-    }
-    .toolbar-filters {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-    }
-    .filter-select,
-    .date-range-wrap,
+    .btn-skeleton,
+    .filter-group,
     .filter-skeleton {
-      width: 100%;
-      min-width: 0;
+      width: 100% !important;
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+      margin: 0 !important;
     }
+    .summary-btn-skeleton,
+    .btn-skeleton,
     .filter-skeleton {
-      min-height: 2.75rem;
-      height: auto;
+      display: block !important;
+      background-color: var(--background-color-soft) !important;
+    }
+    .filter-select :deep(.select-trigger) {
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+      border-radius: 10px;
+    }
+    .date-range-wrap :deep(.mx-datepicker) {
+      width: 100%;
     }
     .date-range-wrap :deep(.mx-input) {
-      min-height: 2.75rem;
-      font-size: 1rem;
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      font-size: 0.875rem !important;
+      border-radius: 10px;
     }
     .table-header {
       display: none;
@@ -1406,6 +1468,11 @@ export default {
         font-size: 0.75rem;
         font-weight: 600;
         color: var(--normal-text-color);
+      }
+      #expense-currency {
+        width: auto;
+        min-width: 120px;
+        max-width: 150px;
       }
       .col-mobile-label-skeleton {
         display: block;

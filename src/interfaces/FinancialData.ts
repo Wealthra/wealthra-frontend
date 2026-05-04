@@ -34,6 +34,7 @@ export interface FinancialData {
     amount: number
     isRecurring: boolean
     method: string
+    currency: string
   }[]
   incomeHasMoreItems: boolean
   pageNumberIncome: number
@@ -81,6 +82,7 @@ export interface FinancialData {
     isRecurring: boolean
     description: string
     paymentMethod: string
+    currency: string
   }[]
   expenseRecentTransactions: {
     amount: number

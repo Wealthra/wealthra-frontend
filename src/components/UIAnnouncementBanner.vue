@@ -1,5 +1,9 @@
 <template>
-  <div v-if="isVisible && announcements.length > 0" class="announcement-banner-overlay" @click.self="closeBanner">
+  <div
+    v-if="isVisible && announcements.length > 0"
+    class="announcement-banner-overlay"
+    @click.self="closeBanner"
+  >
     <div class="announcement-banner-card glass-card">
       <div class="banner-header">
         <div class="banner-title-group">
@@ -27,7 +31,7 @@
         <transition :name="slideDirection" mode="out-in">
           <div :key="currentIndex" class="banner-body">
             <p class="announcement-text">{{ currentAnnouncement.body }}</p>
-            
+
             <div class="announcement-meta">
               <div class="meta-item">
                 <font-awesome-icon icon="calendar-day" class="meta-icon" />
@@ -44,18 +48,22 @@
             <button @click="prev" class="nav-btn" :disabled="currentIndex === 0">
               <font-awesome-icon icon="chevron-left" />
             </button>
-            
+
             <div class="pagination-pill">
-              <span 
-                v-for="(_, index) in announcements" 
-                :key="index" 
+              <span
+                v-for="(_, index) in announcements"
+                :key="index"
                 class="dot"
                 :class="{ active: index === currentIndex }"
                 @click="goTo(index)"
               ></span>
             </div>
 
-            <button @click="next" class="nav-btn" :disabled="currentIndex === announcements.length - 1">
+            <button
+              @click="next"
+              class="nav-btn"
+              :disabled="currentIndex === announcements.length - 1"
+            >
               <font-awesome-icon icon="chevron-right" />
             </button>
           </div>
@@ -64,7 +72,10 @@
         <div class="footer-right">
           <div v-if="currentAnnouncement.actionUrl" class="action-wrap">
             <a :href="currentAnnouncement.actionUrl" target="_blank" class="action-btn-premium">
-              {{ currentAnnouncement.actionText || (selectedLanguage === 'Turkish' ? 'Detaylar' : 'Details') }}
+              {{
+                currentAnnouncement.actionText ||
+                (selectedLanguage === 'Turkish' ? 'Detaylar' : 'Details')
+              }}
               <font-awesome-icon icon="arrow-right" class="btn-arrow" />
             </a>
           </div>
@@ -83,13 +94,13 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 export default defineComponent({
   name: 'UIAnnouncementBanner',
   components: {
-    FontAwesomeIcon
+    FontAwesomeIcon,
   },
   props: {
     selectedLanguage: {
       type: String as () => 'English' | 'Turkish',
-      default: 'English'
-    }
+      default: 'English',
+    },
   },
   setup(props) {
     const isVisible = ref(false)
@@ -99,8 +110,9 @@ export default defineComponent({
 
     const currentAnnouncement = computed(() => {
       const ann = announcements.value[currentIndex.value]
-      if (!ann) return { title: '', body: '', severity: 0, startsAt: '', actionUrl: '', actionText: '' }
-      
+      if (!ann)
+        return { title: '', body: '', severity: 0, startsAt: '', actionUrl: '', actionText: '' }
+
       const isTr = props.selectedLanguage === 'Turkish'
       return {
         title: isTr ? ann.titleTr : ann.titleEn,
@@ -108,7 +120,7 @@ export default defineComponent({
         severity: ann.severity,
         startsAt: ann.startsAt,
         actionUrl: ann.actionUrl,
-        actionText: ann.actionText
+        actionText: ann.actionText,
       }
     })
 
@@ -154,33 +166,46 @@ export default defineComponent({
     const getSeverityLabel = (severity: number) => {
       const isTr = props.selectedLanguage === 'Turkish'
       switch (severity) {
-        case 0: return isTr ? 'Düşük' : 'Low'
-        case 1: return isTr ? 'Orta' : 'Medium'
-        case 2: return isTr ? 'Yüksek' : 'High'
-        case 3: return isTr ? 'Kritik' : 'Critical'
-        default: return 'Info'
+        case 0:
+          return isTr ? 'Düşük' : 'Low'
+        case 1:
+          return isTr ? 'Orta' : 'Medium'
+        case 2:
+          return isTr ? 'Yüksek' : 'High'
+        case 3:
+          return isTr ? 'Kritik' : 'Critical'
+        default:
+          return 'Info'
       }
     }
 
     const getSeverityClass = (severity: number) => {
       switch (severity) {
-        case 0: return 'low'
-        case 1: return 'medium'
-        case 2: return 'high'
-        case 3: return 'critical'
-        default: return 'low'
+        case 0:
+          return 'low'
+        case 1:
+          return 'medium'
+        case 2:
+          return 'high'
+        case 3:
+          return 'critical'
+        default:
+          return 'low'
       }
     }
 
     const formatDate = (dateStr: string) => {
       if (!dateStr) return ''
-      return new Date(dateStr).toLocaleDateString(props.selectedLanguage === 'Turkish' ? 'tr-TR' : 'en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      return new Date(dateStr).toLocaleDateString(
+        props.selectedLanguage === 'Turkish' ? 'tr-TR' : 'en-US',
+        {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }
+      )
     }
 
     onMounted(() => {
@@ -199,9 +224,9 @@ export default defineComponent({
       goTo,
       getSeverityLabel,
       getSeverityClass,
-      formatDate
+      formatDate,
     }
-  }
+  },
 })
 </script>
 
@@ -231,7 +256,11 @@ export default defineComponent({
     position: relative;
     overflow: hidden;
     animation: bannerPop 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-    background-image: radial-gradient(circle at top right, rgba(34, 197, 94, 0.03), transparent 40%);
+    background-image: radial-gradient(
+      circle at top right,
+      rgba(34, 197, 94, 0.03),
+      transparent 40%
+    );
 
     .banner-header {
       display: flex;
@@ -253,12 +282,24 @@ export default defineComponent({
           justify-content: center;
           flex-shrink: 0;
           box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
-          
-          &.low { background: rgba(16, 185, 129, 0.18); color: #10b981; }
-          &.medium { background: rgba(59, 130, 246, 0.18); color: #3b82f6; }
-          &.high { background: rgba(245, 158, 11, 0.18); color: #f59e0b; }
-          &.critical { background: rgba(239, 68, 68, 0.18); color: #ef4444; }
-          
+
+          &.low {
+            background: rgba(16, 185, 129, 0.18);
+            color: #10b981;
+          }
+          &.medium {
+            background: rgba(59, 130, 246, 0.18);
+            color: #3b82f6;
+          }
+          &.high {
+            background: rgba(245, 158, 11, 0.18);
+            color: #f59e0b;
+          }
+          &.critical {
+            background: rgba(239, 68, 68, 0.18);
+            color: #ef4444;
+          }
+
           .banner-icon {
             font-size: 1.75rem;
           }
@@ -282,11 +323,23 @@ export default defineComponent({
             letter-spacing: 0.08em;
             padding: 4px 10px;
             border-radius: 8px;
-            
-            &.low { background: rgba(16, 185, 129, 0.12); color: #10b981; }
-            &.medium { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
-            &.high { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
-            &.critical { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+
+            &.low {
+              background: rgba(16, 185, 129, 0.12);
+              color: #10b981;
+            }
+            &.medium {
+              background: rgba(59, 130, 246, 0.12);
+              color: #3b82f6;
+            }
+            &.high {
+              background: rgba(245, 158, 11, 0.12);
+              color: #f59e0b;
+            }
+            &.critical {
+              background: rgba(239, 68, 68, 0.12);
+              color: #ef4444;
+            }
           }
 
           h3 {
@@ -325,7 +378,6 @@ export default defineComponent({
         &:hover {
           background: var(--border-color);
           color: var(--header-text-color);
-          transform: rotate(90deg) scale(1.1);
         }
       }
     }
@@ -349,7 +401,7 @@ export default defineComponent({
       .announcement-meta {
         display: flex;
         gap: 20px;
-        
+
         .meta-item {
           display: flex;
           align-items: center;
@@ -358,7 +410,7 @@ export default defineComponent({
           color: var(--normal-text-color);
           opacity: 0.5;
           font-weight: 700;
-          
+
           .meta-icon {
             font-size: 0.9rem;
           }
@@ -429,7 +481,9 @@ export default defineComponent({
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-            &:hover { background: var(--normal-text-color); }
+            &:hover {
+              background: var(--normal-text-color);
+            }
             &.active {
               background: var(--primary-green-color);
               width: 24px;
@@ -463,7 +517,7 @@ export default defineComponent({
           transform: translateY(-3px);
           box-shadow: 0 15px 35px rgba(34, 197, 94, 0.4);
           filter: brightness(1.05);
-          
+
           .btn-arrow {
             transform: translateX(6px);
           }
@@ -475,8 +529,14 @@ export default defineComponent({
 
 /* Animations */
 @keyframes bannerPop {
-  0% { opacity: 0; transform: scale(0.96) translateY(60px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(60px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* Slide Transitions */
@@ -487,9 +547,21 @@ export default defineComponent({
   transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.slide-left-enter-from { opacity: 0; transform: translateX(40px) scale(0.98); }
-.slide-left-leave-to { opacity: 0; transform: translateX(-40px) scale(0.98); }
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(40px) scale(0.98);
+}
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-40px) scale(0.98);
+}
 
-.slide-right-enter-from { opacity: 0; transform: translateX(-40px) scale(0.98); }
-.slide-right-leave-to { opacity: 0; transform: translateX(40px) scale(0.98); }
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-40px) scale(0.98);
+}
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(40px) scale(0.98);
+}
 </style>

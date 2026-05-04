@@ -38,7 +38,7 @@
             <template v-else>
               <tr v-for="ip in blockedIps" :key="ip.id">
                 <td class="col-ip" data-label="IP Address">
-                  <span class="mono ip-text">{{ ip.ipAddress }}</span>
+                  <span class="mono ip-text">{{ isPrivacyMode ? '•••.•••.•••.•••' : ip.ipAddress }}</span>
                 </td>
                 <td class="col-reason" data-label="Reason">
                   <span class="reason-cell" :title="ip.reason">{{ truncate(ip.reason, 40) }}</span>
@@ -140,11 +140,13 @@ import UIModal from '@/components/UIModal.vue'
 import UIDatepicker from '@/components/UIDatepicker.vue'
 import UITooltip from '@/components/UITooltip.vue'
 import { useToast } from '@/stores/useToast'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default defineComponent({
   name: 'AdminSecurity',
   components: { UISkeletonLoader, UIModal, UIDatepicker, UITooltip },
   setup() {
+    const { isPrivacyMode } = useCurrency()
     const blockedIps = ref<BlockedIp[]>([])
     const isLoading = ref(true)
     const showAddModal = ref(false)
@@ -254,7 +256,8 @@ export default defineComponent({
       handleUnblockClick,
       formatDateTime,
       isExpired,
-      truncate
+      truncate,
+      isPrivacyMode
     }
   }
 })

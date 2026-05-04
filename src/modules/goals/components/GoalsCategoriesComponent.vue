@@ -438,14 +438,83 @@ export default {
         }
 
         &:last-child {
-          background-color: var(--background-color-soft);
-          color: var(--normal-text-color);
-          border: 1px solid var(--border-color);
+          background-color: var(--primary-green-color);
+          color: white;
+          font-weight: 600;
         }
 
         &:hover {
-          background-color: var(--primary-green-color);
-          color: white;
+          opacity: 0.9;
+          transform: translateY(-1px);
+        }
+      }
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--normal-text-color);
+      }
+
+      input {
+        width: 100%;
+        height: 2.75rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--background-color);
+        color: var(--header-text-color);
+        font-size: 0.9375rem;
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--primary-green-color);
+          box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.1);
+        }
+      }
+
+      .input-with-prefix {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--background-color);
+        overflow: hidden;
+        transition: all 0.2s ease;
+
+        .input-prefix {
+          display: flex;
+          align-items: center;
+          padding: 0 1rem;
+          height: 100%;
+          background-color: var(--background-color-soft);
+          color: var(--normal-text-color);
+          border-right: 1px solid var(--border-color);
+          font-size: 0.9375rem;
+          font-weight: 500;
+          flex-shrink: 0;
+        }
+
+        input {
+          flex: 1;
+          border: none;
+          border-radius: 0;
+          background-color: transparent;
+
+          &:focus {
+            box-shadow: none;
+          }
+        }
+
+        &:focus-within {
+          border-color: var(--primary-green-color);
+          box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.1);
         }
       }
     }

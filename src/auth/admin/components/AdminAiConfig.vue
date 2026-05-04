@@ -20,7 +20,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-label">{{ t.promptTokens }}</span>
-            <span class="stat-value">{{ formatInt(usage.totalPromptTokens) }}</span>
+            <span class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(usage.totalPromptTokens) }}</span>
           </div>
         </div>
         <div class="stat-card glass-card">
@@ -29,7 +29,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-label">{{ t.completionTokens }}</span>
-            <span class="stat-value">{{ formatInt(usage.totalCompletionTokens) }}</span>
+            <span class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(usage.totalCompletionTokens) }}</span>
           </div>
         </div>
         <div class="stat-card glass-card">
@@ -38,7 +38,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-label">{{ t.totalTokens }}</span>
-            <span class="stat-value">{{ formatInt(usage.totalPromptTokens + usage.totalCompletionTokens) }}</span>
+            <span class="stat-value">{{ isPrivacyMode ? '••••' : formatInt(usage.totalPromptTokens + usage.totalCompletionTokens) }}</span>
           </div>
         </div>
         <div class="stat-card glass-card">
@@ -47,7 +47,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-label">{{ t.estimatedCost }}</span>
-            <span class="stat-value">{{ formatUsd(usage.totalEstimatedCostUsd) }}</span>
+            <span class="stat-value">{{ isPrivacyMode ? '••••' : formatUsd(usage.totalEstimatedCostUsd) }}</span>
           </div>
         </div>
       </template>
@@ -161,11 +161,11 @@
                 <span class="quota-status success">{{ t.statusHealthy }}</span>
               </div>
               <div class="quota-bar-wrap">
-                <div class="quota-bar" :style="{ width: '42%' }"></div>
+                <div class="quota-bar" :style="{ width: isPrivacyMode ? '0%' : '42%' }"></div>
               </div>
               <div class="quota-footer">
-                <span>{{ t.usageRate }}: 42%</span>
-                <span>{{ formatInt(usage?.requestCount || 0) }} {{ t.requests }}</span>
+                <span>{{ t.usageRate }}: {{ isPrivacyMode ? '••%' : '42%' }}</span>
+                <span>{{ isPrivacyMode ? '••••' : formatInt(usage?.requestCount || 0) }} {{ t.requests }}</span>
               </div>
             </div>
           </template>
@@ -190,6 +190,7 @@ import { adminService } from '@/services/api/admin/admin.service'
 import type { AdminAiSettings, AiUsageSummary, GroqModelDto } from '@/services/api/admin/admin.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import UISelect from '@/components/UISelect.vue'
+import { useCurrency } from '@/composables/useCurrency'
 import { Doughnut as DoughnutChart } from 'vue-chartjs'
 import {
   faRobot,
@@ -226,6 +227,7 @@ export default defineComponent({
     }
   },
   setup(props) {
+    const { isPrivacyMode } = useCurrency()
     const settings = ref<AdminAiSettings>({
       enrichmentModel: '',
       defaultChatModel: ''
@@ -273,8 +275,10 @@ export default defineComponent({
 
     const modelOptions = computed(() => {
       return groqModels.value.map((m: GroqModelDto) => ({
-        label: `${m.id} (${m.contextWindow ? formatInt(m.contextWindow) : '?'})`,
-        value: m.id
+        label: isPrivacyMode.value
+          ? `${m.id} (•••)`
+          : `${m.id} (${m.contextWindow ? formatInt(m.contextWindow) : '?'})`,
+        value: m.id,
       }))
     })
 
@@ -339,8 +343,8 @@ export default defineComponent({
       return {
         labels: [t.value.promptLabel, t.value.completionLabel],
         datasets: [{
-          data: [usage.value.totalPromptTokens, usage.value.totalCompletionTokens],
-          backgroundColor: ['#10b981', '#3b82f6'],
+          data: isPrivacyMode.value ? [0, 100] : [usage.value.totalPromptTokens, usage.value.totalCompletionTokens],
+          backgroundColor: isPrivacyMode.value ? ['#334155', '#334155'] : ['#10b981', '#3b82f6'],
           hoverOffset: 4,
           borderWidth: 0
         }]
@@ -391,6 +395,7 @@ export default defineComponent({
       handleSave,
       showTooltip,
       hideTooltip,
+      isPrivacyMode,
       faRobot,
       faTerminal,
       faCode,

@@ -42,6 +42,7 @@
                 searchable
                 class="premium-selector-dropdown year"
               />
+
             </div>
           </div>
         </div>
@@ -246,7 +247,7 @@
                       <div class="evidence-container">
                         <p class="evidence-text">
                           <span class="evidence-lead">{{ t.evidence }}:</span>
-                          {{ signal.evidence }}
+                          {{ maskSensitiveText(signal.evidence) }}
                         </p>
                       </div>
                     </div>
@@ -331,11 +332,11 @@
               >
                 <div class="suggestion-header">
                   <span class="suggestion-name">{{ suggestion.categoryName }}</span>
-                  <span class="match-score">{{ Math.round(suggestion.score * 100) }}%</span>
+                  <span class="match-score">{{ isPrivacyMode ? '••%' : Math.round(suggestion.score * 100) + '%' }}</span>
                 </div>
-                <p class="suggestion-desc">{{ suggestion.evidence }}</p>
+                <p class="suggestion-desc">{{ maskSensitiveText(suggestion.evidence) }}</p>
                 <div class="progress-container">
-                  <div class="progress-bar" :style="{ width: suggestion.score * 100 + '%' }"></div>
+                  <div class="progress-bar" :style="{ width: isPrivacyMode ? '0%' : (suggestion.score * 100 + '%') }"></div>
                 </div>
               </div>
             </div>
@@ -397,7 +398,7 @@
                 </div>
                 <div class="tip-content">
                   <h5 class="tip-topic">{{ tip.topic }}</h5>
-                  <p class="tip-body">{{ tip.body }}</p>
+                  <p class="tip-body">{{ maskSensitiveText(tip.body) }}</p>
                 </div>
               </div>
             </div>
@@ -436,6 +437,7 @@ import { recommendationService } from '@/services/api/recommendation/recommendat
 import type { PersonalizedRecommendationResponse } from '@/services/api/recommendation/recommendation.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import UISelect from '@/components/UISelect.vue'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default defineComponent({
   name: 'RecommendationsView',
@@ -455,6 +457,8 @@ export default defineComponent({
     const isLoading = ref(true)
     const recommendationData = ref<PersonalizedRecommendationResponse | null>(null)
     const itemsPerPage = ref(3)
+
+    const { currency, setCurrency, isPrivacyMode, maskSensitiveText } = useCurrency()
 
     const updateItemsPerPage = () => {
       const width = window.innerWidth
@@ -579,6 +583,7 @@ export default defineComponent({
         .join(' ')
     }
 
+
     const getSeverityIcon = (severity: string) => {
       switch (severity) {
         case 'critical':
@@ -605,7 +610,8 @@ export default defineComponent({
         const data = await recommendationService.getPersonalized(
           selectedYear.value,
           selectedMonth.value,
-          langCode
+          langCode,
+          currency.value
         )
         recommendationData.value = data
 
@@ -632,7 +638,7 @@ export default defineComponent({
     })
 
     const { selectedLanguage: langProp } = toRefs(props)
-    watch([selectedMonth, selectedYear, langProp], () => {
+    watch([selectedMonth, selectedYear, langProp, currency], () => {
       fetchRecommendations()
     })
 
@@ -728,6 +734,10 @@ export default defineComponent({
       onScroll,
       getPages,
       itemsPerPage,
+      currency,
+      setCurrency,
+      isPrivacyMode,
+      maskSensitiveText,
     }
   },
 })

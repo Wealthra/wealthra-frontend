@@ -18,11 +18,11 @@
       <div class="detail-grid">
         <div class="detail-row">
           <span class="lbl">{{ t('budgetDetailLimit') }}</span>
-          <span class="val">{{ formatCurrency(budget.limitAmount) }}</span>
+          <span class="val">{{ isPrivacyMode ? '••' : formatCurrency(budget.limitAmount) }}</span>
         </div>
         <div class="detail-row">
           <span class="lbl">{{ t('budgetDetailSpent') }}</span>
-          <span class="val">{{ formatCurrency(budget.currentAmount) }}</span>
+          <span class="val">{{ isPrivacyMode ? '••' : formatCurrency(budget.currentAmount) }}</span>
         </div>
         <div class="detail-row">
           <span class="lbl">{{ t('budgetDetailCurrency') }}</span>
@@ -30,7 +30,7 @@
         </div>
         <div class="detail-row">
           <span class="lbl">{{ t('budgetDetailPercentUsed') }}</span>
-          <span class="val">{{ budget.percentageUsed?.toFixed?.(1) ?? budget.percentageUsed }}%</span>
+          <span class="val">{{ isPrivacyMode ? '••%' : ((budget.percentageUsed?.toFixed?.(1) ?? budget.percentageUsed) + '%') }}</span>
         </div>
         <div class="detail-row">
           <span class="lbl">{{ t('budgetDetailStatus') }}</span>
@@ -70,8 +70,8 @@ export default defineComponent({
   },
   emits: ['close'],
   setup() {
-    const { formatCurrency } = useCurrency()
-    return { formatCurrency }
+    const { formatCurrency, isPrivacyMode } = useCurrency()
+    return { formatCurrency, isPrivacyMode }
   },
   methods: {
     t(key: keyof typeof budgetTexts.English) {

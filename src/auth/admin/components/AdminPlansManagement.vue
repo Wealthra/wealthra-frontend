@@ -100,7 +100,7 @@
                 </td>
                 <td class="price-cell" :data-label="t.price">
                   <div class="price-wrap">
-                    <span class="amount">{{ plan.monthlyPrice }}</span>
+                    <span class="amount">{{ isPrivacyMode ? '••••' : plan.monthlyPrice }}</span>
                     <span class="currency">{{ plan.priceCurrency }}</span>
                     <span class="period">/mo</span>
                   </div>
@@ -108,11 +108,11 @@
                 <td class="limits-cell" :data-label="t.limits">
                   <div class="limit-item">
                     <span class="limit-label">OCR:</span>
-                    <span class="limit-value">{{ plan.monthlyOcrLimit }}</span>
+                    <span class="limit-value">{{ formatAmount(plan.monthlyOcrLimit) }}</span>
                   </div>
                   <div class="limit-item">
                     <span class="limit-label">STT:</span>
-                    <span class="limit-value">{{ plan.monthlySttLimit }}</span>
+                    <span class="limit-value">{{ formatAmount(plan.monthlySttLimit) }}</span>
                   </div>
                 </td>
                 <td class="status-cell" :data-label="t.status">
@@ -216,10 +216,10 @@
               </div>
               <div class="user-usage-info">
                 <span
-                  >OCR: <strong>{{ user.ocrRequestsThisMonth }}</strong></span
+                  >OCR: <strong>{{ formatAmount(user.ocrRequestsThisMonth) }}</strong></span
                 >
                 <span
-                  >STT: <strong>{{ user.sttRequestsThisMonth }}</strong></span
+                  >STT: <strong>{{ formatAmount(user.sttRequestsThisMonth) }}</strong></span
                 >
               </div>
             </div>
@@ -254,6 +254,7 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import type { PropType } from 'vue'
+import { useCurrency } from '@/composables/useCurrency'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
 import type {
   AdminPlan,
@@ -294,6 +295,7 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const { formatAmount, isPrivacyMode, formatCurrency } = useCurrency()
     const plans = ref<AdminPlan[]>([])
     const usageSummary = ref<IUsageSummary | null>(null)
     const isLoadingPlans = ref(true)
@@ -502,6 +504,8 @@ export default defineComponent({
       faXmark,
       faChevronRight,
       faBan,
+      formatAmount,
+      isPrivacyMode,
     }
   },
 })

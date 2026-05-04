@@ -81,20 +81,20 @@
         <div class="alert-analysis-box">
           <div class="analysis-header">
             <span class="analysis-label">Analiz</span>
-            <span class="pct-label">{{ formatPercentage(alert) }}</span>
+            <span class="pct-label">{{ isPrivacyMode ? '••%' : formatPercentage(alert) }}</span>
           </div>
           <div class="progress-container">
             <div class="progress-track">
               <div
                 class="progress-fill"
-                :style="{ width: Math.min(100, calculatePercentage(alert)) + '%' }"
+                :style="{ width: isPrivacyMode ? '0%' : (Math.min(100, calculatePercentage(alert)) + '%') }"
               ></div>
             </div>
           </div>
           <div class="amount-display">
-            <span class="current">{{ formatCurrency(alert.currentAmount) }}</span>
+            <span class="current">{{ formatCurrencyValue(alert.currentAmount) }}</span>
             <span class="divider">/</span>
-            <span class="limit">{{ formatCurrency(alert.limitAmount) }}</span>
+            <span class="limit">{{ formatCurrencyValue(alert.limitAmount) }}</span>
           </div>
         </div>
       </div>
@@ -110,8 +110,8 @@ import { useCurrency } from '@/composables/useCurrency'
 export default {
   name: 'UIBudgetAlertsCard',
   setup() {
-    const { formatCurrency } = useCurrency()
-    return { formatCurrency }
+    const { formatCurrency, isPrivacyMode, maskSensitiveText } = useCurrency()
+    return { formatCurrency, isPrivacyMode, maskSensitiveText }
   },
   data() {
     return {
@@ -162,7 +162,7 @@ export default {
       }
       return transactionCategoryIconMap.default
     },
-    formatCurrency(amount: number) {
+    formatCurrencyValue(amount: number) {
       return this.formatCurrency(amount)
     },
     calculatePercentage(alert: SummaryBudgetAlert) {
@@ -177,13 +177,13 @@ export default {
       if (alert.status === 'Exceeded') {
         const diff = alert.currentAmount - alert.limitAmount
         return isTurkish
-          ? `Bütçenizi ${this.formatCurrency(diff)} aştınız.`
-          : `You exceeded your budget by ${this.formatCurrency(diff)}.`
+          ? `Bütçenizi ${this.formatCurrencyValue(diff)} aştınız.`
+          : `You exceeded your budget by ${this.formatCurrencyValue(diff)}.`
       }
       const remaining = alert.limitAmount - alert.currentAmount
       return isTurkish
-        ? `Limitinize ${this.formatCurrency(remaining)} kaldı.`
-        : `${this.formatCurrency(remaining)} remaining until limit.`
+        ? `Limitinize ${this.formatCurrencyValue(remaining)} kaldı.`
+        : `${this.formatCurrencyValue(remaining)} remaining until limit.`
     },
     scrollNext() {
       const list = this.$refs.listRef as HTMLElement

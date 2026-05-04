@@ -66,6 +66,8 @@ import DatePicker from 'vue-datepicker-next'
 import 'vue-datepicker-next/index.css'
 import { exportService } from '@/services/api/export/export.service'
 import UISelect from '@/components/UISelect.vue'
+import { useCurrency } from '@/composables/useCurrency'
+import { watch } from 'vue'
 
 export default defineComponent({
   name: 'UIExportModal',
@@ -80,10 +82,17 @@ export default defineComponent({
   setup(props) {
     const startDate = ref(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
     const endDate = ref(new Date().toISOString().split('T')[0])
+    const { currency: globalCurrency } = useCurrency()
     const format = ref<'PDF' | 'Excel'>('PDF')
-    const currency = ref<'USD' | 'EUR' | 'TRY'>('USD')
+    const currency = ref<'USD' | 'EUR' | 'TRY'>(globalCurrency.value as any || 'USD')
     const language = ref<'English' | 'Turkish'>(props.selectedLanguage === 'Turkish' ? 'Turkish' : 'English')
     const isDownloading = ref(false)
+
+    // Watch for global currency changes and update local selection if not modified by user?
+    // Actually, usually users want the modal to reflect current dashboard state.
+    watch(globalCurrency, (newVal) => {
+      currency.value = newVal as any
+    })
 
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'

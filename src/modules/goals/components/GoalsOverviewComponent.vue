@@ -11,7 +11,7 @@
             <div class="goals-overview-titles">
               <div class="goals-overview-component-title">{{ goalsOverviewText }}</div>
               <div v-if="totalGoals != null && totalGoals > 0" class="goals-overview-stats">
-                {{ t('totalGoals') }}: {{ totalGoals }} · {{ t('achievedGoals') }}: {{ achievedGoals }}
+                {{ t('totalGoals') }}: {{ isPrivacyMode ? '••' : totalGoals }} · {{ t('achievedGoals') }}: {{ isPrivacyMode ? '••' : achievedGoals }}
               </div>
             </div>
             <button type="button" class="analysis-btn" @click="$emit('showAnalysis')">
@@ -38,7 +38,7 @@
           <div v-if="!isMobile" class="goals-overview-component-progress-bar">
             <div
               class="goals-overview-component-progress-bar-fill"
-              :style="{ width: progressBarWidthPercentage + '%' }"
+              :style="{ width: isPrivacyMode ? '0%' : (progressBarWidthPercentage + '%') }"
             ></div>
           </div>
           <!-- Mobile only: doughnut chart + center text -->
@@ -50,10 +50,10 @@
               class="goals-overview-doughnut"
             />
             <div class="goals-overview-doughnut-center" aria-hidden="true">
-              {{ centerText }}
+              {{ isPrivacyMode ? '••••' : centerText }}
             </div>
           </div>
-          <div v-if="!isMobile" class="goals-overview-component-percentage">{{ displayPercentage }}</div>
+          <div v-if="!isMobile" class="goals-overview-component-percentage">{{ isPrivacyMode ? '••%' : displayPercentage }}</div>
         </template>
       </div>
     </div>
@@ -61,6 +61,7 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue'
 import { Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -77,8 +78,13 @@ ChartJS.register(ArcElement, CategoryScale, LinearScale, Tooltip)
 
 const MOBILE_BREAKPOINT = 768
 
-export default {
+export default defineComponent({
   name: 'GoalsOverviewComponent',
+
+  setup() {
+    const { formatCurrency, isPrivacyMode } = useCurrency()
+    return { formatCurrency, isPrivacyMode }
+  },
 
   components: {
     Doughnut,
@@ -110,11 +116,6 @@ export default {
       type: Boolean,
       default: false,
     },
-  },
-
-  setup() {
-    const { formatCurrency } = useCurrency()
-    return { formatCurrency }
   },
 
   methods: {
@@ -177,8 +178,8 @@ export default {
         labels: ['Current', 'Remaining'],
         datasets: [
           {
-            data: [used, remaining],
-            backgroundColor: [usedColor, remainingColor],
+            data: this.isPrivacyMode ? [0, 100] : [used, remaining],
+            backgroundColor: this.isPrivacyMode ? [remainingColor, remainingColor] : [usedColor, remainingColor],
             borderWidth: 0,
             hoverOffset: 4,
           },
@@ -187,6 +188,7 @@ export default {
     },
 
     doughnutOptions() {
+      void this.isPrivacyMode // Trigger reactivity
       const fmt = (n: number) => n.toLocaleString('en-US')
       const limit = this.limitAmount
       const used = this.currentAmount
@@ -230,7 +232,7 @@ export default {
       this.isMobile = e.matches
     })
   },
-}
+})
 </script>
 
 <style scoped lang="scss">

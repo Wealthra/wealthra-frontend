@@ -4,19 +4,19 @@
     <div class="stat-grid">
       <div class="stat-card">
         <div class="stat-label">{{ t.totalUsers }}</div>
-        <div class="stat-value">{{ summary.totalUsers }}</div>
+        <div class="stat-value">{{ formatAmount(summary.totalUsers) }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">{{ t.activePlans }}</div>
-        <div class="stat-value">{{ summary.activePlans }}</div>
+        <div class="stat-value">{{ formatAmount(summary.activePlans) }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">{{ t.totalOcr }}</div>
-        <div class="stat-value">{{ summary.totalOcrRequestsThisMonth }}</div>
+        <div class="stat-value">{{ formatAmount(summary.totalOcrRequestsThisMonth) }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">{{ t.totalStt }}</div>
-        <div class="stat-value">{{ summary.totalSttRequestsThisMonth }}</div>
+        <div class="stat-value">{{ formatAmount(summary.totalSttRequestsThisMonth) }}</div>
       </div>
     </div>
 
@@ -38,9 +38,9 @@
               <td :data-label="t.plan">
                 <span class="plan-name-tag">{{ item.planName }}</span>
               </td>
-              <td :data-label="t.userCount">{{ item.userCount }}</td>
-              <td :data-label="t.ocrUsage">{{ item.totalOcrRequests }}</td>
-              <td :data-label="t.sttUsage">{{ item.totalSttRequests }}</td>
+              <td :data-label="t.userCount">{{ formatAmount(item.userCount) }}</td>
+              <td :data-label="t.ocrUsage">{{ formatAmount(item.totalOcrRequests) }}</td>
+              <td :data-label="t.sttUsage">{{ formatAmount(item.totalSttRequests) }}</td>
             </tr>
           </tbody>
         </table>
@@ -53,6 +53,7 @@
 import { defineComponent, computed } from 'vue'
 import type { PropType } from 'vue'
 import type { AdminUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
+import { useCurrency } from '@/composables/useCurrency'
 
 export default defineComponent({
   name: 'AdminUsageSummary',
@@ -67,6 +68,8 @@ export default defineComponent({
     }
   },
   setup(props) {
+    const { formatAmount } = useCurrency()
+
     const t = computed(() => {
       const isTr = props.selectedLanguage === 'Turkish'
       return {
@@ -82,7 +85,7 @@ export default defineComponent({
       }
     })
 
-    return { t }
+    return { t, formatAmount }
   }
 })
 </script>

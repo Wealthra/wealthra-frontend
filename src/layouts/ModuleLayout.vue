@@ -1,7 +1,5 @@
 <template>
   <div class="app-layout-container">
-
-
     <UIAnnouncementBanner v-if="!isUserAdmin" :selectedLanguage="selectedLanguage" />
 
     <!-- Left Sidebar -->
@@ -87,26 +85,42 @@
           <div class="usage-item">
             <div class="usage-label">
               <span>OCR</span>
-              <span class="usage-value">{{ usageData.ocrRequestsThisMonth }} / {{ usageData.monthlyOcrLimit || '∞' }}</span>
+              <span class="usage-value"
+                >{{ usageData.ocrRequestsThisMonth }} / {{ usageData.monthlyOcrLimit || '∞' }}</span
+              >
             </div>
             <div class="usage-bar-bg">
-              <div 
-                class="usage-bar-fill" 
-                :class="{ 'warning': (usageData.ocrRequestsThisMonth / (usageData.monthlyOcrLimit || 1)) > 0.8 }"
-                :style="{ width: getUsagePercentage(usageData.ocrRequestsThisMonth, usageData.monthlyOcrLimit) + '%' }"
+              <div
+                class="usage-bar-fill"
+                :class="{
+                  warning: usageData.ocrRequestsThisMonth / (usageData.monthlyOcrLimit || 1) > 0.8,
+                }"
+                :style="{
+                  width:
+                    getUsagePercentage(usageData.ocrRequestsThisMonth, usageData.monthlyOcrLimit) +
+                    '%',
+                }"
               ></div>
             </div>
           </div>
           <div class="usage-item">
             <div class="usage-label">
               <span>{{ normalizedLanguage === 'English' ? 'Voice' : 'Ses' }}</span>
-              <span class="usage-value">{{ usageData.sttRequestsThisMonth }} / {{ usageData.monthlySttLimit || '∞' }}</span>
+              <span class="usage-value"
+                >{{ usageData.sttRequestsThisMonth }} / {{ usageData.monthlySttLimit || '∞' }}</span
+              >
             </div>
             <div class="usage-bar-bg">
-              <div 
-                class="usage-bar-fill" 
-                :class="{ 'warning': (usageData.sttRequestsThisMonth / (usageData.monthlySttLimit || 1)) > 0.8 }"
-                :style="{ width: getUsagePercentage(usageData.sttRequestsThisMonth, usageData.monthlySttLimit) + '%' }"
+              <div
+                class="usage-bar-fill"
+                :class="{
+                  warning: usageData.sttRequestsThisMonth / (usageData.monthlySttLimit || 1) > 0.8,
+                }"
+                :style="{
+                  width:
+                    getUsagePercentage(usageData.sttRequestsThisMonth, usageData.monthlySttLimit) +
+                    '%',
+                }"
               ></div>
             </div>
           </div>
@@ -160,11 +174,7 @@
             <font-awesome-icon :icon="faDownload" />
           </button>
 
-          <button
-            class="refetch-btn"
-            @click="handleRefetch"
-            :title="texts.refetch"
-          >
+          <button class="refetch-btn" @click="handleRefetch" :title="texts.refetch">
             <font-awesome-icon :icon="faRotateRight" />
           </button>
 
@@ -177,7 +187,28 @@
             <font-awesome-icon :icon="isPrivacyMode ? faEyeSlash : faEye" />
           </button>
 
-          <UILanguageButton @updateLanguage="emitUpdateLanguage" />
+          <UISelect
+            :model-value="selectedLanguage"
+            class="language-select-topbar"
+            :options="[
+              { label: 'English', value: 'English' },
+              { label: 'Turkish', value: 'Turkish' },
+            ]"
+            compact
+            @update:model-value="val => emitUpdateLanguage(val as string)"
+          />
+          <UISelect
+            :model-value="currency"
+            class="currency-select-topbar"
+            :label="selectedLanguage === 'English' ? 'Currency' : 'Para Birimi'"
+            compact
+            :options="[
+              { label: 'USD ($)', value: 'USD' },
+              { label: 'EUR (€)', value: 'EUR' },
+              { label: 'TRY (₺)', value: 'TRY' },
+            ]"
+            @update:model-value="val => setCurrency(val as any)"
+          />
           <UIThemeButton />
           <!-- Profile Section -->
           <div class="profile-section-wrapper" ref="profileWrapperRef">
@@ -226,11 +257,7 @@
     </div>
 
     <!-- Copilot Chatbot -->
-    <CopilotChat 
-      v-if="!isUserAdmin" 
-      :selectedLanguage="selectedLanguage" 
-      :usageData="usageData"
-    />
+    <CopilotChat v-if="!isUserAdmin" :selectedLanguage="selectedLanguage" :usageData="usageData" />
 
     <UIExportModal
       v-if="isExportModalOpen"
@@ -243,10 +270,10 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import UILanguageButton from '@/components/UILanguageButton.vue'
 import UIThemeButton from '@/components/UIThemeButton.vue'
 import CopilotChat from '@/components/CopilotChat.vue'
 import UIExportModal from '@/modules/dashboard/components/UIExportModal.vue'
+import UISelect from '@/components/UISelect.vue'
 import { clearAuth, getUserId, isAdmin, setAdminStatus } from '@/utils/auth'
 import UIAnnouncementBanner from '@/components/UIAnnouncementBanner.vue'
 import { arrowIcons, leftSidebarIconMap, profileIcon } from '@/icons/fontawesome-icons'
@@ -261,17 +288,20 @@ import { accountService } from '@/services/api/account/account.service'
 import { useCurrency } from '@/composables/useCurrency'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import { notificationService } from '@/services/api/notification/notification.service'
+import { notificationHub, type NotificationDto } from '@/services/api/notification/notification.hub'
+import { adminHub } from '@/services/api/admin/admin.hub'
 import type { AccountUserUsageResponse } from '@/services/api/account/account.models'
+import notificationSound from '@/assets/notification.wav'
 
 export default defineComponent({
   name: 'ModuleLayout',
   components: {
-    UILanguageButton,
     UIThemeButton,
     CopilotChat,
     UIAnnouncementBanner,
     UISkeletonLoader,
     UIExportModal,
+    UISelect,
   },
   props: {
     selectedLanguage: {
@@ -298,7 +328,7 @@ export default defineComponent({
     const unreadNotificationsCount = ref(0)
     const usageData = ref<AccountUserUsageResponse | null>(null)
 
-    const { isPrivacyMode, togglePrivacyMode } = useCurrency()
+    const { isPrivacyMode, togglePrivacyMode, currency, setCurrency } = useCurrency()
 
     const userFirstName = ref<string>('')
     const userLastName = ref<string>('')
@@ -317,7 +347,16 @@ export default defineComponent({
 
     const leftBarContent: Record<Language, readonly string[]> = {
       English: leftBarContentEnglish as readonly string[],
-      Turkish: ['Kontrol Paneli', 'Öneriler', 'Gelir', 'Giderler', 'Bütçe', 'Hedefler', 'Destek', 'Ayarlar'],
+      Turkish: [
+        'Kontrol Paneli',
+        'Öneriler',
+        'Gelir',
+        'Giderler',
+        'Bütçe',
+        'Hedefler',
+        'Destek',
+        'Ayarlar',
+      ],
     }
 
     const route = useRoute()
@@ -343,6 +382,20 @@ export default defineComponent({
       if (event.detail !== undefined) {
         unreadNotificationsCount.value = event.detail
       }
+    }
+
+    const playNotificationSound = () => {
+      const audio = new Audio(notificationSound)
+      audio.volume = 0.4
+      audio.play().catch(err => console.error('Failed to play notification sound:', err))
+    }
+
+    const onNotificationReceived = (notification: NotificationDto) => {
+      unreadNotificationsCount.value++
+      playNotificationSound()
+
+      // Optional: Dispatch a custom event if other components need to know
+      window.dispatchEvent(new CustomEvent('new-notification', { detail: notification }))
     }
 
     const fetchInitialUnreadCount = async () => {
@@ -371,6 +424,13 @@ export default defineComponent({
       loadCurrentUser()
       fetchInitialUnreadCount()
       fetchUsageData()
+
+      notificationHub.onNotificationReceived(onNotificationReceived)
+      notificationHub.start()
+
+      if (isUserAdmin.value) {
+        adminHub.start()
+      }
     })
 
     onBeforeUnmount(() => {
@@ -378,6 +438,10 @@ export default defineComponent({
       window.removeEventListener('unread-notifications-updated', handleUnreadUpdate)
       window.removeEventListener('app:refetch', fetchUsageData)
       window.removeEventListener('app:refetch-usage', fetchUsageData)
+
+      notificationHub.offNotificationReceived(onNotificationReceived)
+      notificationHub.stop()
+      adminHub.stop()
     })
 
     const emitUpdateLanguage = (language: string) => {
@@ -510,10 +574,10 @@ export default defineComponent({
           'Admin Ayarları',
         ]
         const content = lang === 'Turkish' ? adminContentTurkish : adminContentEnglish
-        
+
         return adminContentEnglish.map((eng, idx) => ({
           englishLabel: eng,
-          label: content[idx]
+          label: content[idx],
         }))
       }
 
@@ -610,10 +674,12 @@ export default defineComponent({
       faRotateRight,
       faEye,
       faEyeSlash,
+      currency,
+      setCurrency,
       getUsagePercentage: (used: number, limit: number | null) => {
         if (!limit) return 0
         return Math.min(Math.round((used / limit) * 100), 100)
-      }
+      },
     }
   },
 })
@@ -713,8 +779,14 @@ export default defineComponent({
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .layout-loading-skeleton {
@@ -797,6 +869,8 @@ export default defineComponent({
     .refetch-btn {
       background: rgba(119, 119, 119, 0.1);
       border: 1px solid rgba(119, 119, 119, 0.3);
+      background: rgba(119, 119, 119, 0.1);
+      border: 1px solid rgba(119, 119, 119, 0.3);
       color: var(--normal-text-color);
       font-size: 11px;
       cursor: pointer;
@@ -822,16 +896,6 @@ export default defineComponent({
 
       &.notifications-btn-layout {
         position: relative;
-        color: var(--primary-pink-color);
-        border: 1px solid rgba(255, 105, 180, 0.45);
-        background-color: rgba(255, 105, 180, 0.12);
-
-        &:hover {
-          background-color: rgba(255, 105, 180, 0.2);
-          border-color: rgba(255, 105, 180, 0.7);
-          color: var(--primary-pink-color);
-        }
-
         .notification-badge {
           position: absolute;
           top: -6px;
@@ -853,26 +917,29 @@ export default defineComponent({
       }
 
       &.export-btn-layout {
-        color: var(--primary-green-color);
-        border: 1px solid rgba(92, 184, 92, 0.45);
-        background-color: rgba(92, 184, 92, 0.12);
-
-        &:hover {
-          background-color: rgba(92, 184, 92, 0.2);
-          border-color: rgba(92, 184, 92, 0.7);
-          color: var(--reverse-primary-green-color);
-        }
       }
 
       &.privacy-btn-layout {
-        color: var(--primary-blue-color);
-        border: 1px solid rgba(133, 193, 233, 0.45);
-        background-color: rgba(133, 193, 233, 0.12);
+      }
+    }
+
+    .currency-select-topbar,
+    .language-select-topbar {
+      min-width: 100px;
+      :deep(.select-trigger) {
+        height: 32px;
+        padding: 0 10px;
+        border-radius: 8px;
+        background: rgba(119, 119, 119, 0.1);
+        border: 1px solid rgba(119, 119, 119, 0.3);
+        color: var(--normal-text-color);
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
 
         &:hover {
-          background-color: rgba(133, 193, 233, 0.2);
-          border-color: rgba(133, 193, 233, 0.7);
-          color: var(--reverse-primary-blue-color);
+          background: rgba(119, 119, 119, 0.15);
+          border-color: rgba(119, 119, 119, 0.5);
         }
       }
     }
@@ -979,7 +1046,7 @@ export default defineComponent({
   }
 
   &.navbar-c--expanded {
-    width: 250px;
+    width: 280px;
   }
 
   .navbar-collapsed {
@@ -1044,7 +1111,7 @@ export default defineComponent({
       flex-direction: column;
       width: 100%;
       gap: 4px;
-      padding: 0 12px;
+      padding: 0 8px;
     }
   }
 
@@ -1052,12 +1119,12 @@ export default defineComponent({
     position: relative;
     width: 100%;
     height: 40px;
-    padding: 0 12px;
+    padding: 0 10px;
     border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     transition:
       transform 0.2s ease,
       opacity 0.2s ease;
@@ -1076,6 +1143,9 @@ export default defineComponent({
       font-size: 14px;
       color: var(--normal-text-color);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
     }
 
     &:hover {
@@ -1206,8 +1276,6 @@ export default defineComponent({
   }
 }
 
-
-
 /* ============================
    Media Queries
    ============================ */
@@ -1273,6 +1341,14 @@ export default defineComponent({
         padding: 6px 12px;
         font-size: 13px;
       }
+
+      .currency-select-topbar,
+      .language-select-topbar {
+        width: auto;
+        min-width: 100px;
+        max-width: 130px;
+        flex: 0 1 auto;
+      }
     }
   }
 
@@ -1298,12 +1374,13 @@ export default defineComponent({
 
     .sidebar-top,
     .sidebar-bottom,
-    .navbar-divider {
+    .navbar-divider,
+    .sidebar-usage-container {
       display: none;
     }
 
     .sidebar-middle {
-      padding: 0 16px;
+      padding: 0 12px;
       flex: 1;
       justify-content: flex-start;
       overflow-x: auto;
@@ -1312,22 +1389,42 @@ export default defineComponent({
       align-items: center;
       -webkit-overflow-scrolling: touch;
 
+      /* Hide Scrollbar */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       &::-webkit-scrollbar {
         display: none;
       }
+
+      /* Premium Edge Fades (Gradients) */
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 15px,
+        black calc(100% - 15px),
+        transparent
+      );
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 15px,
+        black calc(100% - 15px),
+        transparent
+      );
 
       .middle-wrapper {
         flex-direction: row;
         justify-content: flex-start;
         height: 100%;
         align-items: center;
-        gap: 8px;
+        gap: 12px; /* Increased gap for better spacing */
         width: auto;
+        padding: 0 4px; /* Slight internal padding for the mask */
       }
 
       .icon-wrapper {
         width: auto;
-        padding: 8px 12px;
+        padding: 8px 14px;
         margin: 0;
         flex-shrink: 0;
         min-width: max-content;
@@ -1337,7 +1434,7 @@ export default defineComponent({
           font-size: 13px;
         }
       }
-      
+
       .menu-item-container {
         flex-shrink: 0;
       }

@@ -97,10 +97,15 @@ export default {
       selectedBudgetId: null as number | null,
     }
   },
+  watch: {
+    currency() {
+      this.loadAppropriateData()
+    },
+  },
   methods: {
     async fetchOverview() {
       try {
-        const data = await budgetService.getBudgetsOverview()
+        const data = await budgetService.getBudgetsOverview(this.currency)
         this.overviewTotalSpent = data.totalSpent ?? 0
         this.overviewTotalLimit = data.totalLimit ?? 0
       } catch {
@@ -111,7 +116,7 @@ export default {
 
     async fetchBudgets() {
       try {
-        const data = await budgetService.getBudgets()
+        const data = await budgetService.getBudgets(this.currency)
         this.budgets = data ?? []
       } catch {
         console.error('Error fetching budgets')
@@ -120,7 +125,7 @@ export default {
 
     async fetchMonthlyBreakdown() {
       try {
-        const data = await budgetService.getBudgetsMonthly()
+        const data = await budgetService.getBudgetsMonthly(this.currency)
         this.monthlyBreakdown = data.categoryBreakdown ?? []
       } catch {
         console.error('Error fetching monthly breakdown')
@@ -178,7 +183,7 @@ export default {
       this.budgetDetailLoading = true
       this.budgetDetail = null
       try {
-        this.budgetDetail = await budgetService.getBudgetById(id)
+        this.budgetDetail = await budgetService.getBudgetById(id, this.currency)
       } catch {
         this.budgetDetail = null
       } finally {

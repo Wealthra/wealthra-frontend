@@ -45,12 +45,12 @@
                   <div class="progress-bar">
                     <div 
                       class="progress-fill" 
-                      :style="{ width: Math.min(item.percentageUsed, 100) + '%' }"
+                      :style="{ width: isPrivacyMode ? '0%' : (Math.min(item.percentageUsed, 100) + '%') }"
                       :class="item.status.toLowerCase()"
                     ></div>
                   </div>
                   <div class="progress-labels">
-                    <span class="percent">{{ item.percentageUsed.toFixed(1) }}%</span>
+                    <span class="percent">{{ isPrivacyMode ? '••%' : (item.percentageUsed.toFixed(1) + '%') }}</span>
                     <span class="remaining">{{ t('remaining') }}: {{ formatCurrency(item.remainingAmount) }}</span>
                   </div>
                 </div>
@@ -101,8 +101,8 @@ export default defineComponent({
   },
   emits: ['close'],
   setup() {
-    const { formatCurrency } = useCurrency()
-    return { formatCurrency }
+    const { formatCurrency, isPrivacyMode } = useCurrency()
+    return { formatCurrency, isPrivacyMode }
   },
   methods: {
     t(key: string) {

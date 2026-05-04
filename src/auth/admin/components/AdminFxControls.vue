@@ -93,7 +93,7 @@
                   autoFocus
                 />
               </template>
-              <span v-else class="rate-value">{{ rate.rate.toFixed(4) }}</span>
+              <span v-else class="rate-value">{{ isPrivacyMode ? '••••' : rate.rate.toFixed(4) }}</span>
             </div>
             <div class="col col-updated" :data-label="selectedLanguage === 'Turkish' ? 'Son Güncelleme' : 'Last Updated'">
               <span class="date-text">{{ formatDate(rate.updatedOn) }}</span>
@@ -148,6 +148,7 @@ import { adminService } from '@/services/api/admin/admin.service'
 import type { FxRate, CreateFxRateRequest } from '@/services/api/admin/admin.models'
 import UISkeletonLoader from '@/components/UISkeletonLoader.vue'
 import UISelect from '@/components/UISelect.vue'
+import { useCurrency } from '@/composables/useCurrency'
 import { emptyStateIcons } from '@/icons/fontawesome-icons'
 
 export default defineComponent({
@@ -160,6 +161,7 @@ export default defineComponent({
     }
   },
   setup(props) {
+    const { isPrivacyMode } = useCurrency()
     const manualRates = ref<FxRate[]>([])
     const isLoadingRates = ref(true)
     const isSavingRate = ref(false)
@@ -276,6 +278,7 @@ export default defineComponent({
       isConfirmingDeleteId,
       formatDate,
       handleGlobalRefetch,
+      isPrivacyMode,
       emptyStateIcons
     }
   }

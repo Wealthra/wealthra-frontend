@@ -12,12 +12,14 @@ export const incomeService = {
     EndDate?: string
     PageNumber?: number
     PageSize?: number
+    currency?: string
   } = {}): Promise<IncomesApiListResponse> {
     const searchParams = new URLSearchParams()
     if (params.StartDate) searchParams.append('StartDate', params.StartDate)
     if (params.EndDate) searchParams.append('EndDate', params.EndDate)
     if (params.PageNumber != null) searchParams.append('PageNumber', String(params.PageNumber))
     if (params.PageSize != null) searchParams.append('PageSize', String(params.PageSize))
+    if (params.currency) searchParams.append('currency', params.currency)
 
     const query = searchParams.toString()
     const endpoint = query ? `Incomes?${query}` : 'Incomes'
@@ -35,8 +37,9 @@ export const incomeService = {
     })
   },
 
-  async getIncomeById(id: number): Promise<IncomeApiModel> {
-    return apiRequest<IncomeApiModel>(`Incomes/${id}`, {
+  async getIncomeById(id: number, currency?: string): Promise<IncomeApiModel> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : ''
+    return apiRequest<IncomeApiModel>(`Incomes/${id}${query}`, {
       method: 'GET',
     })
   },
