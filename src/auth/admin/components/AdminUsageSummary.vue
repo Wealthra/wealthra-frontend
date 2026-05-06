@@ -151,7 +151,7 @@ export default defineComponent({
 .table-container {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-x: auto;
 }
 
@@ -234,5 +234,24 @@ export default defineComponent({
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+  .usage-summary-container {
+    min-height: auto;
+    height: auto;
+    overflow-x: hidden;
+  }
+
+  .table-container {
+    flex: none;
+    min-height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .glass-card {
+    padding: 16px;
+  }
 }
 </style>

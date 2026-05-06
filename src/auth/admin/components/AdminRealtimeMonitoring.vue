@@ -436,6 +436,27 @@ export default defineComponent({
   }
 }
 
+@media (max-width: 768px) {
+  .admin-realtime-monitoring {
+    flex: none;
+    min-height: auto;
+  }
+
+  .activity-feed-container {
+    flex: none;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .feed-list {
+    flex: none;
+    overflow: visible;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: none;
+  }
+}
+
 .activity-item {
   display: flex;
   align-items: center;

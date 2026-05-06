@@ -412,6 +412,8 @@ export default {
   }
 
   .income-content {
+    flex: none;
+    min-height: auto;
     padding: 0 0.5rem;
     gap: 1rem;
 
@@ -420,6 +422,8 @@ export default {
       gap: 0.5rem;
     }
     .statistics-wrapper {
+      flex: none;
+      min-height: auto;
       flex-direction: column;
       gap: 1rem;
     }

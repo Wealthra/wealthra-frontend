@@ -1248,6 +1248,8 @@ export default {
 
 @media (max-width: 1200px) {
   .goals-table-container {
+    flex: none;
+    min-height: auto;
     padding: 1rem;
     width: 100%;
 
@@ -1302,6 +1304,15 @@ export default {
       height: 2.75rem !important;
       min-height: 2.75rem !important;
       font-size: 0.875rem !important;
+    }
+
+    .table-wrap {
+      flex: none;
+      min-height: 10rem;
+      overflow: visible;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 0;
     }
 
     .table-header {

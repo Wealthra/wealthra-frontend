@@ -839,7 +839,8 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: max(var(--spacing-md), env(safe-area-inset-top)) var(--spacing-md) var(--spacing-sm) var(--spacing-md);
+  padding: max(var(--spacing-md), env(safe-area-inset-top)) var(--spacing-md) var(--spacing-sm)
+    var(--spacing-md);
   gap: var(--spacing-md);
   background-color: transparent;
 
@@ -1443,15 +1444,16 @@ export default defineComponent({
       }
 
       .icon-wrapper {
-        width: auto;
-        padding: 8px 14px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
         margin: 0;
         flex-shrink: 0;
-        min-width: max-content;
+        min-width: 44px;
+        justify-content: center;
 
         .nav-label {
-          display: block;
-          font-size: 13px;
+          display: none;
         }
       }
 

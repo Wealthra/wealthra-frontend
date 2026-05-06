@@ -286,11 +286,14 @@ export default {
 
 @media (max-width: 768px) {
   .goals-content {
+    flex: none;
+    min-height: auto;
     padding: 0 0.5rem;
     gap: 1rem;
   }
 
   .goals-table-wrap {
+    flex: none;
     min-height: 18rem;
   }
 }

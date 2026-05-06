@@ -72,6 +72,10 @@ export default defineComponent({
 
 @media (max-width: 768px) {
   .admin-system-monitor {
+    flex: none;
+    min-height: auto;
+    height: auto;
+    overflow: visible;
     gap: 1rem;
   }
 }

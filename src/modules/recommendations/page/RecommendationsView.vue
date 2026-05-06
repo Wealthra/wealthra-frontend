@@ -754,6 +754,15 @@ export default defineComponent({
   animation: fadeIn 0.5s ease-out;
 }
 
+@media (max-width: 768px) {
+  .recommendations-view {
+    /* Avoid nested vertical scroll trap on touch devices. */
+    flex: none;
+    min-height: auto;
+    overflow: visible;
+  }
+}
+
 /* Module Container */
 .module-container {
   display: flex;
@@ -764,6 +773,13 @@ export default defineComponent({
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
   height: 100%;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .module-container {
+    height: auto;
+    overflow: visible;
+  }
 }
 
 /* Header Section */
@@ -876,6 +892,15 @@ export default defineComponent({
   &::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    flex: none;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: auto;
+    padding: 1rem;
   }
 }
 

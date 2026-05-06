@@ -5,7 +5,12 @@
       <div v-if="activeTab === 'overview'" class="tab-pane overview-pane">
         <div v-if="isLoading" class="admin-loading-skeleton w-full">
           <div class="kpi-grid">
-            <UISkeletonLoader v-for="i in 4" :key="'kpi-' + i" height="120px" border-radius="16px" />
+            <UISkeletonLoader
+              v-for="i in 4"
+              :key="'kpi-' + i"
+              height="120px"
+              border-radius="16px"
+            />
           </div>
           <div class="dashboard-grid mt-8">
             <div class="col-span-12">
@@ -22,52 +27,52 @@
         </section>
       </div>
 
-        <!-- User Management Tab -->
-        <div v-if="activeTab === 'users'" class="tab-pane">
-          <section id="users" class="admin-section flex-column-fill">
-            <AdminUserManagement :selectedLanguage="selectedLanguage" />
-          </section>
-        </div>
-
-        <!-- Plans & Subscriptions Tab -->
-        <div v-if="activeTab === 'plans'" class="tab-pane">
-          <section id="plans" class="admin-section flex-column-fill">
-            <AdminPlansManagement :selectedLanguage="selectedLanguage" />
-          </section>
-        </div>
-
-        <!-- Support Tab -->
-        <div v-if="activeTab === 'support'" class="tab-pane">
-          <section class="admin-section flex-column-fill">
-            <AdminSupportTickets :selectedLanguage="selectedLanguage" />
-          </section>
-        </div>
-
-        <!-- Operations Tab -->
-        <div v-if="activeTab === 'operations'" class="tab-pane">
-          <section class="admin-section flex-column-fill">
-            <AdminOperations :selectedLanguage="selectedLanguage" />
-          </section>
-        </div>
-
-        <!-- Security & Monitoring Tab -->
-        <div v-if="activeTab === 'security'" class="tab-pane">
-          <section class="admin-section flex-column-fill">
-            <AdminSecurityMonitoring :selectedLanguage="selectedLanguage" />
-          </section>
-        </div>
-
-        <!-- Settings Tab -->
-        <div v-if="activeTab === 'settings'" class="tab-pane">
-          <SettingsView :selectedLanguage="selectedLanguage" :hide-usage-section="true" />
-        </div>
+      <!-- User Management Tab -->
+      <div v-if="activeTab === 'users'" class="tab-pane">
+        <section id="users" class="admin-section flex-column-fill">
+          <AdminUserManagement :selectedLanguage="selectedLanguage" />
+        </section>
       </div>
+
+      <!-- Plans & Subscriptions Tab -->
+      <div v-if="activeTab === 'plans'" class="tab-pane">
+        <section id="plans" class="admin-section flex-column-fill">
+          <AdminPlansManagement :selectedLanguage="selectedLanguage" />
+        </section>
+      </div>
+
+      <!-- Support Tab -->
+      <div v-if="activeTab === 'support'" class="tab-pane">
+        <section class="admin-section flex-column-fill">
+          <AdminSupportTickets :selectedLanguage="selectedLanguage" />
+        </section>
+      </div>
+
+      <!-- Operations Tab -->
+      <div v-if="activeTab === 'operations'" class="tab-pane">
+        <section class="admin-section flex-column-fill">
+          <AdminOperations :selectedLanguage="selectedLanguage" />
+        </section>
+      </div>
+
+      <!-- Security & Monitoring Tab -->
+      <div v-if="activeTab === 'security'" class="tab-pane">
+        <section class="admin-section flex-column-fill">
+          <AdminSecurityMonitoring :selectedLanguage="selectedLanguage" />
+        </section>
+      </div>
+
+      <!-- Settings Tab -->
+      <div v-if="activeTab === 'settings'" class="tab-pane">
+        <SettingsView :selectedLanguage="selectedLanguage" :hide-usage-section="true" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, onMounted, onBeforeUnmount, ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { adminPlansService } from '@/services/api/adminPlans/adminPlans.service'
 import type { AdminUsageSummary as IUsageSummary } from '@/services/api/adminPlans/adminPlans.models'
 
@@ -95,9 +100,10 @@ export default defineComponent({
   },
   setup() {
     const route = useRoute()
-    const router = useRouter()
-
-    const ROUTE_TO_TAB: Record<string, 'overview' | 'users' | 'plans' | 'support' | 'operations' | 'security' | 'settings'> = {
+    const ROUTE_TO_TAB: Record<
+      string,
+      'overview' | 'users' | 'plans' | 'support' | 'operations' | 'security' | 'settings'
+    > = {
       'admin-overview': 'overview',
       'admin-users': 'users',
       'admin-plans': 'plans',
@@ -186,6 +192,8 @@ export default defineComponent({
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .tab-content {
@@ -193,12 +201,14 @@ export default defineComponent({
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 .tab-pane {
   display: flex;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 
   &.overview-pane {
     display: flex;
@@ -212,6 +222,7 @@ export default defineComponent({
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 .mt-8 {
@@ -222,7 +233,9 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 48px;
-  &.w-full { width: 100%; }
+  &.w-full {
+    width: 100%;
+  }
 }
 
 .admin-section {

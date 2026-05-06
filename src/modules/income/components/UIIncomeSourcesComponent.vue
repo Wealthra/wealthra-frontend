@@ -1550,7 +1550,8 @@ export default defineComponent({
 @media (max-width: 1024px) {
   .income-sources-container {
     width: 100%;
-    min-height: 0;
+    flex: none;
+    min-height: auto;
     height: auto;
     padding: 1rem;
   }
@@ -1633,8 +1634,12 @@ export default defineComponent({
   }
 
   .table-wrap {
+    flex: none;
     overflow: visible;
+    overflow-x: auto;
     min-height: 10rem;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 0;
   }
 
   .income-sources-container .table-header,
@@ -1716,7 +1721,8 @@ export default defineComponent({
 @media (max-width: 1200px) {
   .income-sources-container {
     width: 100%;
-    min-height: 0;
+    flex: none;
+    min-height: auto;
     height: auto;
     padding: 1rem;
   }

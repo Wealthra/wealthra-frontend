@@ -460,6 +460,13 @@ export default defineComponent({
   flex: 1 1 auto;
 }
 
+@media (max-width: 768px) {
+  .tickets-content {
+    flex: none;
+    min-height: auto;
+  }
+}
+
 .tickets-table-container {
   display: flex;
   flex-direction: column;
@@ -958,6 +965,8 @@ export default defineComponent({
 
 @media (max-width: 1200px) {
   .tickets-table-container {
+    flex: none;
+    min-height: auto;
     padding: 1rem;
     .header {
       flex-direction: column;
@@ -1009,6 +1018,14 @@ export default defineComponent({
     .filter-skeleton {
       height: 2.75rem !important;
       background-color: var(--background-color-soft) !important;
+    }
+    .table-wrap {
+      flex: none;
+      min-height: 10rem;
+      overflow: visible;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 0;
     }
     .table-header {
       display: none;

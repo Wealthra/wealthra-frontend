@@ -246,33 +246,38 @@ export default {
 
 @media (max-width: 1024px) {
   .budget-content {
-    flex: 0 0 auto;
-    min-height: min-content;
+    flex: none;
+    min-height: auto;
   }
 
   .budget-categories-notifications {
     flex: none;
-    min-height: 0;
+    min-height: auto;
   }
 
   .budget-table-wrap {
+    flex: none;
     min-height: 20rem;
   }
 }
 
 @media (max-width: 768px) {
   .budget-content {
+    flex: none;
+    min-height: auto;
     padding: 0 0.5rem;
     gap: 1rem;
   }
 
   .budget-categories-notifications {
+    flex: none;
+    min-height: auto;
     flex-direction: column;
     gap: 1rem;
   }
 
   .budget-table-wrap {
-    flex: 1 1 auto;
+    flex: none;
     min-height: 18rem;
   }
 }

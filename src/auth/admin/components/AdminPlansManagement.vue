@@ -1,160 +1,162 @@
 <template>
   <div class="admin-plans-management">
-    <!-- Usage Summary Section -->
-    <section class="usage-section mb-8">
-      <div v-if="isLoadingSummary" class="summary-loading-fidelity">
-        <div class="skeleton-grid-summary">
-          <div v-for="i in 4" :key="i" class="skel-kpi-card glass-card">
-            <div class="skel-kpi-info">
-              <UISkeletonLoader width="80px" height="12px" border-radius="4px" class="mb-2" />
-              <UISkeletonLoader width="120px" height="24px" border-radius="4px" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Missing Breakdown Skeleton -->
-        <div class="skel-breakdown glass-card mt-6">
-          <UISkeletonLoader width="150px" height="20px" border-radius="4px" class="mb-6" />
-          <div class="skel-table">
-            <div v-for="i in 4" :key="i" class="skel-table-row">
-              <UISkeletonLoader width="100px" height="14px" border-radius="4px" />
-              <UISkeletonLoader width="60px" height="14px" border-radius="4px" />
-              <UISkeletonLoader width="60px" height="14px" border-radius="4px" />
-              <UISkeletonLoader width="60px" height="14px" border-radius="4px" />
-            </div>
-          </div>
-        </div>
-      </div>
-      <AdminUsageSummary
-        v-else-if="usageSummary"
-        :summary="usageSummary"
-        :selectedLanguage="selectedLanguage"
-      />
-    </section>
-
-    <!-- Plans Table Section -->
-    <section class="plans-section">
-      <div class="section-card glass-card">
-        <div class="section-header">
-          <template v-if="isLoadingPlans">
-            <h2>{{ t.allPlans }}</h2>
-            <UISkeletonLoader width="140px" height="36px" border-radius="10px" />
-          </template>
-          <template v-else>
-            <h2>{{ t.allPlans }}</h2>
-            <div class="header-actions">
-              <button class="create-btn premium-button" @click="openCreateModal" :disabled="isLoadingPlans">
-                <font-awesome-icon :icon="faPlus" />
-                <span>{{ t.createNewPlan }}</span>
-              </button>
-            </div>
-          </template>
-        </div>
-
-        <div class="table-wrap">
-          <div v-if="isLoadingPlans" class="table-loading-fidelity">
-            <div v-for="i in 6" :key="i" class="skeleton-row-fidelity">
-              <div class="skel-cell skel-name">
-                <UISkeletonLoader width="100%" height="14px" border-radius="4px" />
+    <div class="plans-scroll-content">
+      <!-- Usage Summary Section -->
+      <section class="usage-section mb-8">
+        <div v-if="isLoadingSummary" class="summary-loading-fidelity">
+          <div class="skeleton-grid-summary">
+            <div v-for="i in 4" :key="i" class="skel-kpi-card glass-card">
+              <div class="skel-kpi-info">
+                <UISkeletonLoader width="80px" height="12px" border-radius="4px" class="mb-2" />
+                <UISkeletonLoader width="120px" height="24px" border-radius="4px" />
               </div>
-              <div class="skel-cell">
+            </div>
+          </div>
+
+          <!-- Missing Breakdown Skeleton -->
+          <div class="skel-breakdown glass-card mt-6">
+            <UISkeletonLoader width="150px" height="20px" border-radius="4px" class="mb-6" />
+            <div class="skel-table">
+              <div v-for="i in 4" :key="i" class="skel-table-row">
+                <UISkeletonLoader width="100px" height="14px" border-radius="4px" />
+                <UISkeletonLoader width="60px" height="14px" border-radius="4px" />
+                <UISkeletonLoader width="60px" height="14px" border-radius="4px" />
                 <UISkeletonLoader width="60px" height="14px" border-radius="4px" />
               </div>
-              <div class="skel-cell">
-                <UISkeletonLoader width="40px" height="14px" border-radius="4px" />
-              </div>
-              <div class="skel-cell">
-                <UISkeletonLoader width="80px" height="14px" border-radius="4px" />
-              </div>
-              <div class="skel-cell text-right">
-                <UISkeletonLoader width="40px" height="14px" border-radius="4px" style="margin-left: auto" />
-              </div>
-              <div class="skel-cell text-right">
-                <UISkeletonLoader width="20px" height="14px" border-radius="4px" style="margin-left: auto" />
-              </div>
             </div>
           </div>
-          <table v-else class="plans-table">
-            <thead>
-              <tr>
-                <th>{{ t.planName }}</th>
-                <th>{{ t.price }}</th>
-                <th>{{ t.limits }}</th>
-                <th>{{ t.status }}</th>
-                <th class="text-right">{{ t.actions }}</th>
-                <th style="width: 40px"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="plan in plans"
-                :key="plan.id"
-                class="plan-row"
-                @click="openAssignmentPanel(plan)"
-              >
-                <td class="name-cell" :data-label="t.planName">
-                  <div class="plan-info">
-                    <span class="plan-name">{{ plan.name }}</span>
-                    <span class="plan-id">ID: #{{ plan.id }}</span>
-                  </div>
-                </td>
-                <td class="price-cell" :data-label="t.price">
-                  <div class="price-wrap">
-                    <span class="amount">{{ isPrivacyMode ? '••••' : plan.monthlyPrice }}</span>
-                    <span class="currency">{{ plan.priceCurrency }}</span>
-                    <span class="period">/mo</span>
-                  </div>
-                </td>
-                <td class="limits-cell" :data-label="t.limits">
-                  <div class="limit-item">
-                    <span class="limit-label">OCR:</span>
-                    <span class="limit-value">{{ formatAmount(plan.monthlyOcrLimit) }}</span>
-                  </div>
-                  <div class="limit-item">
-                    <span class="limit-label">STT:</span>
-                    <span class="limit-value">{{ formatAmount(plan.monthlySttLimit) }}</span>
-                  </div>
-                </td>
-                <td class="status-cell" :data-label="t.status">
-                  <span :class="['status-badge', plan.isActive ? 'active' : 'inactive']">
-                    {{ plan.isActive ? t.active : t.inactive }}
-                  </span>
-                </td>
-                <td class="actions-cell text-right" :data-label="t.actions">
-                  <div class="row-actions">
-                    <button
-                      class="action-btn edit"
-                      @click.stop="openEditModal(plan)"
-                      :title="t.edit"
-                    >
-                      <font-awesome-icon :icon="faPenToSquare" />
-                    </button>
-                    <button
-                      class="action-btn delete"
-                      @click.stop="confirmDelete(plan)"
-                      :title="t.delete"
-                    >
-                      <font-awesome-icon :icon="faBan" />
-                    </button>
-                  </div>
-                </td>
-                <td class="chevron-cell">
-                  <font-awesome-icon :icon="faChevronRight" class="row-chevron" />
-                </td>
-              </tr>
-              <tr v-if="plans.length === 0 && !isLoadingPlans">
-                <td colspan="5" class="empty-cell">
-                  <div class="empty-state">
-                    <font-awesome-icon :icon="faBoxOpen" class="empty-icon" />
-                    <p>{{ t.noPlansFound }}</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
-      </div>
-    </section>
+        <AdminUsageSummary
+          v-else-if="usageSummary"
+          :summary="usageSummary"
+          :selectedLanguage="selectedLanguage"
+        />
+      </section>
+
+      <!-- Plans Table Section -->
+      <section class="plans-section">
+        <div class="section-card glass-card">
+          <div class="section-header">
+            <template v-if="isLoadingPlans">
+              <h2>{{ t.allPlans }}</h2>
+              <UISkeletonLoader width="140px" height="36px" border-radius="10px" />
+            </template>
+            <template v-else>
+              <h2>{{ t.allPlans }}</h2>
+              <div class="header-actions">
+                <button class="create-btn premium-button" @click="openCreateModal" :disabled="isLoadingPlans">
+                  <font-awesome-icon :icon="faPlus" />
+                  <span>{{ t.createNewPlan }}</span>
+                </button>
+              </div>
+            </template>
+          </div>
+
+          <div class="table-wrap">
+            <div v-if="isLoadingPlans" class="table-loading-fidelity">
+              <div v-for="i in 6" :key="i" class="skeleton-row-fidelity">
+                <div class="skel-cell skel-name">
+                  <UISkeletonLoader width="100%" height="14px" border-radius="4px" />
+                </div>
+                <div class="skel-cell">
+                  <UISkeletonLoader width="60px" height="14px" border-radius="4px" />
+                </div>
+                <div class="skel-cell">
+                  <UISkeletonLoader width="40px" height="14px" border-radius="4px" />
+                </div>
+                <div class="skel-cell">
+                  <UISkeletonLoader width="80px" height="14px" border-radius="4px" />
+                </div>
+                <div class="skel-cell text-right">
+                  <UISkeletonLoader width="40px" height="14px" border-radius="4px" style="margin-left: auto" />
+                </div>
+                <div class="skel-cell text-right">
+                  <UISkeletonLoader width="20px" height="14px" border-radius="4px" style="margin-left: auto" />
+                </div>
+              </div>
+            </div>
+            <table v-else class="plans-table">
+              <thead>
+                <tr>
+                  <th>{{ t.planName }}</th>
+                  <th>{{ t.price }}</th>
+                  <th>{{ t.limits }}</th>
+                  <th>{{ t.status }}</th>
+                  <th class="text-right">{{ t.actions }}</th>
+                  <th style="width: 40px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="plan in plans"
+                  :key="plan.id"
+                  class="plan-row"
+                  @click="openAssignmentPanel(plan)"
+                >
+                  <td class="name-cell" :data-label="t.planName">
+                    <div class="plan-info">
+                      <span class="plan-name">{{ plan.name }}</span>
+                      <span class="plan-id">ID: #{{ plan.id }}</span>
+                    </div>
+                  </td>
+                  <td class="price-cell" :data-label="t.price">
+                    <div class="price-wrap">
+                      <span class="amount">{{ isPrivacyMode ? '••••' : plan.monthlyPrice }}</span>
+                      <span class="currency">{{ plan.priceCurrency }}</span>
+                      <span class="period">/mo</span>
+                    </div>
+                  </td>
+                  <td class="limits-cell" :data-label="t.limits">
+                    <div class="limit-item">
+                      <span class="limit-label">OCR:</span>
+                      <span class="limit-value">{{ formatAmount(plan.monthlyOcrLimit) }}</span>
+                    </div>
+                    <div class="limit-item">
+                      <span class="limit-label">STT:</span>
+                      <span class="limit-value">{{ formatAmount(plan.monthlySttLimit) }}</span>
+                    </div>
+                  </td>
+                  <td class="status-cell" :data-label="t.status">
+                    <span :class="['status-badge', plan.isActive ? 'active' : 'inactive']">
+                      {{ plan.isActive ? t.active : t.inactive }}
+                    </span>
+                  </td>
+                  <td class="actions-cell text-right" :data-label="t.actions">
+                    <div class="row-actions">
+                      <button
+                        class="action-btn edit"
+                        @click.stop="openEditModal(plan)"
+                        :title="t.edit"
+                      >
+                        <font-awesome-icon :icon="faPenToSquare" />
+                      </button>
+                      <button
+                        class="action-btn delete"
+                        @click.stop="confirmDelete(plan)"
+                        :title="t.delete"
+                      >
+                        <font-awesome-icon :icon="faBan" />
+                      </button>
+                    </div>
+                  </td>
+                  <td class="chevron-cell">
+                    <font-awesome-icon :icon="faChevronRight" class="row-chevron" />
+                  </td>
+                </tr>
+                <tr v-if="plans.length === 0 && !isLoadingPlans">
+                  <td colspan="5" class="empty-cell">
+                    <div class="empty-state">
+                      <font-awesome-icon :icon="faBoxOpen" class="empty-icon" />
+                      <p>{{ t.noPlansFound }}</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
 
     <!-- Side Panel for Assignment -->
     <UISidePanelShell
@@ -295,7 +297,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { formatAmount, isPrivacyMode, formatCurrency } = useCurrency()
+    const { formatAmount, isPrivacyMode } = useCurrency()
     const plans = ref<AdminPlan[]>([])
     const usageSummary = ref<IUsageSummary | null>(null)
     const isLoadingPlans = ref(true)
@@ -517,7 +519,29 @@ export default defineComponent({
   flex-direction: column;
   padding: 0;
   gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: hidden;
+  overflow-x: hidden;
   animation: fadeIn 0.4s ease-out;
+}
+
+.plans-scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.usage-section {
+  :deep(.table-container) {
+    max-height: none;
+    overflow-y: visible;
+  }
 }
 
 .skeleton-grid-summary {
@@ -633,6 +657,7 @@ export default defineComponent({
 }
 
 .table-wrap {
+  width: 100%;
   overflow-x: auto;
 }
 
@@ -1060,5 +1085,44 @@ export default defineComponent({
 }
 .flex-1 {
   flex: 1;
+}
+
+@media (max-width: 768px) {
+  .admin-plans-management,
+  .usage-section,
+  .plans-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .section-card {
+    padding: 16px;
+  }
+
+  .plans-scroll-content {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrap {
+    overflow-x: hidden;
+  }
+
+  .plans-table {
+    width: 100%;
+    table-layout: fixed;
+
+    .plan-row td {
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .row-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
 }
 </style>

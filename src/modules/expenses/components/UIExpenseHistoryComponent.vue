@@ -1276,6 +1276,8 @@ export default defineComponent({
 
 @media (max-width: 1024px) {
   .expense-sources-container {
+    flex: none;
+    min-height: auto;
     padding: 1rem;
     .header {
       flex-direction: column;
@@ -1339,6 +1341,14 @@ export default defineComponent({
       min-height: 2.75rem;
       font-size: 0.8125rem; /* Smaller font for side-by-side */
     }
+    .table-wrap {
+      flex: none;
+      min-height: 10rem;
+      overflow: visible;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 0;
+    }
     .table-header {
       display: none;
     }
@@ -1389,6 +1399,8 @@ export default defineComponent({
 
 @media (max-width: 1200px) {
   .expense-sources-container {
+    flex: none;
+    min-height: auto;
     padding: 1rem;
     .header {
       flex-direction: column;
@@ -1441,6 +1453,14 @@ export default defineComponent({
       min-height: 2.75rem !important;
       font-size: 0.875rem !important;
       border-radius: 10px;
+    }
+    .table-wrap {
+      flex: none;
+      min-height: 10rem;
+      overflow: visible;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 0;
     }
     .table-header {
       display: none;

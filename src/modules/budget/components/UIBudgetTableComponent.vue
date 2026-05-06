@@ -866,6 +866,8 @@ export default {
 
 @media (max-width: 1200px) {
   .budget-table-container {
+    flex: none;
+    min-height: auto;
     padding: 1rem;
     width: 100%;
 
@@ -922,6 +924,15 @@ export default {
     .filter-skeleton {
       height: 2.75rem !important;
       background-color: var(--background-color-soft) !important;
+    }
+
+    .table-wrap {
+      flex: none;
+      min-height: 10rem;
+      overflow: visible;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 0;
     }
 
     .table-header {
