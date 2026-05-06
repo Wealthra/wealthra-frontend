@@ -157,15 +157,10 @@
 
             <div class="quota-info mt-6">
               <div class="quota-header">
-                <span class="quota-label">{{ t.quotaTitle }}</span>
-                <span class="quota-status success">{{ t.statusHealthy }}</span>
-              </div>
-              <div class="quota-bar-wrap">
-                <div class="quota-bar" :style="{ width: isPrivacyMode ? '0%' : '42%' }"></div>
+                <span class="quota-label">{{ t.requests }}</span>
               </div>
               <div class="quota-footer">
-                <span>{{ t.usageRate }}: {{ isPrivacyMode ? '••%' : '42%' }}</span>
-                <span>{{ isPrivacyMode ? '••••' : formatInt(usage?.requestCount || 0) }} {{ t.requests }}</span>
+                <span>{{ isPrivacyMode ? '••••' : formatInt(usage?.requestCount || 0) }}</span>
               </div>
             </div>
           </template>
