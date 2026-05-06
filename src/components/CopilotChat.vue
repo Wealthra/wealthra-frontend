@@ -2384,11 +2384,14 @@ export default defineComponent({
   .copilot-window {
     width: 100vw !important;
     height: 100vh !important;
+    height: 100dvh !important;
     max-height: 100vh;
+    max-height: 100dvh;
     bottom: 0;
     right: 0;
     border-radius: 0;
     z-index: 10000;
+    background: var(--background-color);
 
     .copilot-window-inner {
       border-radius: 0;
@@ -2407,14 +2410,15 @@ export default defineComponent({
   }
 
   .copilot-header {
-    padding: 16px 20px;
-    height: 70px;
+    padding: max(16px, env(safe-area-inset-top)) 20px 16px 20px;
+    height: auto;
+    min-height: 70px;
     border-radius: 0 !important;
   }
 
   .copilot-input-area {
     padding: 16px;
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
 }
 .copilot-icon-btn:disabled {

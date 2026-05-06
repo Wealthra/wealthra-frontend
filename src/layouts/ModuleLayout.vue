@@ -712,10 +712,14 @@ export default defineComponent({
 
   width: 100%;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   display: flex;
   background-color: var(--background-color-soft);
   overflow: hidden;
   font-family: var(--main-font);
+
+  /* Safe area padding for mobile notches and home indicators */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ============================
@@ -835,7 +839,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm) var(--spacing-md);
+  padding: max(var(--spacing-md), env(safe-area-inset-top)) var(--spacing-md) var(--spacing-sm) var(--spacing-md);
   gap: var(--spacing-md);
   background-color: transparent;
 
@@ -1051,6 +1055,7 @@ export default defineComponent({
    ============================ */
 .navbar-c {
   height: 100%;
+  padding-top: env(safe-area-inset-top);
   display: flex;
   background-color: var(--background-color);
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);

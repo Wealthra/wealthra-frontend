@@ -425,10 +425,20 @@
   font-weight: normal;
 }
 
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent body scroll, layout handles it */
+}
+
 body {
   color: var(--normal-text-color);
   background: var(--background-color);
-
+  width: 100%;
+  position: fixed;
+  inset: 0;
   line-height: 1.6;
   font-family:
     Inter,

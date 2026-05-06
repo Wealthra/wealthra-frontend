@@ -387,8 +387,10 @@ export default {
     align-items: center;
     width: 40%;
     height: 100vh;
+    height: 100dvh;
     overflow-y: auto;
     padding: 2rem;
+    padding-top: max(2rem, env(safe-area-inset-top));
     gap: 3rem;
 
     @media (max-width: 1024px) {
@@ -622,6 +624,7 @@ export default {
     justify-content: center;
     width: 60%;
     max-height: 100vh;
+    max-height: 100dvh;
     overflow: hidden;
 
     @media (max-width: 1024px) {

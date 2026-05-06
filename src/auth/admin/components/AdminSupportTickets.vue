@@ -909,6 +909,7 @@ export default defineComponent({
 @media (max-width: 600px) {
   .modal-shell {
     max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0;
   }
   
