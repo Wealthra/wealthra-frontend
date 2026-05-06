@@ -156,11 +156,9 @@
             </div>
 
             <div class="quota-info mt-6">
-              <div class="quota-header">
-                <span class="quota-label">{{ t.requests }}</span>
-              </div>
-              <div class="quota-footer">
-                <span>{{ isPrivacyMode ? '••••' : formatInt(usage?.requestCount || 0) }}</span>
+              <div class="quota-stat">
+                <span class="quota-stat__label">{{ t.requests }}</span>
+                <span class="quota-stat__value">{{ isPrivacyMode ? '••••' : formatInt(usage?.requestCount || 0) }}</span>
               </div>
             </div>
           </template>
@@ -254,9 +252,6 @@ export default defineComponent({
         saving: isTr ? 'Kaydediliyor...' : 'Saving...',
         usageBreakdown: isTr ? 'Jeton Dağılımı' : 'Token Breakdown',
         last7Days: isTr ? 'Son 7 Gün' : 'Last 7 Days',
-        quotaTitle: isTr ? 'Sistem Kotası' : 'System Quota',
-        statusHealthy: isTr ? 'Sağlıklı' : 'Healthy',
-        usageRate: isTr ? 'Kullanım Oranı' : 'Usage Rate',
         requests: isTr ? 'istek' : 'requests',
         promptLabel: isTr ? 'İstem' : 'Prompt',
         completionLabel: isTr ? 'Tamamlama' : 'Completion'
@@ -741,42 +736,33 @@ export default defineComponent({
   padding: 0 1.5rem 1.5rem;
   flex-shrink: 0;
   width: 100%;
-  
-  .quota-header {
+
+  .quota-stat {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-
-    .quota-label { font-size: 0.85rem; font-weight: 700; color: var(--header-text-color); }
-    .quota-status { 
-      font-size: 0.7rem; 
-      font-weight: 800; 
-      text-transform: uppercase;
-      &.success { color: #10b981; }
-    }
-  }
-
-  .quota-bar-wrap {
-    height: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 1rem 1.25rem;
+    border-radius: 14px;
     background: var(--background-color-soft);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 8px;
-
-    .quota-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #10b981, #3b82f6);
-      border-radius: 4px;
-    }
+    border: 1px solid var(--border-color);
   }
 
-  .quota-footer {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
+  .quota-stat__label {
+    font-size: 0.7rem;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--normal-text-color);
-    opacity: 0.8;
+    line-height: 1.2;
+  }
+
+  .quota-stat__value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--header-text-color);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
 }
 
