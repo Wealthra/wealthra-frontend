@@ -162,7 +162,7 @@
                             <div class="copilot-item__meta">
                               <span class="copilot-item__category">{{ item.categoryName }}</span>
                               <span class="copilot-item__amount">{{
-                                formatCurrency(item.amount, 0, item.currency as any)
+                                formatExtractedItemAmount(item.amount, item.currency)
                               }}</span>
                             </div>
                           </div>
@@ -262,7 +262,12 @@
 
                     <!-- Actions Group -->
                     <div
-                      v-if="!msg.saved && msg.itemData && msg.itemData.length > 0 && msg.uiHints?.show_confirm_buttons !== false"
+                      v-if="
+                        !msg.saved &&
+                        msg.itemData &&
+                        msg.itemData.length > 0 &&
+                        msg.uiHints?.show_confirm_buttons !== false
+                      "
                       class="copilot-items__actions-group"
                     >
                       <button
@@ -356,14 +361,21 @@
             </div>
 
             <!-- Default State: Pill-shaped Chat Input Wrapper -->
-            <div v-else class="copilot-input-box" :class="{ 'copilot-input-box--disabled': editingItemKey !== null }">
+            <div
+              v-else
+              class="copilot-input-box"
+              :class="{ 'copilot-input-box--disabled': editingItemKey !== null }"
+            >
               <button
                 class="copilot-icon-btn"
                 @click="triggerImageUpload"
                 :title="t.image"
                 :disabled="isOcrLimitReached || editingItemKey !== null"
               >
-                <font-awesome-icon icon="image" :class="{ 'icon-disabled': isOcrLimitReached || editingItemKey !== null }" />
+                <font-awesome-icon
+                  icon="image"
+                  :class="{ 'icon-disabled': isOcrLimitReached || editingItemKey !== null }"
+                />
               </button>
 
               <textarea
@@ -426,7 +438,16 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineComponent,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+} from 'vue'
 import { marked } from 'marked'
 import { copilotService } from '@/services/api/copilot/copilot.service'
 import { categoryService } from '@/services/api/category/category.service'
@@ -480,7 +501,25 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { currency: preferredCurrency, currencySymbol, formatCurrency } = useCurrency()
+    const { currency: preferredCurrency, currencySymbol, formatCurrency, isPrivacyMode } =
+      useCurrency()
+
+    const extractedAmountSymbols: Record<string, string> = {
+      USD: '$',
+      EUR: '€',
+      TRY: '₺',
+    }
+
+    const formatExtractedItemAmount = (amount: number, currency?: string) => {
+      const normalizedCurrency = (currency || preferredCurrency.value || 'USD').toUpperCase()
+      const symbol = extractedAmountSymbols[normalizedCurrency] || `${normalizedCurrency} `
+
+      if (isPrivacyMode.value) {
+        return `${symbol}••••`
+      }
+
+      return `${symbol}${amount}`
+    }
 
     const currencyOptions = [
       { label: '$', value: 'USD' },
@@ -497,7 +536,7 @@ export default defineComponent({
       const maxW = window.innerWidth - 48
       const maxH = window.innerHeight - 48
 
-      if (windowWidth.value > maxW) windowWidth.value = Math.max(320, maxW)
+      if (windowWidth.value > maxW) windowWidth.value = Math.max(450, maxW)
       if (windowHeight.value > maxH) windowHeight.value = Math.max(400, maxH)
     }
 
@@ -846,7 +885,8 @@ export default defineComponent({
             sender: 'bot',
             type: 'interactive',
             content: t.value.extractedMsg,
-            itemData: items, isChatConfirmation: false,
+            itemData: items,
+            isChatConfirmation: false,
           })
         } else {
           removeLastBotTextMessage()
@@ -902,7 +942,8 @@ export default defineComponent({
             sender: 'bot',
             type: 'interactive',
             content: t.value.extractedMsg,
-            itemData: items, isChatConfirmation: false,
+            itemData: items,
+            isChatConfirmation: false,
           })
         } else {
           removeLastBotTextMessage()
@@ -948,38 +989,52 @@ export default defineComponent({
 
       try {
         const result = await copilotService.chat({ message: msgText })
-        
+
         if (result && typeof result === 'object') {
           const res = result as CopilotChatResponse
           const resType = (res.type || '').toLowerCase()
           const itemsSource = res.payload?.batch?.items || res.payload?.items
 
-          if ((resType === 'confirmation' || resType === 'interactive') && Array.isArray(itemsSource)) {
-            const sanitize = (val: any) => (val === 'null' || val === 'None' || val === null || val === undefined) ? '' : String(val).trim()
+          if (
+            (resType === 'confirmation' || resType === 'interactive') &&
+            Array.isArray(itemsSource)
+          ) {
+            const sanitize = (val: any) =>
+              val === 'null' || val === 'None' || val === null || val === undefined
+                ? ''
+                : String(val).trim()
 
             const mappedItems: ExtractedExpenseItem[] = itemsSource.map((item: any) => {
               const rawCatId = sanitize(item.category_id || item.categoryId)
               const rawCatName = sanitize(item.category_name || item.categoryName)
-              
+
               let catId = Number(rawCatId) || 0
               if (!catId && rawCatName) {
                 const targetName = rawCatName.toLowerCase()
-                const found = categories.value.find(c => (c.categoryName || '').toLowerCase() === targetName)
+                const found = categories.value.find(
+                  c => (c.categoryName || '').toLowerCase() === targetName
+                )
                 if (found) catId = found.id
               }
 
               // Safer amount parsing
               const rawAmount = item.amount !== undefined && item.amount !== null ? item.amount : 0
-              const amountValue = typeof rawAmount === 'string' ? parseFloat(rawAmount) : Number(rawAmount)
+              const amountValue =
+                typeof rawAmount === 'string' ? parseFloat(rawAmount) : Number(rawAmount)
 
               return {
                 id: Math.floor(Math.random() * 1000000),
                 description: sanitize(item.description) || 'Expense',
                 amount: isNaN(amountValue) ? 0 : amountValue,
-                currency: (sanitize(item.currency) || preferredCurrency.value || 'TRY').toUpperCase(),
+                currency: (
+                  sanitize(item.currency) ||
+                  preferredCurrency.value ||
+                  'TRY'
+                ).toUpperCase(),
                 paymentMethod: sanitize(item.payment_method || item.paymentMethod) || 'Other',
                 isRecurring: !!(item.is_recurring || item.isRecurring),
-                transactionDate: sanitize(item.date || item.transactionDate) || new Date().toISOString(),
+                transactionDate:
+                  sanitize(item.date || item.transactionDate) || new Date().toISOString(),
                 categoryId: catId || 0,
                 categoryName: rawCatName || 'Uncategorized',
               }
@@ -1106,7 +1161,6 @@ export default defineComponent({
       }
     }
 
-
     const handleReject = async (msg: ChatMessage) => {
       msg.saving = true
       try {
@@ -1115,7 +1169,7 @@ export default defineComponent({
             message: props.selectedLanguage === 'Turkish' ? 'Hayır' : 'No',
           })
         }
-        
+
         msg.saving = false
         msg.itemData = []
         msg.type = 'text'
@@ -1237,6 +1291,7 @@ export default defineComponent({
       sendTextMessage,
       parseMarkdown,
       formatCurrency,
+      formatExtractedItemAmount,
       currencySymbol,
       isOcrLimitReached,
       isSttLimitReached,
@@ -1921,7 +1976,6 @@ export default defineComponent({
 
 /* Removed .copilot-item__row as we are stacking items now */
 
-
 .copilot-item__actions {
   display: flex;
   gap: 6px;
@@ -2145,7 +2199,7 @@ export default defineComponent({
     opacity: 0.6;
     cursor: not-allowed;
     background: var(--background-color-soft);
-    
+
     * {
       pointer-events: none;
     }
